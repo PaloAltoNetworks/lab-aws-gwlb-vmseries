@@ -14,63 +14,81 @@ data "aws_ami" "pa-vm" {
   }
 }
 
-# Create launch template with a single interface
-resource "aws_launch_template" "this" {
-  name          = "${var.name_prefix}template1"
+resource "aws_launch_configuration" "this" {
+  name_prefix   = var.prefix_name_tag
   ebs_optimized = true
   image_id      = data.aws_ami.pa-vm.id
   instance_type = var.fw_instance_type
   key_name      = var.ssh_key_name
-  tags          = var.global_tags
+  security_groups = var.asg_interface["security_groups"]
+  #iam_instance_profile = var.iam_instance_profile
 
   user_data = base64encode(join(",", compact(concat(
     [for k, v in var.bootstrap_options : "${k}=${v}"],
   ))))
 
-  network_interfaces {
-    device_index    = 0
-    subnet_id       = var.subnet_ids[var.interfaces.0.subnet_name]
-    security_groups = [var.security_group_ids[var.interfaces.0.security_group]]
+  lifecycle {
+    create_before_destroy = true
   }
-
-  tag_specifications {
-    resource_type = "instance"
-
-    tags = var.global_tags
-  }
-
 }
 
-# Create autoscaling group based on launch template and ALL subnets from var.interfaces
-resource "aws_autoscaling_group" "this" {
-  name                = "${var.name_prefix}asg1"
-  #vpc_zone_identifier = distinct([for k, v in var.interfaces : var.subnet_ids[v.subnet_name]])
-  vpc_zone_identifier = [
-    for subnet in var.asg_subnets :
-    var.subnet_ids[subnet]
+
+locals {
+  asg_tags = [
+    for k, v in var.global_tags : {
+      key                 = k
+      value               = v
+      propagate_at_launch = true
+    }
   ]
+}
+
+resource "aws_autoscaling_group" "this" {
+  name                = "${var.prefix_name_tag}asg1"
   desired_capacity    = var.desired_capacity
   max_size            = var.max_size
   min_size            = var.min_size
 
-  launch_template {
-    id      = aws_launch_template.this.id
-    version = "$Latest"
+  vpc_zone_identifier = var.asg_interface["subnets"]
+
+  launch_configuration = aws_launch_configuration.this.name
+
+  initial_lifecycle_hook {
+    name                   = "${var.prefix_name_tag}launch"
+    default_result       = "CONTINUE"
+    heartbeat_timeout      = var.lifecycle_hook_timeout
+    lifecycle_transition = "autoscaling:EC2_INSTANCE_LAUNCHING"
+
+    notification_metadata = <<EOF
+${var.lifecycle_hook_metadata}
+EOF
   }
+
+  tags                = concat(local.asg_tags, [{ key = "Name", value = var.autoscaling_name_tag, propagate_at_launch = true}])
+
+  lifecycle { // https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/version-3-upgrade#resource-aws_autoscaling_group
+    create_before_destroy = true
+    ignore_changes = [ load_balancers, target_group_arns ]
+  }
+
 }
 
 # Add lifecycle hook to autoscaling group
 resource "aws_autoscaling_lifecycle_hook" "this" {
-  name                   = "${var.name_prefix}hook1"
+  name                   = "${var.prefix_name_tag}hook1"
   autoscaling_group_name = aws_autoscaling_group.this.name
   default_result         = "CONTINUE"
   heartbeat_timeout      = var.lifecycle_hook_timeout
   lifecycle_transition   = "autoscaling:EC2_INSTANCE_LAUNCHING"
+
+  notification_metadata = <<EOF
+${var.lifecycle_hook_metadata}
+EOF
 }
 
 # IAM role that will be used for Lambda function
 resource "aws_iam_role" "this" {
-  name               = "${var.name_prefix}lambda_iam_role"
+  name               = "${var.prefix_name_tag}lambda_iam_role"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -90,7 +108,7 @@ EOF
 
 # Attach IAM Policy to IAM role for Lambda
 resource "aws_iam_role_policy" "this" {
-  name   = "${var.name_prefix}lambda_iam_policy"
+  name   = "${var.prefix_name_tag}lambda_iam_policy"
   role   = aws_iam_role.this.id
   policy = <<-EOF
 {
@@ -127,25 +145,26 @@ EOF
 }
 
 resource "aws_lambda_function" "this" {
-  filename         = "lambda_payload.zip"
-  function_name    = "${var.name_prefix}add_nics"
+  filename         = "${path.module}/lambda_payload.zip"
+  function_name    = "${var.prefix_name_tag}add_nics"
   role             = aws_iam_role.this.arn
   handler          = "lambda.lambda_handler"
   source_code_hash = filebase64sha256("${path.module}/lambda_payload.zip")
   runtime          = "python3.8"
   tags             = var.global_tags
+  timeout          = var.lambda_timeout
 }
 
 resource "aws_lambda_permission" "this" {
   action              = "lambda:InvokeFunction"
   function_name       = aws_lambda_function.this.function_name
   principal           = "events.amazonaws.com"
-  statement_id_prefix = var.name_prefix
+  statement_id_prefix = var.prefix_name_tag
   # source_arn    = "arn:aws:events:eu-west-1:111122223333:rule/RunDaily"
 }
 
 resource "aws_cloudwatch_event_rule" "this" {
-  name          = "${var.name_prefix}add_nics"
+  name          = "${var.prefix_name_tag}add_nics"
   tags          = var.global_tags
   event_pattern = <<EOF
 {
@@ -166,6 +185,6 @@ EOF
 
 resource "aws_cloudwatch_event_target" "this" {
   rule      = aws_cloudwatch_event_rule.this.name
-  target_id = "${var.name_prefix}add_nics"
+  target_id = "${var.prefix_name_tag}add_nics"
   arn       = aws_lambda_function.this.arn
 }
