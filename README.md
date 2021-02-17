@@ -7,22 +7,36 @@
 
 This lab will involve deploying a solution for AWS using Palo Alto Networks VM-Series in the Gateway Load Balancer (GWLB) topology.
 
-
 ## Deployment
 
-
-
-
+- Login to console
+- Verify in correct region 
 
 ### Step x: Update IAM Policies
 
 
+- Search for `IAM` in top searchbar (IAM is global)
+- In IAM dashboard select Users -> awsstudent
+- Expand default_policy, edit -> json
+- Remove the following actions from the explicity Deny policy
+- Review policy / save changes
+
+```
+"aws-marketplace-management:*"
+"aws-marketplace:Subscribe"
+"aws-marketplace:Unsubscribe"
+"cloudshell:*"
+```
+
+Note: You will have a json syntax error if you leave trailing comma on line 32 after removing `cloudshell` or 
+
+
 <img src="https://user-images.githubusercontent.com/43679669/108144448-aa08ad00-7097-11eb-926d-66ab34e050da.png" width=50% height=50%>
 
-
-
-
 ### Step x: Launch CloudShell
+
+- Search for `cloudshell` in top search bar
+
 
 - Check which Marketplace VM-Series images (AMIs) are available
 
@@ -46,7 +60,7 @@ The name tag of the image should be standard and can be used for the filter. For
 **We see that 10.0.4 AMI is availble, so we will use that for the variable**
 
 
-- Generate SSH Key
+- Generate SSH Key in cloudshell
 
 Any EC2 Instance must be associated with a SSH keypair, which is the default method of initial interactive login to instances. With successful bootstrapping, there should not be any need to connect to the VM-Series instances direclty with this key, but it is usually good to keep this key securely stored for any emergency backdoor access. For this lab, a keypair will be generated in the cloudshell and then terraform will create a corresponding object in AWS using the same key.
 
@@ -56,6 +70,20 @@ Any EC2 Instance must be associated with a SSH keypair, which is the default met
 
 
 ### Step x: Clone the Repository
+
+- Download Terraform
+
+TODO: Replace with one-liner
+
+`wget https://releases.hashicorp.com/terraform/0.13.6/terraform_0.13.6_linux_amd64.zip`
+`unzip terraform_0.13.6_linux_amd64.zip`
+`rm terraform_0.13.6_linux_amd64.zip`
+`sudo mv terraform /usr/bin/`
+
+Verify 
+`terraform --version`
+
+
 
 ```
 $ git clone https://github.com/PaloAltoNetworks/ps-regional-2021-aws-labs.git
