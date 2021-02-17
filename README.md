@@ -4,17 +4,19 @@
 
 The Prisma Cloud Host Security
 GSPxxx
-[[import labmanuallogo]]
+
 Overview
 
 
 ## Deployment
 
 
-### Step 2: Launch CloudShell
+### Step x: Update IAM Policies
+
+### Step x: Launch CloudShell
 
 
-### Step 2: Clone the Repository
+### Step x: Clone the Repository
 
 ```
 $ git clone https://github.com/PaloAltoNetworks/ps-regional-2021-aws-labs.git
