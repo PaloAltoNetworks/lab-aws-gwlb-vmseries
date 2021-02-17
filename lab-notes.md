@@ -34,3 +34,8 @@ Deploy GWLB (with ASG?) using AWS cloud shell
 Manual configuration of endpoints, routes to endpoint, routes to  GW, appliance mode
 Manual configuration for sub-interface association
 Demo cloudwatch metrics and dynamic address groups
+
+
+### AWS CLI commands
+
+aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-10* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2
