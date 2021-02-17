@@ -115,6 +115,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "this" {
   ]
   vpc_id                                          = var.vpcs[each.value.vpc]
   transit_gateway_id                              = local.combined_transit_gateways[each.value.transit_gateway]
+  appliance_mode_support                          = lookup(each.value, "appliance_mode_support", null) != null ? each.value.appliance_mode_support : null
   transit_gateway_default_route_table_association = false
   transit_gateway_default_route_table_propagation = false
   tags                                            = merge({ Name = "${var.prefix_name_tag}${each.value.name}" }, var.global_tags, lookup(each.value, "local_tags", {}))

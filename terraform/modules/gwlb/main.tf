@@ -29,7 +29,7 @@ data "aws_vpc_endpoint_service" "this" {
     if lookup(gwlb, "existing", null) == true ? true : false
   }
   tags = {
-    Name = each.value.name
+    Name = "${var.prefix_name_tag}${each.value.name}"
   }
 }
 
@@ -111,7 +111,6 @@ resource "aws_vpc_endpoint_service" "this" {
   }
   acceptance_required = false
   allowed_principals         = lookup(each.value, "allowed_principals", null) #["arn:aws:iam::632512868473:root"]
-  #allowed_principals         = ["arn:aws:iam::${data.aws_caller_identity.current.id}:root"]
   gateway_load_balancer_arns = [aws_lb.this[each.key].arn]
   tags                       = merge({ Name = "${var.prefix_name_tag}${each.value.name}" }, var.global_tags, lookup(each.value, "local_tags", {}))
 }

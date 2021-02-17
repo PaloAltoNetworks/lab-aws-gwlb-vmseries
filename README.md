@@ -26,7 +26,7 @@ This lab will involve deploying a solution for AWS using Palo Alto Networks VM-S
 
 - Check which Marketplace VM-Series images (AMIs) are available
 
-This terraform deployment will look up the AMI ID to use for the deployment based on the variable `fw_version`. New AMIs are not always published for each minor release. Therefore, you need to determine what images are aviailble for your region currently.
+This terraform deployment will look up the AMI ID to use for the deployment based on the variable `fw_version`. New AMIs are not always published for each minor release. Therefore, it is a good idea to verify what version AMI most closely matches your target version.
 
 In cloud console, enter:
 
@@ -34,7 +34,7 @@ In cloud console, enter:
 
 How many different BYOL AMIs are avilable for 10.x in this region?
 
-product-code is a global value that correlates with Palo Alto Networks marketplace offerings. This is global and same across all regions. There will be changes to this as vm-flex offerings come live.
+product-code is a global value that correlates with Palo Alto Networks marketplace offerings. This is global and the same across all regions. There will be changes to this as vm-flex offerings come live.
 
 ```
     "byol"  = "6njl1pau431dv1qxipg63mvah"
@@ -43,9 +43,14 @@ product-code is a global value that correlates with Palo Alto Networks marketpla
 ```
 The name tag of the image should be standard and can be used for the filter. For example `PA-VM-AWS-9.1*`, `PA-VM-AWS-9.1.3*`, `PA-VM-AWS-10*`. This is the same logic the terraform will use to lookup the AMI based on the `fw_version` variable.
 
+**We see that 10.0.4 AMI is availble, so we will use that for the variable**
 
 
+- Generate SSH Key
 
+Any EC2 Instance must be associated with a SSH keypair, which is the default method of initial interactive login to instances. With successful bootstrapping, there should not be any need to connect to the VM-Series instances direclty with this key, but it is usually good to keep this key securely stored for any emergency backdoor access. For this lab, a keypair will be generated in the cloudshell and then terraform will create a corresponding object in AWS using the same key.
+
+`ssh-keygen -f ~/.ssh/ps-lab -t rsa -C ps-lab`
 
 
 

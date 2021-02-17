@@ -28,7 +28,6 @@ resource "aws_instance" "this" {
   ebs_optimized                        = true
   ami                                  = data.aws_ami.this.id
   instance_type                        = each.value.instance_type
-  iam_instance_profile                 = lookup(each.value, "iam_instance_profile", null)
   tags = merge(
     {
       "Name" = each.value.name
@@ -45,6 +44,8 @@ resource "aws_instance" "this" {
 
   private_ip                  = lookup(each.value, "private_ip", null)
   associate_public_ip_address = lookup(each.value, "public_ip", null)
+  iam_instance_profile        = lookup(each.value, "iam_instance_profile", null)
+
 
   vpc_security_group_ids = [var.security_groups_map[each.value.security_groups]]
   subnet_id              = var.subnets_map[each.value.subnet_id]

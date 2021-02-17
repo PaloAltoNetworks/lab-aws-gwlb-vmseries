@@ -111,6 +111,7 @@ resource "aws_subnet" "this" {
   availability_zone = lookup(each.value, "az", null)
   tags              = merge({ Name = "${var.prefix_name_tag}${each.value.name}" }, var.global_tags, lookup(each.value, "local_tags", {}))
   vpc_id            = local.combined_vpc["vpc_id"]
+  map_public_ip_on_launch = lookup(each.value, "public_ip", null)
   depends_on        = [aws_vpc_ipv4_cidr_block_association.this]
 }
 

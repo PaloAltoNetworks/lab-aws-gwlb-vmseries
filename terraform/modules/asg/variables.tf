@@ -24,7 +24,7 @@ variable "fw_instance_type" {
   default     = "m5.xlarge"
 }
 
-variable "name_prefix" {
+variable "prefix_name_tag" {
   description = "All resource names will be prepended with this string"
   type        = string
 }
@@ -40,18 +40,15 @@ variable "bootstrap_options" {
   default     = {}
 }
 
-variable "interfaces" {
-  type = list
-}
-
-variable "subnet_ids" {
-  description = "Map of subnet ids"
-  type        = map
-}
-
-variable "security_group_ids" {
-  description = "Map of security group ids"
-  type        = map
+variable "asg_interface" {
+  description = "Map of data about default interface (Subnets, SG)"
+  type        = any
+  default     = {}
+  // Example:
+  // asg_interface = {
+  //    security_groups  = ["sg-123456"]
+  //      sourc_dest_check = "True"
+  //      subnets          = ["subnet-123456", "subnet-123456"]
 }
 
 variable "lifecycle_hook_timeout" {
@@ -79,11 +76,14 @@ variable "global_tags" {
   type = map
 }
 
-variable asg_subnets {
-  default = []
+variable lifecycle_hook_metadata {
+  default = ""
 }
 
+variable lambda_timeout {
+  default = "30"
+}
 
-variable fw_asg_name_tag {
-  default = []
+variable autoscaling_name_tag {
+  default = ""
 }
