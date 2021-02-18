@@ -99,7 +99,7 @@ security_vpc_security_groups = {
       ssh2 = {
         description = "Permit traffic from any vpc"
         type        = "ingress", from_port = "0", to_port = "0", protocol = "-1"
-        cidr_blocks = ["10.208.0.0/13", "172.17.0.0/16"]
+        cidr_blocks = ["10.0.0.0/8"]
       }
     }
   }
@@ -112,30 +112,25 @@ security_vpc_security_groups = {
         type        = "egress", from_port = "0", to_port = "0", protocol = "-1"
         cidr_blocks = ["0.0.0.0/0"]
       }
-      ssh1 = {
+      ssh-from-inet = {
         description = "Permit SSH"
         type        = "ingress", from_port = "22", to_port = "22", protocol = "tcp"
-        cidr_blocks = ["1.1.1.1/32"] // TODO: update here
+        cidr_blocks = ["0.0.0.0/0"] // TODO: update here
       }
-      ssh2 = {
-        description = "Permit SSH"
-        type        = "ingress", from_port = "22", to_port = "22", protocol = "tcp"
-        cidr_blocks = ["10.208.8.128/27"]
-      }
-      https-from-inet-temp = {
+      https-from-inet = {
         description = "Permit HTTPS"
         type        = "ingress", from_port = "443", to_port = "443", protocol = "tcp"
-        cidr_blocks = ["1.1.1.1/32"]  // TODO: update here
+        cidr_blocks = ["0.0.0.0/0"]  // TODO: update here
       }
       panorama-mgmt = {
         description = "Permit Panorama Management"
         type        = "ingress", from_port = "3978", to_port = "3978", protocol = "tcp"
-        cidr_blocks = ["10.208.8.128/27"]
+        cidr_blocks = ["0.0.0.0/0"]
       }
       https = {
         description = "Permit Panorama Logging"
         type        = "ingress", from_port = "28443", to_port = "28443", protocol = "tcp"
-        cidr_blocks = ["10.208.8.128/27"]
+        cidr_blocks = ["0.0.0.0/0"]
       }
     }
   }
@@ -246,18 +241,6 @@ vpc_routes = {
     next_hop_type = "internet_gateway"
     next_hop_name = "vmseries-vpc"
   }
-  mgmt1-to-panorama-via-tgw = {
-    route_table   = "mgmt1"
-    prefix        = "10.208.8.128/27"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  mgmt2-to-panorama-via-tgw = {
-    route_table   = "mgmt2"
-    prefix        = "10.208.8.128/27"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
   natgw1-igw = {
     route_table   = "natgw1"
     prefix        = "0.0.0.0/0"
@@ -272,25 +255,13 @@ vpc_routes = {
   }
   natgw1-to-gwlbe-outbound1 = {
     route_table   = "natgw1"
-    prefix        = "10.208.0.0/13"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "vpc_endpoint"
     next_hop_name = "outbound1"
   }
   natgw2-to-gwlbe-outbound2 = {
     route_table   = "natgw2"
-    prefix        = "10.208.0.0/13"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "outbound2"
-  }
-  natgw1-to-gwlbe-outbound1-test-spoke = {
-    route_table   = "natgw1"
-    prefix        = "172.17.0.0/16"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "outbound1"
-  }
-  natgw2-to-gwlbe-outbound2-test-spoke = {
-    route_table   = "natgw2"
-    prefix        = "172.17.0.0/16"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "vpc_endpoint"
     next_hop_name = "outbound2"
   }
@@ -308,49 +279,49 @@ vpc_routes = {
   }
   gwlbe-outbound1-to-tgw = {
     route_table   = "gwlbe-outbound-1"
-    prefix        = "10.208.0.0/13"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "transit_gateway"
     next_hop_name = "gwlb"
   }
   gwlbe-outbound2-to-tgw = {
     route_table   = "gwlbe-outbound-2"
-    prefix        = "10.208.0.0/13"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "transit_gateway"
     next_hop_name = "gwlb"
   }
   gwlbe-east-west-1-to-tgw = {
     route_table   = "gwlbe-eastwest-1"
-    prefix        = "10.208.0.0/13"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "transit_gateway"
     next_hop_name = "gwlb"
   }
   gwlbe-east-west-2-to-tgw = {
     route_table   = "gwlbe-eastwest-2"
-    prefix        = "10.208.0.0/13"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "transit_gateway"
     next_hop_name = "gwlb"
   }
   gwlbe-outbound1-to-tgw-test-spoke = {
     route_table   = "gwlbe-outbound-1"
-    prefix        = "172.17.0.0/16"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "transit_gateway"
     next_hop_name = "gwlb"
   }
   gwlbe-outbound2-to-tgw-test-spoke = {
     route_table   = "gwlbe-outbound-2"
-    prefix        = "172.17.0.0/16"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "transit_gateway"
     next_hop_name = "gwlb"
   }
   gwlbe-east-west-1-to-tgw-test-spoke = {
     route_table   = "gwlbe-eastwest-1"
-    prefix        = "172.17.0.0/16"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "transit_gateway"
     next_hop_name = "gwlb"
   }
   gwlbe-east-west-2-to-tgw-test-spoke = {
     route_table   = "gwlbe-eastwest-2"
-    prefix        = "172.17.0.0/16"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "transit_gateway"
     next_hop_name = "gwlb"
   }
@@ -368,25 +339,13 @@ vpc_routes = {
   }
   tgw-attach-1-to-eastwest-gwlbe-1 = {
     route_table   = "tgw-attach1"
-    prefix        = "10.208.0.0/13"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "vpc_endpoint"
     next_hop_name = "east-west1"
   }
   tgw-attach-2-to-eastwest-gwlbe-2 = {
     route_table   = "tgw-attach2"
-    prefix        = "10.208.0.0/13"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "east-west2"
-  }
-  tgw-attach-1-to-eastwest-gwlbe-1-test-spoke = {
-    route_table   = "tgw-attach1"
-    prefix        = "172.17.0.0/16"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "east-west1"
-  }
-  tgw-attach-2-to-eastwest-gwlbe-2-test-spoke = {
-    route_table   = "tgw-attach2"
-    prefix        = "172.17.0.0/16"
+    prefix        = "10.0.0.0/8"
     next_hop_type = "vpc_endpoint"
     next_hop_name = "east-west2"
   }
@@ -431,7 +390,7 @@ gateway_load_balancer_endpoints = {
 
 transit_gateways = {
   gwlb = {
-    name     = "ps-lab-tgw"
+    name     = "tgw"
     asn      = "65200"
     route_tables = {
       security-in = { name = "from-security-vpc"}
