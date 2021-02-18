@@ -39,3 +39,9 @@ Demo cloudwatch metrics and dynamic address groups
 ### AWS CLI commands
 
 aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-10* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2
+
+### TODO
+
+TGW attachment timed out?
+Add IAM for cloudwatch
+Create SSH key with CFN

@@ -17,19 +17,15 @@ This lab will involve deploying a solution for AWS using Palo Alto Networks VM-S
 
 - Search for `IAM` in top searchbar (IAM is global)
 - In IAM dashboard select Users -> awsstudent
-- Expand `default_policy`, Edit Policy -> JSON
-- Remove the following actions from the explicity Deny Action
+- Expand `default_policy`, Edit Policy -> Visual Editor
+- Find the Deny Action for `Cloud Shell` and click `Remove` on the right
+- Review policy / save changes
 
 ```
-"aws-marketplace-management:*"
-"aws-marketplace:Subscribe"
-"aws-marketplace:Unsubscribe"
 "cloudshell:*"
 ```
 
-- Review policy / save changes
-
-Note: You will have a json syntax error if you leave trailing comma on line 32 after removing `cloudshell` 
+Note: If using the json editor, you will syntax error if you leave trailing comma on line 32 after removing `cloudshell` 
 
 
 <img src="https://user-images.githubusercontent.com/43679669/108144448-aa08ad00-7097-11eb-926d-66ab34e050da.png" width=50% height=50%>
@@ -70,8 +66,6 @@ Any EC2 Instance must be associated with a SSH keypair, which is the default met
 `ssh-keygen -f ~/.ssh/ps-lab -t rsa -C ps-lab`
 
 
-
-
 ### Step x: Clone the Repository
 
 - Download Terraform in Cloudshell
@@ -96,10 +90,16 @@ $ git clone https://github.com/PaloAltoNetworks/ps-regional-2021-aws-labs.git
 
 ### Step x: Update tfvars
 
+- //TODO add notes about terraform general usage, handling sensitive values, etc
+
+For simplicity, only the variable values that need to be modified are separated into a separate tfvars file.
+
 - Change into terraform directory
-- Use nano or vi to modify `terraform.tfvars`
+- Use nano or vi to modify `student.auto.tfvars`
 - Update the specifics of your deployment
 - Anything marked with `###` should be replaced with appropriate value
+
+We will be using the newer feature for light bootstrapping that does not require S3 buckets. Essentially, all of the paramaters normally specific in init-cfg can now be passed directly to the instance via user-data.
 
 ```
 firewalls = [
@@ -147,6 +147,21 @@ firewalls = [
   }
 ]
 ```
+
+### Step x: Apply Terraform
+
+- Terraform init / apply
+
+
+
+
+### Step x: Things to do while waiting on launch
+
+- Look at user data
+- Check instance screenshot
+- Check cloudwatch bootstrap logs
+- Look at VPC & TGW route tables, endpoints, correlate to the topology diagram
+- 
 
 
 ### Step 50: Finished
