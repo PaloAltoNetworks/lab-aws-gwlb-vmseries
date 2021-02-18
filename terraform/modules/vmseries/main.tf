@@ -20,7 +20,7 @@ locals {
 #************************************************************************************
 # CREATE & ASSIGN IAM ROLE, POLICY, & INSTANCE PROFILE
 #************************************************************************************
-resource "aws_iam_role" "bootstrap_role" {
+resource "aws_iam_role" "vmseries" {
   name = "${var.prefix_name_tag}-${var.prefix_bootstrap}-role"
 
   assume_role_policy = <<EOF
@@ -42,7 +42,7 @@ EOF
 resource "aws_iam_role_policy" "bootstrap_policy" {
   for_each = var.buckets_map
   name     = "${var.prefix_name_tag}-${each.key}-pan-bootstrap"
-  role     = aws_iam_role.bootstrap_role.id
+  role     = aws_iam_role.vmseries.id
 
   policy = <<EOF
 {
@@ -61,7 +61,7 @@ EOF
 resource "aws_iam_role_policy" "bootstrap_policy_objects" {
   for_each = var.buckets_map
   name     = "pan_bootstrap_s3_object-${each.key}"
-  role     = aws_iam_role.bootstrap_role.id
+  role     = aws_iam_role.vmseries.id
 
   policy = <<EOF
 {
@@ -77,8 +77,41 @@ resource "aws_iam_role_policy" "bootstrap_policy_objects" {
 EOF
 }
 
-resource "aws_iam_instance_profile" "bootstrap_profile" {
-  name = "${var.prefix_name_tag}-${var.prefix_bootstrap}-profile"
+# Get info from environment to construct ARNs for IAM policies
+
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_iam_role_policy" "cloudwatch" {
+  name = "${var.prefix_name_tag}-vmseries-cloudwatch"
+  role   = aws_iam_role.vmseries.id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "cloudwatch:PutMetricData",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+            ],
+            "Resource": "arn:${data.aws_partition.current.partition}:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:PaloAltoNetworksFirewalls:log-stream:*"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_instance_profile" "vmseries" {
+  name = "${var.prefix_name_tag}-vmseries"
   role = aws_iam_role.bootstrap_role.name
   path = "/"
 }
@@ -171,7 +204,7 @@ resource "aws_instance" "pa-vm-series" {
     var.tags, each.value.fw_tags
   )
 
-  iam_instance_profile = lookup(each.value, "iam_instance_profile", null) != null ? "${var.prefix_name_tag}-${each.value.iam_instance_profile}" : null
+  iam_instance_profile = lookup(each.value, "iam_instance_profile", null) != null ? "${var.prefix_name_tag}-${each.value.iam_instance_profile}" : aws_iam_role.vmseries.name
   user_data = base64encode(join(",", compact(concat(
     [for k, v in each.value.bootstrap_options : "${k}=${v}"],
     [lookup(each.value, "bootstrap_bucket", null) != null ? "vmseries-bootstrap-aws-s3bucket=${var.buckets_map[each.value.bootstrap_bucket].name}" : null],
