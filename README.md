@@ -74,17 +74,16 @@ Any EC2 Instance must be associated with a SSH keypair, which is the default met
 
 ### Step x: Clone the Repository
 
-- Download Terraform
+- Download Terraform in Cloudshell
 
 TODO: Replace with one-liner
 
-`wget https://releases.hashicorp.com/terraform/0.13.6/terraform_0.13.6_linux_amd64.zip`
-
-`unzip terraform_0.13.6_linux_amd64.zip`
-
-`rm terraform_0.13.6_linux_amd64.zip`
-
-`sudo mv terraform /usr/bin/`
+```
+wget https://releases.hashicorp.com/terraform/0.13.6/terraform_0.13.6_linux_amd64.zip
+unzip terraform_0.13.6_linux_amd64.zip
+rm terraform_0.13.6_linux_amd64.zip
+sudo mv terraform /usr/bin/
+```
 
 Verify 
 `terraform --version`
