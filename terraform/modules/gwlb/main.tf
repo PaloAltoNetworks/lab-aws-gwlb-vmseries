@@ -29,7 +29,7 @@ data "aws_vpc_endpoint_service" "this" {
     if lookup(gwlb, "existing", null) == true ? true : false
   }
   tags = {
-    Name = "${var.prefix_name_tag}${each.value.name}"
+    Name = each.value.name
   }
 }
 
