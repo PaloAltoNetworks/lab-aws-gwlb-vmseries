@@ -108,7 +108,7 @@ EOF
 }
 
 
-### Module calls for App1 VPC
+### Module calls for app2 VPC
 
 module "app1_vpc" {
   source           = "../modules/vpc"
@@ -223,13 +223,13 @@ module "app1_nlb" {
   ]
 }
 
-resource "aws_lb_target_group_attachment" "ssh" {
+resource "aws_lb_target_group_attachment" "app1_ssh" {
   count            = 2
   target_group_arn = module.app1_nlb.target_group_arns[0]
   target_id        = module.app1_ec2_cluster.id[count.index]
 }
 
-resource "aws_lb_target_group_attachment" "http" {
+resource "aws_lb_target_group_attachment" "app1_http" {
   count            = 2
   target_group_arn = module.app1_nlb.target_group_arns[1]
   target_id        = module.app1_ec2_cluster.id[count.index]
@@ -238,71 +238,128 @@ resource "aws_lb_target_group_attachment" "http" {
 
 ### Module calls for app2 VPC
 
+module "app2_vpc" {
+  source           = "../modules/vpc"
+  global_tags      = var.global_tags
+  prefix_name_tag  = var.prefix_name_tag
+  vpc              = var.app2_vpc
+  vpc_route_tables = var.app2_vpc_route_tables
+  subnets          = var.app2_vpc_subnets
+  vpc_endpoints    = var.app2_vpc_endpoints
+  security_groups  = var.app2_vpc_security_groups
+}
 
 
-# module "app2_vpc" {
-#   source           = "../modules/vpc"
-#   global_tags      = var.global_tags
-#   prefix_name_tag  = var.prefix_name_tag
-#   vpc              = var.app2_vpc
-#   vpc_route_tables = var.app2_vpc_route_tables
-#   subnets          = var.app2_vpc_subnets
-#   vpc_endpoints    = var.app2_vpc_endpoints
-#   security_groups  = var.app2_vpc_security_groups
-# }
+module "app2_vpc_routes" {
+  source            = "../modules/vpc_routes"
+  region            = var.region
+  global_tags       = var.global_tags
+  prefix_name_tag   = var.prefix_name_tag
+  vpc_routes        = var.app2_vpc_routes
+  vpc_route_tables  = module.app2_vpc.route_table_ids
+  internet_gateways = module.app2_vpc.internet_gateway_id
+  nat_gateways      = module.app2_vpc.nat_gateway_ids
+  vpc_endpoints     = module.app2_gwlb.endpoint_ids
+  transit_gateways  = module.app2_transit_gateways.transit_gateway_ids
+}
+
+module "app2_transit_gateways" {
+  source                          = "../modules/transit_gateway"
+  global_tags                     = var.global_tags
+  prefix_name_tag                 = var.prefix_name_tag
+  subnets                         = module.app2_vpc.subnet_ids
+  vpcs                            = module.app2_vpc.vpc_id
+  transit_gateways                = var.app2_transit_gateways
+  transit_gateway_vpc_attachments = var.app2_transit_gateway_vpc_attachments
+  depends_on = [module.gwlb] // Depends on GWLB being created in security VPC
+}
+
+module "app2_gwlb" {
+  source                          = "../modules/gwlb"
+  region                          = var.region
+  global_tags                     = var.global_tags
+  prefix_name_tag                 = var.prefix_name_tag
+  vpc_id                          = module.app2_vpc.vpc_id.vpc_id
+  gateway_load_balancers          = var.app2_gateway_load_balancers
+  gateway_load_balancer_endpoints = var.app2_gateway_load_balancer_endpoints
+  subnets_map                     = module.app2_vpc.subnet_ids
+  depends_on = [module.transit_gateways] // Depends on GWLB being created in security VPC
+}
 
 
-# module "app2_vpc_routes" {
-#   source            = "../modules/vpc_routes"
-#   region            = var.region
-#   global_tags       = var.global_tags
-#   prefix_name_tag   = var.prefix_name_tag
-#   vpc_routes        = var.app2_vpc_routes
-#   vpc_route_tables  = module.app2_vpc.route_table_ids
-#   internet_gateways = module.app2_vpc.internet_gateway_id
-#   nat_gateways      = module.app2_vpc.nat_gateway_ids
-#   vpc_endpoints     = module.app2_gwlb.endpoint_ids
-#   transit_gateways  = module.app2_transit_gateways.transit_gateway_ids
-# }
+module "app2_ec2_cluster" {
+  source                 = "terraform-aws-modules/ec2-instance/aws"
+  version                = "~> 2.0"
 
-# module "app2_transit_gateways" {
-#   source                          = "../modules/transit_gateway"
-#   global_tags                     = var.global_tags
-#   prefix_name_tag                 = var.prefix_name_tag
-#   subnets                         = module.app2_vpc.subnet_ids
-#   vpcs                            = module.app2_vpc.vpc_id
-#   transit_gateways                = var.app2_transit_gateways
-#   transit_gateway_vpc_attachments = var.app2_transit_gateway_vpc_attachments
-#   depends_on = [module.gwlb] // Depends on GWLB being created in security VPC
-# }
+  name                   = "${var.prefix_name_tag}app2-web"
+  instance_count         = 2
+  associate_public_ip_address = false
 
-# module "app2_gwlb" {
-#   source                          = "../modules/gwlb"
-#   region                          = var.region
-#   global_tags                     = var.global_tags
-#   prefix_name_tag                 = var.prefix_name_tag
-#   vpc_id                          = module.app2_vpc.vpc_id.vpc_id
-#   gateway_load_balancers          = var.app2_gateway_load_balancers
-#   gateway_load_balancer_endpoints = var.app2_gateway_load_balancer_endpoints
-#   subnets_map                     = module.app2_vpc.subnet_ids
-#   depends_on = [module.transit_gateways] // Depends on GWLB being created in security VPC
-# }
+  ami                    = data.aws_ami.amazon-linux-2.id
+  instance_type          = "t2.micro"
+  key_name               = aws_key_pair.lab.key_name
+  monitoring             = true
+  vpc_security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
+  subnet_id              = module.app2_vpc.subnet_ids["web1"]
+  user_data_base64 = base64encode(local.web_user_data)
+  tags = var.global_tags
+}
 
 
-# module "app2_ec2_cluster" {
-#   source                 = "terraform-aws-modules/ec2-instance/aws"
-#   version                = "~> 2.0"
+##################################################################
+# Network Load Balancer with Elastic IPs attached
+##################################################################
+module "app2_nlb" {
+  source  = "terraform-aws-modules/alb/aws"
+  version = "~> 5.0"
 
-#   name                   = "app2-cluster"
-#   instance_count         = 2
-#   associate_public_ip_address = false
+  name = "${var.prefix_name_tag}app2-nlb"
 
-#   ami                    = "ami-0e999cbd62129e3b1" //TODO lookup ami per region
-#   instance_type          = "t2.micro"
-#   key_name               = aws_key_pair.lab.key_name
-#   monitoring             = true
-#   vpc_security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
-#   subnet_id              = module.app2_vpc.subnet_ids["web1"]
+  load_balancer_type = "network"
 
-#   tags = var.global_tags
-# }
+  vpc_id = module.app2_vpc.vpc_id["vpc_id"]
+
+  #   Use `subnets` if you don't want to attach EIPs
+  subnets = [module.app2_vpc.subnet_ids["alb1"], module.app2_vpc.subnet_ids["alb2"]]
+
+  #  TCP_UDP, UDP, TCP
+  http_tcp_listeners = [
+    {
+      port               = 22
+      protocol           = "TCP"
+      target_group_index = 0
+    },
+    {
+      port               = 80
+      protocol           = "TCP"
+      target_group_index = 1
+    },
+  ]
+
+  target_groups = [
+    {
+      name     = "${var.prefix_name_tag}app2-ssh"
+      backend_protocol = "TCP"
+      backend_port     = 22
+      target_type      = "instance"
+    },
+    {
+      name     = "${var.prefix_name_tag}app2-http"
+      backend_protocol = "TCP"
+      backend_port     = 80
+      target_type      = "instance"
+    }
+  ]
+}
+
+resource "aws_lb_target_group_attachment" "app2_ssh" {
+  count            = 2
+  target_group_arn = module.app2_nlb.target_group_arns[0]
+  target_id        = module.app2_ec2_cluster.id[count.index]
+}
+
+resource "aws_lb_target_group_attachment" "app2_http" {
+  count            = 2
+  target_group_arn = module.app2_nlb.target_group_arns[1]
+  target_id        = module.app2_ec2_cluster.id[count.index]
+}
