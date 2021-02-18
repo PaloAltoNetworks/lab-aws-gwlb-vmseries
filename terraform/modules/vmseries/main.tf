@@ -112,7 +112,7 @@ EOF
 
 resource "aws_iam_instance_profile" "vmseries" {
   name = "${var.prefix_name_tag}-vmseries"
-  role = aws_iam_role.bootstrap_role.name
+  role = aws_iam_role.vmseries.id
   path = "/"
 }
 
