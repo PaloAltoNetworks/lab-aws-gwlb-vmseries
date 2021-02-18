@@ -17,9 +17,8 @@ This lab will involve deploying a solution for AWS using Palo Alto Networks VM-S
 
 - Search for `IAM` in top searchbar (IAM is global)
 - In IAM dashboard select Users -> awsstudent
-- Expand default_policy, edit -> json
-- Remove the following actions from the explicity Deny policy
-- Review policy / save changes
+- Expand `default_policy`, Edit Policy -> JSON
+- Remove the following actions from the explicity Deny Action
 
 ```
 "aws-marketplace-management:*"
@@ -28,7 +27,9 @@ This lab will involve deploying a solution for AWS using Palo Alto Networks VM-S
 "cloudshell:*"
 ```
 
-Note: You will have a json syntax error if you leave trailing comma on line 32 after removing `cloudshell` or 
+- Review policy / save changes
+
+Note: You will have a json syntax error if you leave trailing comma on line 32 after removing `cloudshell` 
 
 
 <img src="https://user-images.githubusercontent.com/43679669/108144448-aa08ad00-7097-11eb-926d-66ab34e050da.png" width=50% height=50%>
@@ -36,6 +37,8 @@ Note: You will have a json syntax error if you leave trailing comma on line 32 a
 ### Step x: Launch CloudShell
 
 - Search for `cloudshell` in top search bar
+
+This lab will use cloudshell for access to AWS CLI and as a runtime environment to provision your lab resources in AWS using terraform. Cloudshell will have the same IAM role as your authenticated user and has some utilities (git, aws cli, etc) pre-installed. It is only available in limited regions currently.
 
 
 - Check which Marketplace VM-Series images (AMIs) are available
@@ -76,8 +79,11 @@ Any EC2 Instance must be associated with a SSH keypair, which is the default met
 TODO: Replace with one-liner
 
 `wget https://releases.hashicorp.com/terraform/0.13.6/terraform_0.13.6_linux_amd64.zip`
+
 `unzip terraform_0.13.6_linux_amd64.zip`
+
 `rm terraform_0.13.6_linux_amd64.zip`
+
 `sudo mv terraform /usr/bin/`
 
 Verify 
