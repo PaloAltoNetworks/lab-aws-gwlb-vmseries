@@ -7,6 +7,11 @@
 
 This lab will involve deploying a solution for AWS using Palo Alto Networks VM-Series in the Gateway Load Balancer (GWLB) topology.
 
+The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panorama assumptions:
+- Accessible with public IP on TCP 3978
+- Prepped with Template Stacks and Device Groups
+- vm-auth-key generated on Panorama
+
 ## Deployment
 
 - Login to console
@@ -65,6 +70,12 @@ Any EC2 Instance must be associated with a SSH keypair, which is the default met
 
 `ssh-keygen -f ~/.ssh/ps-lab -t rsa -C ps-lab`
 
+- Download ssh key for use later to SSH to instances
+
+Actions -> Download File -> Path: `/home/cloudshell-user/.ssh/ps-lab`
+
+TODO: handle key differently, some will prefer PPK. create in console ?
+
 
 ### Step x: Clone the Repository
 
@@ -90,12 +101,18 @@ $ git clone https://github.com/PaloAltoNetworks/ps-regional-2021-aws-labs.git
 
 ### Step x: Update tfvars
 
+
 - //TODO add notes about terraform general usage, handling sensitive values, etc
 
 For simplicity, only the variable values that need to be modified are separated into a separate tfvars file.
 
-- Change into terraform directory
-- Use nano or vi to modify `student.auto.tfvars`
+- Change into terraform directory 
+
+`cd ps-regional-2021-aws-labs/terraform/vmseries/`
+
+- Use vim to modify `student.auto.tfvars`
+
+
 - Update the specifics of your deployment
 - Anything marked with `###` should be replaced with appropriate value
 
@@ -152,7 +169,15 @@ firewalls = [
 
 - Terraform init / apply
 
+```
+Plan: 168 to add, 0 to change, 0 to destroy.
 
+Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+```
 
 
 ### Step x: Things to do while waiting on launch
