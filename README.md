@@ -94,8 +94,60 @@ Verify
 $ git clone https://github.com/PaloAltoNetworks/ps-regional-2021-aws-labs.git
 ```
 
+### Step x: Update tfvars
 
-text to be copied to clip board goes here
+- Change into terraform directory
+- Use nano or vi to modify `terraform.tfvars`
+- Update the specifics of your deployment
+- Anything marked with `###` should be replaced with appropriate value
+
+```
+firewalls = [
+  {
+    name    = "vmseries01"
+    fw_tags = {}
+    bootstrap_options = {
+      mgmt-interface-swap = "enable"
+      plugin-op-commands  = "aws-gwlb-inspect:enable"
+      type                = "dhcp-client"
+      hostname            = "lab###_vmseries01"
+      panorama-server     = "###"
+      panorama-server-2   = "###"
+      tplname             = "TPL-STUDENT-STACK-###"
+      dgname              = "DG-STUDENT-###"
+      vm-auth-key         = "###"
+      authcodes           = "###"
+      #op-command-modes    = ""
+    }
+    interfaces = [
+      { name = "vmseries01-data", index = "0" },
+      { name = "vmseries01-mgmt", index = "1" },
+    ]
+  },
+  {
+    name    = "vmseries02"
+    fw_tags = {}
+    bootstrap_options = {
+      mgmt-interface-swap = "enable"
+      plugin-op-commands  = "aws-gwlb-inspect:enable"
+      type                = "dhcp-client"
+      hostname            = "lab#_vmseries02"
+      panorama-server     = "###"
+      panorama-server-2   = "###"
+      tplname             = "###"
+      dgname              = "###"
+      vm-auth-key         = "###"
+      authcodes           = "###"
+      #op-command-modes    = ""
+    }
+    interfaces = [
+      { name = "vmseries02-data", index = "0" },
+      { name = "vmseries02-mgmt", index = "1" },
+    ]
+  }
+]
+```
+
 
 ### Step 50: Finished
 

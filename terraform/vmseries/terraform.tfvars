@@ -23,7 +23,6 @@ security_vpc = {
     enable_dns_support   = true
     enable_dns_hostnames = true
     internet_gateway     = true
-   # local_tags           = { Propagate-to = "cloudtn_aws_sharedsrv, Isolated, Flat, On-premises", Associate-with = "Infrastructure" }
   }
 }
 
@@ -154,14 +153,14 @@ firewalls = [
       mgmt-interface-swap = "enable"
       plugin-op-commands  = "aws-gwlb-inspect:enable"
       type                = "dhcp-client"
-      hostname            = "lab01_vmseries01"
-      panorama-server     = "10.208.8.140" //TODO
-      #panorama-server-2   = ""
-      tplname             = "lab01_stack" //TODO
-      dgname              = "lab01_dg" //TODO
-      vm-auth-key         = ""
+      hostname            = "lab###_vmseries01"
+      panorama-server     = "###"
+      panorama-server-2   = "###"
+      tplname             = "TPL-STUDENT-STACK-###"
+      dgname              = "DG-STUDENT-###"
+      vm-auth-key         = "###"
+      authcodes           = "###"
       #op-command-modes    = ""
-      authcodes           = "" // TODO
     }
     interfaces = [
       { name = "vmseries01-data", index = "0" },
@@ -175,14 +174,14 @@ firewalls = [
       mgmt-interface-swap = "enable"
       plugin-op-commands  = "aws-gwlb-inspect:enable"
       type                = "dhcp-client"
-      hostname            = "lab01_vmseries02"
-      panorama-server     = "10.208.8.140" //TODO
-      #panorama-server-2   = ""
-      tplname             = "lab01_stack" //TODO
-      dgname              = "lab01_dg" //TODO
-      vm-auth-key         = ""
+      hostname            = "lab#_vmseries02"
+      panorama-server     = "###"
+      panorama-server-2   = "###"
+      tplname             = "###"
+      dgname              = "###"
+      vm-auth-key         = "###"
+      authcodes           = "###"
       #op-command-modes    = ""
-      authcodes           = "" // TODO
     }
     interfaces = [
       { name = "vmseries02-data", index = "0" },
@@ -433,6 +432,7 @@ gateway_load_balancer_endpoints = {
 transit_gateways = {
   gwlb = {
     name     = "ps-lab-tgw"
+    asn      = "65200"
     route_tables = {
       security-in = { name = "from-security-vpc"}
       spoke-in = { name = "from-spoke-vpcs"}
