@@ -74,7 +74,7 @@ Any EC2 Instance must be associated with a SSH keypair, which is the default met
 
 Actions -> Download File -> Path: `/home/cloudshell-user/.ssh/ps-lab`
 
-TODO: handle key differently, some will prefer PPK. create in console ?
+TODO: handle key differently, some will prefer PPK. Use QL default key that is created, we can look it up in terraform.
 
 
 ### Step x: Clone the Repository
@@ -87,10 +87,10 @@ TODO: Replace with one-liner
 wget https://releases.hashicorp.com/terraform/0.13.6/terraform_0.13.6_linux_amd64.zip
 unzip terraform_0.13.6_linux_amd64.zip
 rm terraform_0.13.6_linux_amd64.zip
-sudo mv terraform /usr/bin/
+mv terraform /home/cloudshell-user/bin/
 ```
 
-Verify 
+Verify Terraform is installed
 `terraform --version`
 
 
@@ -179,14 +179,72 @@ Do you want to perform these actions?
   Enter a value: yes
 ```
 
+It should take 5-10 minutes for terraform to finish deploying all resources.
+
+When complete, you will see a list of outputs. Copy these off locally so you can reference them in later steps. You can also come back to this directory in CloudShell and run `terraform output`. 
+
+
 
 ### Step x: Things to do while waiting on launch
 
-- Look at user data
-- Check instance screenshot
+All resources are now created in AWS, but it will be around 10 minutes until VM-Series are fully initialized and bootstrapped.
+
+In the meantime, lets go look at what you built!
+
+
+- Inspect VM-Series user data
+
+EC2 Dashboard -> Instances -> Select `vmseries01` -> Actions -> Instance settings -> Edit user data
+
+> Verify the values matches what was provided in your Lab Details
+
+> What are some tradeoffs of using user-data method for bootstrap vs S3 bucket?
+
+> What needs to happen if you have a typo or missed a value for bootstrap when you deployed?
+
+---
+
+- Get VM-Series instance screenshot
+
+This can be useful to get a view of the console during launch. It is not interactive and must be manually refershed, but you can at least see some output related to bootstrap process or to troubleshoot if the VM-Series isn't booting properly or is in maintenance mode.
+
+EC2 Dashboard -> Instances -> Select `vmseries01` -> Actions -> Monitor and troubleshoot -> Get instance screenshot
+
+---
+
+- Check VM-Series instance details
+
+> What is the instance type? Which BYOL model(s) would this instance type be appropriate for?
+
+> How many interfaces are associated to the VM-Series? Which interface is the default ENI for the instance? Which interfaces have public IPs associated?
+
+> Check the security group associated with the "data" interface. What is allowed inbound? What is the logic of this SG?
+
+> What Instance Profile was the VM-Series launched with? What actions does it allow? What are some other use-cases where you need to allow additional IAM permissions for the instance profile?
+
+---
+
 - Check cloudwatch bootstrap logs
+
+Search for `cloudwatch` in the top search bar
+Logs -> Log groups -> PaloAltoNetworksFirewalls
+
+Assuming enough time has passed since launch, verify that the bootstrap operations completed successfully.
+
+It is normal for the VMs to lose connectivity to Panorama initially after first joining.
+
+> What is required to enable these logs during boot process?
+
+---
 - Look at VPC & TGW route tables, endpoints, correlate to the topology diagram
-- 
+
+
+---
+- Look at Load Balancers
+
+Health probes of GWLB
+
+
 
 
 ### Step 50: Finished
