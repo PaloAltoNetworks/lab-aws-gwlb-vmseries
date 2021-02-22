@@ -12,16 +12,16 @@ module "security_vpc" {
   security_groups  = var.security_vpc_security_groups
 }
 
-resource "aws_key_pair" "lab" {
-  key_name   = var.ssh_key_name
-  public_key = file(var.public_key_path)
-}
+#resource "aws_key_pair" "lab" {
+#  key_name   = var.ssh_key_name
+#  public_key = file(var.public_key_path)
+#}
 
 module "vmseries" {
   source              = "../modules/vmseries"
   region              = var.region
   prefix_name_tag     = var.prefix_name_tag
-  ssh_key_name        = aws_key_pair.lab.key_name
+  ssh_key_name        = var.ssh_key_name
   fw_license_type     = var.fw_license_type
   fw_version          = var.fw_version
   fw_instance_type    = var.fw_instance_type
@@ -168,7 +168,7 @@ module "app1_ec2_cluster" {
 
   ami                    = data.aws_ami.amazon-linux-2.id
   instance_type          = "t2.micro"
-  key_name               = aws_key_pair.lab.key_name
+  key_name               = var.ssh_key_name
   monitoring             = true
   vpc_security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
   subnet_id              = module.app1_vpc.subnet_ids["web1"]
@@ -297,7 +297,7 @@ module "app2_ec2_cluster" {
 
   ami                    = data.aws_ami.amazon-linux-2.id
   instance_type          = "t2.micro"
-  key_name               = aws_key_pair.lab.key_name
+  key_name               = var.ssh_key_name
   monitoring             = true
   vpc_security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
   subnet_id              = module.app2_vpc.subnet_ids["web1"]

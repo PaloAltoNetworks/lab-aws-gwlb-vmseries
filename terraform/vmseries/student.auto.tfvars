@@ -1,3 +1,5 @@
+ssh_key_name     = "qwikLABS-L17939-10286"
+
 ### VMSERIES ###
 firewalls = [
   {

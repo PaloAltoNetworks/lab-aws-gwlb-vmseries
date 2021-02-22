@@ -4,8 +4,7 @@ prefix_name_tag  = "ps-lab-"
 fw_instance_type = "m5.xlarge"
 fw_license_type  = "byol"
 fw_version       = "10.0.4" //Leave empty to be updated
-ssh_key_name     = "ps-lab"
-public_key_path  = "~/.ssh/ps-lab.pub"
+
 
 global_tags = {
   managedBy  = "terraform"

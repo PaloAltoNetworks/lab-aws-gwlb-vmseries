@@ -6,7 +6,7 @@ variable fw_instance_type {}
 variable fw_license_type {}
 variable fw_version {}
 variable ssh_key_name {}
-variable public_key_path {}
+#variable public_key_path {}
 
 ### VPC
 variable security_vpc {}
