@@ -26,14 +26,9 @@ The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panor
 - Find the Deny Action for `Cloud Shell` and click `Remove` on the right
 - Review policy / save changes
 
-```
-"cloudshell:*"
-```
-
-Note: If using the json editor, you will syntax error if you leave trailing comma on line 32 after removing `cloudshell` 
+<img src="https://user-images.githubusercontent.com/43679669/108776959-1882ba80-7531-11eb-8b8e-3247db81c3de.gif" width=50% height=50%>
 
 
-<img src="https://user-images.githubusercontent.com/43679669/108144448-aa08ad00-7097-11eb-926d-66ab34e050da.png" width=50% height=50%>
 
 ### Step x: Launch CloudShell
 
@@ -214,13 +209,14 @@ EC2 Dashboard -> Instances -> Select `vmseries01` -> Actions -> Monitor and trou
 
 - Check VM-Series instance details
 
-> What is the instance type? Which BYOL model(s) would this instance type be appropriate for?
 
-> How many interfaces are associated to the VM-Series? Which interface is the default ENI for the instance? Which interfaces have public IPs associated?
+> &#10067; What is the instance type? Which BYOL model(s) would this instance type be appropriate for?
 
-> Check the security group associated with the "data" interface. What is allowed inbound? What is the logic of this SG?
+> &#10067; How many interfaces are associated to the VM-Series? Which interface is the default ENI for the instance? Which interfaces have public IPs associated?
 
-> What Instance Profile was the VM-Series launched with? What actions does it allow? What are some other use-cases where you need to allow additional IAM permissions for the instance profile?
+> &#10067; Check the security group associated with the "data" interface. What is allowed inbound? What is the logic of this SG?
+
+> &#10067; What Instance Profile was the VM-Series launched with? What actions does it allow? What are some other use-cases where you need to allow additional IAM permissions for the instance profile?
 
 ---
 
