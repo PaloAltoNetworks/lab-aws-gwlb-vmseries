@@ -144,17 +144,18 @@ For simplicity, only the variable values that need to be modified are separated 
 vi student.auto.tfvars
 ```
 
+- Update the specifics of your deployment
+- Anything marked with `###` should be replaced with appropriate value
+- Reference downloaded `lab-details.txt` for values
+
 > &#8505; If you don't like vi, you can install nano editor:
 > ```
 > sudo yum install -y nano
 > ```
 
 
+<img src="https://user-images.githubusercontent.com/43679669/108796675-47138c00-7557-11eb-99b4-58141a3cf874.gif" width=50% height=50%>
 
-- Update the specifics of your deployment
-- Anything marked with `###` should be replaced with appropriate value
-
-We will be using the newer feature for light bootstrapping that does not require S3 buckets. Essentially, all of the paramaters normally specific in init-cfg can now be passed directly to the instance via user-data.
 
 ```
 firewalls = [
@@ -186,7 +187,7 @@ firewalls = [
       mgmt-interface-swap = "enable"
       plugin-op-commands  = "aws-gwlb-inspect:enable"
       type                = "dhcp-client"
-      hostname            = "lab#_vmseries02"
+      hostname            = "lab###_vmseries02"
       panorama-server     = "###"
       panorama-server-2   = "###"
       tplname             = "###"
@@ -202,57 +203,79 @@ firewalls = [
   }
 ]
 ```
+
+> &#8505; This deployment is using a [newer feature for basic bootstrapping](https://docs.paloaltonetworks.com/plugins/vm-series-and-panorama-plugins-release-notes/vm-series-plugin/vm-series-plugin-20/vm-series-plugin-201/whats-new-in-vm-series-plugin-201.html) that does not require S3 buckets. Essentially, any paramaters normally specific in init-cfg can now be passed directly to the instance via user-data. Prerequisite is the image you are deploying has plugin 2.0.1+ installed
+
+> &#8505; Notice the plugin-op-command to enable the GWLB inspection. There are additional bootstrap parameters planned for 10.0.5 to set GWLB sub-interface associations to endpoints.
+
+
+> &#10067; What are some bootstrap options that won't be possible with this basic bootstrap method?
+
+> &#8505; If you have time left after the rest of the lab activities, later steps will return to do some more digging into the terraform code.
+
 - //TODO add notes about terraform general usage, handling sensitive values, etc
 
 
-### Step x: Apply Terraform
+## Step x: Apply Terraform
 
-- Terraform init / apply
+- Make sure you are in the appropriate directory
 
 ```
-Plan: 168 to add, 0 to change, 0 to destroy.
+cd /home/cloudshell-user/ps-regional-2021-aws-labs/terraform/vmseries
+```
+- Initialize Terraform
 
-Do you want to perform these actions?
-  Terraform will perform the actions described above.
-  Only 'yes' will be accepted to approve.
-
-  Enter a value: yes
+```
+terraform init
 ```
 
-It should take 5-10 minutes for terraform to finish deploying all resources.
+- Apply Terraform
 
-When complete, you will see a list of outputs. Copy these off locally so you can reference them in later steps. You can also come back to this directory in CloudShell and run `terraform output`. 
+```
+terraform apply
+```
+
+- When Prompted for confirmation, type `yes`
+
+
+<img src="https://user-images.githubusercontent.com/43679669/108799781-36671400-755f-11eb-9724-d18c7ea147bb.gif" width=50% height=50%>
+
+
+- It should take 5-10 minutes for terraform to finish deploying all resources.
+
+- When complete, you will see a list of outputs. Copy these off locally so you can reference them in later steps. 
+ 
+> &#8505; You can also come back to this directory in CloudShell later and run `terraform output` to view this information 
 
 
 
-### Step x: Things to do while waiting on launch
+## Step x: Inspect deployed resources
 
 All resources are now created in AWS, but it will be around 10 minutes until VM-Series are fully initialized and bootstrapped.
 
 In the meantime, lets go look at what you built!
 
 
-- Inspect VM-Series user data
+- EC2 Dashboard -> Instances -> Select `vmseries01` -> Actions -> Instance settings -> Edit user data
 
-EC2 Dashboard -> Instances -> Select `vmseries01` -> Actions -> Instance settings -> Edit user data
+- Verify the values matches what was provided in your Lab Details
 
-> Verify the values matches what was provided in your Lab Details
+> &#10067; What are some tradeoffs of using user-data method for bootstrap vs S3 bucket?
 
-> What are some tradeoffs of using user-data method for bootstrap vs S3 bucket?
+> &#10067; What needs to happen if you have a typo or missed a value for bootstrap when you deployed?
 
-> What needs to happen if you have a typo or missed a value for bootstrap when you deployed?
+---
+### Step x.x Get VM-Series instance screenshot
+
+- EC2 Dashboard -> Instances -> Select `vmseries01` -> Actions -> Monitor and troubleshoot -> Get instance screenshot
+
+> &#8505; This can be useful to get a view of the console during launch. It is not interactive and must be manually refershed, but you can at least see some output related to bootstrap process or to troubleshoot if the VM-Series isn't booting properly or is in maintenance mode.
 
 ---
 
-- Get VM-Series instance screenshot
+### Step x.x Check VM-Series instance details
 
-This can be useful to get a view of the console during launch. It is not interactive and must be manually refershed, but you can at least see some output related to bootstrap process or to troubleshoot if the VM-Series isn't booting properly or is in maintenance mode.
-
-EC2 Dashboard -> Instances -> Select `vmseries01` -> Actions -> Monitor and troubleshoot -> Get instance screenshot
-
----
-
-- Check VM-Series instance details
+- EC2 Dashboard -> Instances -> Select `vmseries01` -> Review info / tabs in bottom pane
 
 
 > &#10067; What is the instance type? Which BYOL model(s) would this instance type be appropriate for?
@@ -265,30 +288,105 @@ EC2 Dashboard -> Instances -> Select `vmseries01` -> Actions -> Monitor and trou
 
 ---
 
-- Check cloudwatch bootstrap logs
+### Step x.x Check cloudwatch bootstrap logs
 
-Search for `cloudwatch` in the top search bar
-Logs -> Log groups -> PaloAltoNetworksFirewalls
+- Search for `cloudwatch` in the top search bar
+- Logs -> Log groups -> PaloAltoNetworksFirewalls
+- Assuming enough time has passed since launch, verify that the bootstrap operations completed successfully.
 
-Assuming enough time has passed since launch, verify that the bootstrap operations completed successfully.
+> &#8505; It is normal for the VMs to lose connectivity to Panorama initially after first joining.
 
-It is normal for the VMs to lose connectivity to Panorama initially after first joining.
-
-> What is required to enable these logs during boot process?
+> &#10067; What is required to enable these logs during boot process?
 
 ---
+### Step x.x Check networking
+
 - Look at VPC & TGW route tables, endpoints, correlate to the topology diagram
 
+//TODO - Add steps here
 
 ---
-- Look at Load Balancers
 
-Health probes of GWLB
+### Step x.x Check Load Balancers
+
+- Health probes of GWLB
+- Health probes of App VPC NLBs
+
+//TODO - Add steps here
+
+---
+
+## Step x: Verify Bootstrap in Panorama
+
+//TODO - Add Steps
+
+- Inspect pre-prepped networking config and policies
+
+## Step x: Update VPC networking for GWLB
+
+//TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
 
 
+## Step x: Access web servers
+
+- ssh from local machine to the NLB associate with app1 and app2 apps
+  -  hostname will be the FQDN of the NLBs from the terraform output
+  - username is `ec2-user`
+  - ssh key was downloaded from Qwiklabs console
+
+```
+ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c49.elb.us-west-2.amazonaws.com
+```
+
+> &#8505; We now have secured inbound connectivity but instances do not yet have a path outbound / inbound
+
+//TODO - Add Steps
+
+## Step x.x: Update TGW Route Tables
+
+- VPC Dashboard -> Tranist Gateway Route Tables -> Select `ps-lab-from-spoke-vpcs`
+  -  Check `Associations` tab and verify the two spoke App VPCs are associated
+  -  Check Routes tab and notice there are no existing routes
+  -  Create Static Route (Default to security VPC)
+     - CIDR: 0.0.0.0/0
+     - Attachment: Security VPC (Name Tag = ps-lab-security-vpc)
+
+- VPC Dashboard -> Tranist Gateway Route Tables -> Select `ps-lab-from-security-vpc`
+  -  Check `Associations` tab and verify the security VPC is associated
+  -  Check `Routes` tab and notice there are no existing routes
+  -  Select Propagations Tab -> Create Propagation
+  -  Select attachement with Name Tag `ps-lab-app1-vpc`
+  -  Repeat for attachement with Name Tag `ps-lab-app2-vpc`
+  -  Return to `Routes` tab and verify the table now has routes to reach the App VPCs 
+
+> &#8505; For GWLB model, the OB/EW TGW routing is mostly the same as previous TGW models. Spoke TGW RT directs all traffic to Security VPC. Security TGW RT has routes to reach all spoke VPCs for return traffic.
+>
+>For OB/EW, the GWLB doesn't come into play until traffic comes into the Security VPC
+
+## Step x: Access VM-Series management
+
+//TODO - Add Steps
 
 
-### Step 50: Finished
+## Step x: Test Traffic flows
+
+//TODO - Add Steps
+E/W, outbound, inbound
+
+Inspect FW logs
+
+
+## Step x: Configure GWLB sub-interface associations
+
+//TODO - Add Steps
+
+## Step x: Test Traffic flows
+
+//TODO - Add Steps
+E/W, outbound, inbound
+Inspect logs
+
+## Step 50: Finished
 
 Congratulations!
 
