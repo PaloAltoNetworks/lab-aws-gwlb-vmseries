@@ -47,8 +47,8 @@ app2_vpc_security_groups = {
         cidr_blocks = ["10.0.0.0/8"]
       }
       permit-sy-https = {
-        description = "Permit Port 443 Public"
-        type        = "ingress", from_port = "443", to_port = "443", protocol = "tcp"
+        description = "Permit Port 80 Public"
+        type        = "ingress", from_port = "80", to_port = "80", protocol = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
       }
       permit-sy-ssh = {
