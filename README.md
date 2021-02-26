@@ -25,6 +25,39 @@ Example Code block following an action item
 
 > &#10067; Items with question mark icon are quesions that should be answered on the form
 
+## Table of Contents
+
+- [PS Regional Training 2021 AWS Labs](#ps-regional-training-2021-aws-labs)
+  - [Overview](#overview)
+  - [Lab Guide Syntax conventions](#lab-guide-syntax-conventions)
+  - [Table of Contents](#table-of-contents)
+  - [Step x: Initialize Lab](#step-x-initialize-lab)
+    - [Step x: Find SSH Key Pair Name](#step-x-find-ssh-key-pair-name)
+  - [Step x: Update IAM Policies](#step-x-update-iam-policies)
+  - [Step x: Launch CloudShell](#step-x-launch-cloudshell)
+  - [Step x: Search Available VM-Series Images (AMIs)](#step-x-search-available-vm-series-images-amis)
+  - [Step x: Download Terraform](#step-x-download-terraform)
+  - [Step x: Clone Deployment Git Repository](#step-x-clone-deployment-git-repository)
+  - [Step x: Update Deployment Values in tfvars](#step-x-update-deployment-values-in-tfvars)
+  - [Step x: Apply Terraform](#step-x-apply-terraform)
+  - [Step x: Inspect deployed resources](#step-x-inspect-deployed-resources)
+    - [Step x.x Get VM-Series instance screenshot](#step-xx-get-vm-series-instance-screenshot)
+    - [Step x.x Check VM-Series instance details](#step-xx-check-vm-series-instance-details)
+    - [Step x.x Check cloudwatch bootstrap logs](#step-xx-check-cloudwatch-bootstrap-logs)
+    - [Step x.x Check Load Balancers](#step-xx-check-load-balancers)
+  - [Step x: Verify Bootstrap in Panorama](#step-x-verify-bootstrap-in-panorama)
+  - [Step x: Access VM-Series Management](#step-x-access-vm-series-management)
+  - [Step x: Fix GWLB Health Probes](#step-x-fix-gwlb-health-probes)
+  - [Step x: Update Spokes VPC networking for Inbound inspection with GWLB](#step-x-update-spokes-vpc-networking-for-inbound-inspection-with-gwlb)
+  - [Step x: Verify HTTP traffic to Spoke web servers](#step-x-verify-http-traffic-to-spoke-web-servers)
+  - [Step x: Access Spoke web servers via SSH](#step-x-access-spoke-web-servers-via-ssh)
+  - [Step x: Check Logs for Inbound traffic and Create Security Policies](#step-x-check-logs-for-inbound-traffic-and-create-security-policies)
+  - [Step x: Update Transit Gateway (TGW) Route Tables](#step-x-update-transit-gateway-tgw-route-tables)
+  - [Step x: Update Security VPC networking for OB/EW with GWLB](#step-x-update-security-vpc-networking-for-obew-with-gwlb)
+  - [Step x: Test OB/EW Traffic flows](#step-x-test-obew-traffic-flows)
+  - [Step x: Configure GWLB sub-interface associations](#step-x-configure-gwlb-sub-interface-associations)
+  - [Step x: Test Traffic flows after sub-interface association](#step-x-test-traffic-flows-after-sub-interface-association)
+  - [Step 50: Finished](#step-50-finished)
 ## Step x: Initialize Lab
 
 - Download `Lab Details` File from Qwiklabs interface for later reference
