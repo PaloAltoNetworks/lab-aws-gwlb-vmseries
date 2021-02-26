@@ -61,6 +61,10 @@ resource "aws_route" "internet_gateway" {
   route_table_id         = var.vpc_route_tables[each.value.route_table]
   destination_cidr_block = each.value.prefix
   gateway_id             = var.internet_gateways[each.value.next_hop_name]
+
+  timeouts {
+      create = "5m"
+    }
 }
 
 resource "aws_route" "vpn_gateway" {
@@ -71,6 +75,10 @@ resource "aws_route" "vpn_gateway" {
   route_table_id         = var.vpc_route_tables[each.value.route_table]
   destination_cidr_block = each.value.prefix
   gateway_id             = var.vpn_gateways[each.value.next_hop_name]
+
+  timeouts {
+      create = "5m"
+    }
 }
 
 resource "aws_route" "nat_gateway" {
@@ -81,6 +89,10 @@ resource "aws_route" "nat_gateway" {
   route_table_id         = var.vpc_route_tables[each.value.route_table]
   destination_cidr_block = each.value.prefix
   nat_gateway_id         = var.nat_gateways[each.value.next_hop_name]
+
+  timeouts {
+      create = "5m"
+    }
 }
 
 resource "aws_route" "network_interface" {
@@ -91,6 +103,10 @@ resource "aws_route" "network_interface" {
   route_table_id         = var.vpc_route_tables[each.value.route_table]
   destination_cidr_block = each.value.prefix
   network_interface_id   = var.interfaces[each.value.next_hop_name]
+
+  timeouts {
+      create = "5m"
+    }
 }
 
 resource "aws_route" "transit_gateway" {
@@ -101,6 +117,10 @@ resource "aws_route" "transit_gateway" {
   route_table_id         = var.vpc_route_tables[each.value.route_table]
   destination_cidr_block = each.value.prefix
   transit_gateway_id     = var.transit_gateways[each.value.next_hop_name]
+
+  timeouts {
+      create = "5m"
+    }
 }
 
 resource "aws_route" "vpc_peer" {
@@ -111,6 +131,10 @@ resource "aws_route" "vpc_peer" {
   route_table_id            = var.vpc_route_tables[each.value.route_table]
   destination_cidr_block    = each.value.prefix
   vpc_peering_connection_id = var.vpc_peers[each.value.next_hop_name]
+
+  timeouts {
+      create = "5m"
+    }
 }
 
 resource "aws_route" "vpc_endpoint" {
@@ -121,4 +145,8 @@ resource "aws_route" "vpc_endpoint" {
   route_table_id         = var.vpc_route_tables[each.value.route_table]
   destination_cidr_block = each.value.prefix
   vpc_endpoint_id        = var.vpc_endpoints[each.value.next_hop_name]
+
+  timeouts {
+      create = "5m"
+    }
 } 
