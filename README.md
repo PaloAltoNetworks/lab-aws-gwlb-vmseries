@@ -363,6 +363,68 @@ vmseries_eips = {
 
 > &#10067; Why don't you have to use SSH key pair to authenticate to these VM-Series?
 
+
+## Step x: Fix GWLB Health Probes
+
+- Check GWLB Target Group status
+  - In EC2 Console -> Target Groups -> select `ps-lab-security-gwlb`
+  - Verify health check settings of TCP 80 first `Group details` tab
+  - Switch to `Targets` tab and note that the status of both VM-Series is unhealthy
+
+> &#10067; What Protocol and Port is the Target Group configured to use
+
+> &#8505; You can check traffic logs either in Panorama or local device
+> 
+- Check Traffic Logs for Health Probes
+  - In Panorama UI -> Monitor -> Traffic
+  - Analyze the traffic logs for the port 80 traffic
+  - Notice that the sessions matching allow policy for `gwlb-permit-any` policy but aging out
+
+> &#10067; Why are there two different source addresses in the traffic logs for these GWLB Health Probes?
+
+- Resolve the issue with the Health Probes
+
+- To verify your solution (or shortcut!), expand below for specific steps
+
+<details>
+  <summary>Expand For Specific Steps</summary>
+
+> &#8505; We can see in the traffic logs that the health probes are being received. So we know they are being permitted by the AWS Security Group. They are being permitted by security policy but there is no return traffic (Notice 0 Bytes Received in the traffic logs). This indicates the VM-Series dataplane interface is not listening 
+
+  - Create and add Interface Management profile to eth1/1
+  - //TODO - Add details here
+
+</details>
+
+
+## Step x: Update Spokes VPC networking for Inbound inspection with GWLB
+
+//TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
+
+## Step x: Verify HTTP traffic to Spoke web servers
+
+//TODO - Add Steps
+
+
+## Step x: Access Spoke web servers via SSH
+
+- ssh from local machine to the NLB associated with app1 and app2 apps
+  - hostname will be the FQDN of the NLBs from the terraform output
+  - username is `ec2-user`
+  - ssh key was downloaded from Qwiklabs console
+
+```
+ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c49.elb.us-west-2.amazonaws.com
+```
+
+> &#8505; We now have secured inbound connectivity but instances do not yet have a path outbound / inbound
+
+//TODO - Add Steps
+
+## Step x: Check Logs for Inbound traffic and Create Security Policies
+
+//TODO - Add Steps
+
 ## Step x: Update Transit Gateway (TGW) Route Tables
 
 
@@ -401,37 +463,15 @@ vmseries_eips = {
 > &#10067; What needs to be done on the TGW route tables in order to bring a new Spoke VPC online for OB/EW traffic?
 
 
-## Step x: Update VPC networking for GWLB
+## Step x: Update Security VPC networking for OB/EW with GWLB
 
 //TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
 
 
-## Step x: Access web servers
-
-- ssh from local machine to the NLB associate with app1 and app2 apps
-  - hostname will be the FQDN of the NLBs from the terraform output
-  - username is `ec2-user`
-  - ssh key was downloaded from Qwiklabs console
-
-```
-ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c49.elb.us-west-2.amazonaws.com
-```
-
-> &#8505; We now have secured inbound connectivity but instances do not yet have a path outbound / inbound
+## Step x: Test OB/EW Traffic flows
 
 //TODO - Add Steps
-
-
-
-## Step x: Access VM-Series management
-
-//TODO - Add Steps
-
-
-## Step x: Test Traffic flows
-
-//TODO - Add Steps
-E/W, outbound, inbound
+E/W, outbound
 
 Inspect FW logs
 
@@ -440,7 +480,7 @@ Inspect FW logs
 
 //TODO - Add Steps
 
-## Step x: Test Traffic flows
+## Step x: Test Traffic flows after sub-interface association
 
 //TODO - Add Steps
 E/W, outbound, inbound
