@@ -254,102 +254,102 @@ vpc_routes = {
     next_hop_type = "internet_gateway"
     next_hop_name = "vmseries-vpc"
   }
-  natgw1-to-gwlbe-outbound1 = {
-    route_table   = "natgw1"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "outbound1"
-  }
-  natgw2-to-gwlbe-outbound2 = {
-    route_table   = "natgw2"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "outbound2"
-  }
-  gwlbe-outbound1-to-natgw1 = {
-    route_table   = "gwlbe-outbound-1"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "nat_gateway"
-    next_hop_name = "natgw1"
-  }
-  gwlbe-outbound2-to-natgw2 = {
-    route_table   = "gwlbe-outbound-2"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "nat_gateway"
-    next_hop_name = "natgw2"
-  }
-  gwlbe-outbound1-to-tgw = {
-    route_table   = "gwlbe-outbound-1"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  gwlbe-outbound2-to-tgw = {
-    route_table   = "gwlbe-outbound-2"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  gwlbe-east-west-1-to-tgw = {
-    route_table   = "gwlbe-eastwest-1"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  gwlbe-east-west-2-to-tgw = {
-    route_table   = "gwlbe-eastwest-2"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  gwlbe-outbound1-to-tgw-test-spoke = {
-    route_table   = "gwlbe-outbound-1"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  gwlbe-outbound2-to-tgw-test-spoke = {
-    route_table   = "gwlbe-outbound-2"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  gwlbe-east-west-1-to-tgw-test-spoke = {
-    route_table   = "gwlbe-eastwest-1"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  gwlbe-east-west-2-to-tgw-test-spoke = {
-    route_table   = "gwlbe-eastwest-2"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  tgw-attach-1-to-outbound-gwlbe-1 = {
-    route_table   = "tgw-attach1"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "outbound1"
-  }
-  tgw-attach-2-to-outbound-gwlbe-2 = {
-    route_table   = "tgw-attach2"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "outbound2"
-  }
-  tgw-attach-1-to-eastwest-gwlbe-1 = {
-    route_table   = "tgw-attach1"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "east-west1"
-  }
-  tgw-attach-2-to-eastwest-gwlbe-2 = {
-    route_table   = "tgw-attach2"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "east-west2"
-  }
+#  natgw1-to-gwlbe-outbound1 = {
+#     route_table   = "natgw1"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "outbound1"
+#   }
+#   natgw2-to-gwlbe-outbound2 = {
+#     route_table   = "natgw2"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "outbound2"
+#   }
+#   gwlbe-outbound1-to-natgw1 = {
+#     route_table   = "gwlbe-outbound-1"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "nat_gateway"
+#     next_hop_name = "natgw1"
+#   }
+#   gwlbe-outbound2-to-natgw2 = {
+#     route_table   = "gwlbe-outbound-2"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "nat_gateway"
+#     next_hop_name = "natgw2"
+#   }
+#   gwlbe-outbound1-to-tgw = {
+#     route_table   = "gwlbe-outbound-1"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "transit_gateway"
+#     next_hop_name = "gwlb"
+#   }
+#   gwlbe-outbound2-to-tgw = {
+#     route_table   = "gwlbe-outbound-2"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "transit_gateway"
+#     next_hop_name = "gwlb"
+#   }
+#   gwlbe-east-west-1-to-tgw = {
+#     route_table   = "gwlbe-eastwest-1"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "transit_gateway"
+#     next_hop_name = "gwlb"
+#   }
+#   gwlbe-east-west-2-to-tgw = {
+#     route_table   = "gwlbe-eastwest-2"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "transit_gateway"
+#     next_hop_name = "gwlb"
+#   }
+#   gwlbe-outbound1-to-tgw-test-spoke = {
+#     route_table   = "gwlbe-outbound-1"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "transit_gateway"
+#     next_hop_name = "gwlb"
+#   }
+#   gwlbe-outbound2-to-tgw-test-spoke = {
+#     route_table   = "gwlbe-outbound-2"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "transit_gateway"
+#     next_hop_name = "gwlb"
+#   }
+#   gwlbe-east-west-1-to-tgw-test-spoke = {
+#     route_table   = "gwlbe-eastwest-1"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "transit_gateway"
+#     next_hop_name = "gwlb"
+#   }
+#   gwlbe-east-west-2-to-tgw-test-spoke = {
+#     route_table   = "gwlbe-eastwest-2"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "transit_gateway"
+#     next_hop_name = "gwlb"
+#   }
+#   tgw-attach-1-to-outbound-gwlbe-1 = {
+#     route_table   = "tgw-attach1"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "outbound1"
+#   }
+#   tgw-attach-2-to-outbound-gwlbe-2 = {
+#     route_table   = "tgw-attach2"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "outbound2"
+#   }
+#   tgw-attach-1-to-eastwest-gwlbe-1 = {
+#     route_table   = "tgw-attach1"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "east-west1"
+#   }
+#   tgw-attach-2-to-eastwest-gwlbe-2 = {
+#     route_table   = "tgw-attach2"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "east-west2"
+#   }
 }
 
 
