@@ -49,16 +49,19 @@ Example Code block following an action item
   - [2.10. Verify Bootstrap in Panorama](#210-verify-bootstrap-in-panorama)
   - [2.11. Access VM-Series Management](#211-access-vm-series-management)
   - [2.12. Fix GWLB Health Probes](#212-fix-gwlb-health-probes)
-  - [2.13. Update Spokes VPC networking for Inbound inspection with GWLB](#213-update-spokes-vpc-networking-for-inbound-inspection-with-gwlb)
-  - [2.14. Verify HTTP traffic to Spoke web servers](#214-verify-http-traffic-to-spoke-web-servers)
-  - [2.15. Access Spoke web servers via SSH](#215-access-spoke-web-servers-via-ssh)
-  - [2.16. Check Logs for Inbound traffic and Create Security Policies](#216-check-logs-for-inbound-traffic-and-create-security-policies)
-  - [2.17. Update Transit Gateway (TGW) Route Tables](#217-update-transit-gateway-tgw-route-tables)
-  - [2.18. Update Security VPC networking for OB/EW with GWLB](#218-update-security-vpc-networking-for-obew-with-gwlb)
-  - [2.19. Test OB/EW Traffic flows](#219-test-obew-traffic-flows)
-  - [2.20. Configure GWLB sub-interface associations](#220-configure-gwlb-sub-interface-associations)
-  - [2.21. Test Traffic flows after sub-interface association](#221-test-traffic-flows-after-sub-interface-association)
-  - [2.22. Step 50: Finished](#222-step-50-finished)
+  - [2.13. Update AWS Routing for Outbound and East / West (OBEW) Traffic](#213-update-aws-routing-for-outbound-and-east--west-obew-traffic)
+    - [2.13.1. Update Transit Gateway (TGW) Route Tables](#2131-update-transit-gateway-tgw-route-tables)
+    - [2.13.2. Update Security VPC networking for OB/EW with GWLB](#2132-update-security-vpc-networking-for-obew-with-gwlb)
+    - [2.13.3. Update App1 VPC network for OB/EW with GWLB](#2133-update-app1-vpc-network-for-obew-with-gwlb)
+    - [2.13.4. Test OB/EW Traffic flows](#2134-test-obew-traffic-flows)
+  - [2.14. Configure Inbound Traffic Flows](#214-configure-inbound-traffic-flows)
+    - [2.14.1. Update Spokes VPC networking for Inbound inspection with GWLB](#2141-update-spokes-vpc-networking-for-inbound-inspection-with-gwlb)
+    - [2.14.2. Verify HTTP traffic to Spoke web servers](#2142-verify-http-traffic-to-spoke-web-servers)
+    - [2.14.3. Access Spoke web servers via SSH](#2143-access-spoke-web-servers-via-ssh)
+    - [2.14.4. Check Logs for Inbound traffic and Create Security Policies](#2144-check-logs-for-inbound-traffic-and-create-security-policies)
+  - [2.15. Configure GWLB sub-interface associations](#215-configure-gwlb-sub-interface-associations)
+    - [2.15.1. Test Traffic flows after sub-interface association](#2151-test-traffic-flows-after-sub-interface-association)
+  - [2.16. Step 50: Finished](#216-step-50-finished)
 
 
 # 2. Lab Steps
@@ -411,59 +414,70 @@ vmseries_eips = {
 > &#10067; What Protocol and Port is the Target Group configured to use
 
 > &#8505; You can check traffic logs either in Panorama or local device
+
 > &#8505; **Reboot your VM-Series if you do not see any traffic logs!**
 > 
 - Check Traffic Logs for Health Probes
   - In Panorama UI -> Monitor -> Traffic
   - Analyze the traffic logs for the port 80 traffic
+  - Enable Columns to view `Bytes Sent` and `Bytes Received`
   - Notice that the sessions matching allow policy for `gwlb-permit-any` policy but aging out
 
 > &#10067; Why are there two different source addresses in the traffic logs for these GWLB Health Probes?
 
+<img src="https://user-images.githubusercontent.com/43679669/109860663-6af86100-7c2c-11eb-88f3-0aac14d256a8.gif" width=50% height=50%>
+
 - Resolve the issue with the Health Probes
 
-- To verify your solution (or shortcut!), expand below for specific steps
+- **To verify your solution (or shortcut!), expand below for specific steps**
 
 <details>
-  <summary>Expand For Specific Steps</summary>
+  <summary>Expand Me For Specific Steps</summary>
 
-> &#8505; We can see in the traffic logs that the health probes are being received. So we know they are being permitted by the AWS Security Group. They are being permitted by security policy but there is no return traffic (Notice 0 Bytes Received in the traffic logs). This indicates the VM-Series dataplane interface is not listening 
+> &#8505; We can see in the traffic logs that the health probes are being received. So we know they are being permitted by the AWS Security Group. They are being permitted by catch-all security policy but there is no return traffic (Notice 0 Bytes Received in the traffic logs). This indicates the VM-Series dataplane interface is not listening 
 
   - Create and add Interface Management profile to eth1/1
-  - //TODO - Add details here
+    - In Panorama select Network Tab -> Template `TPL-STUDENT-BASE-##`
+    - Create Interface Management Profile
+      - Name: `gwlb-health-probe`
+      - Services: HTTP
+      - Permitted IP addresses: `10.100.0.16/28`, `10.100.1.16/28`
+    - Select Interfaces -> ethernet1/1 -> Advanced -> Management Profile `gwlb-health-probe`
+
+<img src="https://user-images.githubusercontent.com/43679669/109861732-9fb8e800-7c2d-11eb-87b7-98e794ce8131.gif" width=50% height=50%>
+
+  - Create a specific security policies for these health probes to keep logging clean
+    - In Panorama select Policies Tab -> Device Group `DG-STUDENT-##`
+    - Create new security policy
+      - Name: `gwlb-health-probe`
+      - Source Zone: `gwlb`
+      - Source Addresses: `10.100.0.16/28`, `10.100.1.16/28`
+      - Dest Zone: `gwlb`
+      - Dest Addresses: `10.100.0.16/28`, `10.100.1.16/28`
+      - Application: `Any`
+      - Serivce: `service-http`
+    - Make sure new policy is before the existing catch-all `gwlb-any` policy
+
+  - Commit and Push your changes
+
+<img src="https://user-images.githubusercontent.com/43679669/109866175-f674f080-7c32-11eb-8c77-4e2c3c195f9a.gif" width=50% height=50%>
+
 
 </details>
 
+- Verify Traffic Logs have Bytes Received and are mataching the appropriate security policy
+- Return to AWS console to verify the Targets are now showing as healthy
 
-## 2.13. Update Spokes VPC networking for Inbound inspection with GWLB
-
-//TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
-
-## 2.14. Verify HTTP traffic to Spoke web servers
-
-//TODO - Add Steps
+<img src="https://user-images.githubusercontent.com/43679669/109867219-3b4d5700-7c34-11eb-8121-5ce90f2e1004.gif" width=50% height=50%>
 
 
-## 2.15. Access Spoke web servers via SSH
+> &#10067; Why is the application still detected as incomplete?
 
-- ssh from local machine to the NLB associated with app1 and app2 apps
-  - hostname will be the FQDN of the NLBs from the terraform output
-  - username is `ec2-user`
-  - ssh key was downloaded from Qwiklabs console
 
-```
-ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c49.elb.us-west-2.amazonaws.com
-```
+## 2.13. Update AWS Routing for Outbound and East / West (OBEW) Traffic
 
-> &#8505; We now have secured inbound connectivity but instances do not yet have a path outbound / inbound
 
-//TODO - Add Steps
-
-## 2.16. Check Logs for Inbound traffic and Create Security Policies
-
-//TODO - Add Steps
-
-## 2.17. Update Transit Gateway (TGW) Route Tables
+### 2.13.1. Update Transit Gateway (TGW) Route Tables
 
 
 > &#8505; For GWLB model, the TGW routing for Outbound and EastWest (OB/EW) traffic is the same as previous TGW models. Spoke TGW RT directs all traffic to Security VPC. Security TGW RT has routes to reach all spoke VPCs for return traffic.
@@ -501,30 +515,64 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
 > &#10067; What needs to be done on the TGW route tables in order to bring a new Spoke VPC online for OB/EW traffic?
 
 
-## 2.18. Update Security VPC networking for OB/EW with GWLB
+### 2.13.2. Update Security VPC networking for OB/EW with GWLB
+
+//TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
+
+### 2.13.3. Update App1 VPC network for OB/EW with GWLB
 
 //TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
 
 
-## 2.19. Test OB/EW Traffic flows
+### 2.13.4. Test OB/EW Traffic flows
 
 //TODO - Add Steps
 E/W, outbound
 
 Inspect FW logs
 
+## 2.14. Configure Inbound Traffic Flows
 
-## 2.20. Configure GWLB sub-interface associations
+### 2.14.1. Update Spokes VPC networking for Inbound inspection with GWLB
+
+//TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
+
+### 2.14.2. Verify HTTP traffic to Spoke web servers
 
 //TODO - Add Steps
 
-## 2.21. Test Traffic flows after sub-interface association
+
+### 2.14.3. Access Spoke web servers via SSH
+
+- ssh from local machine to the NLB associated with app1 and app2 apps
+  - hostname will be the FQDN of the NLBs from the terraform output
+  - username is `ec2-user`
+  - ssh key was downloaded from Qwiklabs console
+
+```
+ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c49.elb.us-west-2.amazonaws.com
+```
+
+> &#8505; We now have secured inbound connectivity but instances do not yet have a path outbound / inbound
+
+//TODO - Add Steps
+
+### 2.14.4. Check Logs for Inbound traffic and Create Security Policies
+
+//TODO - Add Steps
+
+
+## 2.15. Configure GWLB sub-interface associations
+
+//TODO - Add Steps
+
+### 2.15.1. Test Traffic flows after sub-interface association
 
 //TODO - Add Steps
 E/W, outbound, inbound
 Inspect logs
 
-## 2.22. Step 50: Finished
+## 2.16. Step 50: Finished
 
 Congratulations!
 
