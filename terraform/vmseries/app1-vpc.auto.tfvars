@@ -110,53 +110,53 @@ app1_transit_gateway_vpc_attachments = {
 
 
 ### VPC_ROUTES
-app1_vpc_routes = {
-  igw-edge-alb1-to-endpoint1 = {
-    route_table   = "igw-edge"
-    prefix        = "10.200.0.16/28"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "app1-inbound1"
-  }
-  igw-edge-alb2-to-endpoint2 = {
-    route_table   = "igw-edge"
-    prefix        = "10.200.1.16/28"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "app1-inbound2"
-  }
-  web1-default-to-tgw = {
-    route_table   = "web1"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  web2-default-to-tgw = {
-    route_table   = "web2"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  gwlbe1-default-to-igw = {
-    route_table   = "gwlbe1"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "internet_gateway"
-    next_hop_name = "app1_vpc"
-  }
-  gwlbe2-default-to-igw = {
-    route_table   = "gwlbe2"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "internet_gateway"
-    next_hop_name = "app1_vpc"
-  }
-  alb1-to-endpoint1 = {
-    route_table   = "alb1"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "app1-inbound1"
-  }
-  alb2-to-endpoint2 = {
-    route_table   = "alb2"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "app1-inbound2"
-  }
-}
+# app1_vpc_routes = {
+#   igw-edge-alb1-to-endpoint1 = {
+#     route_table   = "igw-edge"
+#     prefix        = "10.200.0.16/28"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "app1-inbound1"
+#   }
+#   igw-edge-alb2-to-endpoint2 = {
+#     route_table   = "igw-edge"
+#     prefix        = "10.200.1.16/28"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "app1-inbound2"
+#   }
+#   web1-default-to-tgw = {
+#     route_table   = "web1"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "transit_gateway"
+#     next_hop_name = "gwlb"
+#   }
+#   web2-default-to-tgw = {
+#     route_table   = "web2"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "transit_gateway"
+#     next_hop_name = "gwlb"
+#   }
+#   gwlbe1-default-to-igw = {
+#     route_table   = "gwlbe1"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "internet_gateway"
+#     next_hop_name = "app1_vpc"
+#   }
+#   gwlbe2-default-to-igw = {
+#     route_table   = "gwlbe2"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "internet_gateway"
+#     next_hop_name = "app1_vpc"
+#   }
+#   alb1-to-endpoint1 = {
+#     route_table   = "alb1"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "app1-inbound1"
+#   }
+#   alb2-to-endpoint2 = {
+#     route_table   = "alb2"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "app1-inbound2"
+#   }
+# }
