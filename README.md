@@ -183,7 +183,7 @@ terraform --version
 - Clone the Repository with the terraform to deploy
   
 ```
-$ git clone https://github.com/PaloAltoNetworks/ps-regional-2021-aws-labs.git && cd ps-regional-2021-aws-labs/terraform/vmseries
+git clone https://github.com/PaloAltoNetworks/ps-regional-2021-aws-labs.git && cd ps-regional-2021-aws-labs/terraform/vmseries
 ```
 
 ## 2.7. Update Deployment Values in tfvars
@@ -411,6 +411,7 @@ vmseries_eips = {
 > &#10067; What Protocol and Port is the Target Group configured to use
 
 > &#8505; You can check traffic logs either in Panorama or local device
+> &#8505; **Reboot your VM-Series if you do not see any traffic logs!**
 > 
 - Check Traffic Logs for Health Probes
   - In Panorama UI -> Monitor -> Traffic
