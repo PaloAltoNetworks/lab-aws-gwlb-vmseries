@@ -201,7 +201,8 @@ vi student.auto.tfvars
 ```
 
 - Update the specifics of your deployment
-- Anything marked with `###` should be replaced with appropriate value
+- Anything marked with `##` should be replaced with your Student Number
+- Anything marked with `xxx` should be replaced with the appropriate values for this deployment
 - Reference downloaded `lab-details.txt` for values
 - Don't forget to update `ssh_key_name` with they name of they key you copied previously
 
@@ -215,10 +216,9 @@ vi student.auto.tfvars
 
 
 ```
-ssh_key_name     = "qwikLABS-###"
-  
-### VMSERIES ###
+ssh_key_name     = "qwikLABS-xxx"
 
+### VMSERIES ###
 firewalls = [
   {
     name    = "vmseries01"
@@ -227,14 +227,14 @@ firewalls = [
       mgmt-interface-swap = "enable"
       plugin-op-commands  = "aws-gwlb-inspect:enable"
       type                = "dhcp-client"
-      hostname            = "lab###_vmseries01"
-      panorama-server     = "###"
-      panorama-server-2   = "###"
-      tplname             = "TPL-STUDENT-STACK-###"
-      dgname              = "DG-STUDENT-###"
-      vm-auth-key         = "###"
-      authcodes           = "###"
-      #op-command-modes    = ""
+      hostname            = "lab##_vmseries01"
+      tplname             = "TPL-STUDENT-STACK-##"
+      dgname              = "DG-STUDENT-##"
+      panorama-server     = "xxx"
+      panorama-server-2   = "xxx"
+      vm-auth-key         = "xxx"
+      authcodes           = "xxx"
+      op-command-modes    = ""
     }
     interfaces = [
       { name = "vmseries01-data", index = "0" },
@@ -248,14 +248,14 @@ firewalls = [
       mgmt-interface-swap = "enable"
       plugin-op-commands  = "aws-gwlb-inspect:enable"
       type                = "dhcp-client"
-      hostname            = "lab###_vmseries02"
-      panorama-server     = "###"
-      panorama-server-2   = "###"
-      tplname             = "###"
-      dgname              = "###"
-      vm-auth-key         = "###"
-      authcodes           = "###"
-      #op-command-modes    = ""
+      hostname            = "lab##_vmseries02"
+      tplname             = "TPL-STUDENT-STACK-##"
+      dgname              = "DG-STUDENT-##"
+      panorama-server     = "xxx"
+      panorama-server-2   = "xxx"
+      vm-auth-key         = "xxx"
+      authcodes           = "xxx"
+      op-command-modes    = ""
     }
     interfaces = [
       { name = "vmseries02-data", index = "0" },

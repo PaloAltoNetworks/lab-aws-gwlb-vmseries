@@ -230,4 +230,6 @@ resource "aws_network_interface_attachment" "this" {
   instance_id          = aws_instance.pa-vm-series[each.value.ec2_instance].id
   network_interface_id = aws_network_interface.this[each.key].id
   device_index         = each.value.index
+
+  depends_on        = [aws_eip_association.this]
 }
