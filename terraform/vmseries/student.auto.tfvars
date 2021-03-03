@@ -1,4 +1,4 @@
-ssh_key_name     = "qwikLABS-###"
+ssh_key_name     = "qwikLABS-xxx"
 
 ### VMSERIES ###
 firewalls = [
@@ -9,14 +9,14 @@ firewalls = [
       mgmt-interface-swap = "enable"
       plugin-op-commands  = "aws-gwlb-inspect:enable"
       type                = "dhcp-client"
-      hostname            = "lab###_vmseries01"
-      panorama-server     = "###"
-      panorama-server-2   = "###"
-      tplname             = "TPL-STUDENT-STACK-###"
-      dgname              = "DG-STUDENT-###"
-      vm-auth-key         = "###"
-      authcodes           = "###"
-      #op-command-modes    = ""
+      hostname            = "lab##_vmseries01"
+      tplname             = "TPL-STUDENT-STACK-##"
+      dgname              = "DG-STUDENT-##"
+      panorama-server     = "xxx"
+      panorama-server-2   = "xxx"
+      vm-auth-key         = "xxx"
+      authcodes           = "xxx"
+      op-command-modes    = ""
     }
     interfaces = [
       { name = "vmseries01-data", index = "0" },
@@ -30,14 +30,14 @@ firewalls = [
       mgmt-interface-swap = "enable"
       plugin-op-commands  = "aws-gwlb-inspect:enable"
       type                = "dhcp-client"
-      hostname            = "lab#EE_vmseries02"
-      panorama-server     = "###"
-      panorama-server-2   = "###"
-      tplname             = "TPL-STUDENT-STACK-###"
-      dgname              = "DG-STUDENT-###"
-      vm-auth-key         = "###"
-      authcodes           = "###"
-      #op-command-modes    = ""
+      hostname            = "lab##_vmseries02"
+      tplname             = "TPL-STUDENT-STACK-##"
+      dgname              = "DG-STUDENT-##"
+      panorama-server     = "xxx"
+      panorama-server-2   = "xxx"
+      vm-auth-key         = "xxx"
+      authcodes           = "xxx"
+      op-command-modes    = ""
     }
     interfaces = [
       { name = "vmseries02-data", index = "0" },
