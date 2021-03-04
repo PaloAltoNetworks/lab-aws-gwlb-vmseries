@@ -158,6 +158,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 > &#8505; The name tag of the image should be standard and can be used for the filter. For example `PA-VM-AWS-9.1*`, `PA-VM-AWS-9.1.3*`, `PA-VM-AWS-10*`. This is the same logic the terraform will use to lookup the AMI based on the `fw_version` variable.
 
 > &#8505; Not needed for this lab, but when deploying VM-Series from EC2 console, it will default to the latest version. You can instead go to the AWS Marketplace to subscribe to the offering and select previous versions to deploy the desired AMI
+> 
 > <img src="https://user-images.githubusercontent.com/43679669/109255635-67934e80-77c2-11eb-8ea8-1f1bfe0a1692.gif" width=30% height=30%>
 
 ---
@@ -211,8 +212,8 @@ vi student.auto.tfvars
 - Update the specifics of your deployment
 - Anything marked with `##` should be replaced with your Student Number
 - Anything marked with `xxx` should be replaced with the appropriate values for this deployment
-- Reference downloaded `lab-details.txt` for values
-- Don't forget to update `ssh_key_name` with they name of they key you copied previously
+- Reference `lab-details.txt` downloaded from QwikLabs console for values
+- Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console!
 
 > &#8505; (Optional) If you don't like vi, you can install nano editor:
 > ```
@@ -361,7 +362,7 @@ In the meantime, lets go look at what you built!
 - Logs -> Log groups -> PaloAltoNetworksFirewalls
 - Assuming enough time has passed since launch, verify that the bootstrap operations completed successfully.
 
-> &#8505; It is normal for the VMs to lose connectivity to Panorama initially after first joining.
+> &#8505; It is normal for the VMs to briefly lose connectivity to Panorama after first joining.
 
 > &#10067; What is required to enable these logs during boot process?
 
@@ -486,7 +487,7 @@ vmseries_eips = {
 
 - First investigate Transite Gateway Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 
-- To verify your solution (or shortcut!), expand below for specific steps
+- **To verify your solution (or shortcut!), expand below for specific steps**
 
 <details>
   <summary>Expand For Specific Steps</summary>
@@ -517,7 +518,106 @@ vmseries_eips = {
 
 ### 3.13.2. Update Security VPC networking for OB/EW with GWLB
 
-//TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
+> &#8505; The routing and traffic flows can be tricky to grasp, especially when designing for multiple availability zones. For this lab, we are using separate endpoint for Outbound VS EastWest, plus separate endpoint per AZ. Take your time and understand the traffic flows as you configure the routing.
+>
+> For multi-AZ GWLB, generally will require unique route tables per subnet in both AZs in order to direct traffic in that AZ toward the resources (GWLB endpoint, NAT GW) in the same AZ.
+
+- First investigate the VPC Route Tables in the Security VPC and try to identify and fix what is missing. Refer to the diagram for guidance.
+- Refer to your output from terraform for the GWLB Endpoint IDs
+- You can also view the deployed endpoints VPC Dashboard -> Endpoints
+
+- **To verify your solution (or shortcut!), expand below for specific steps**
+
+<details>
+  <summary>Expand For Specific Steps</summary>
+
+  - VPC Dashboard -> Filter by VPC in left menu -> Select `ps-lab-security`
+    - Now when checking other sections in this dashboard (route tables, subnets, etc) will be filtered to Security VPC
+  -  Select Route Tables section
+  -  Look through the route tables. Most have no routes!
+  -  Identify Security VPC in the Topology Diagram ane we will start from left-to-right
+
+**TGW Attach Route Tables**
+
+> &#8505; Here we are defining what will happen for any traffic coming in to the Security VPC from the TGW. 
+> If traffic is destined for private summary range, we will send it to the EastWest GWLB Endpoints
+>
+> If traffic is desitned for anything else (default route), we will send it to the Outbound GWLB Endpoint
+>
+> For AZ resielence, we also make sure that whatever AZ traffic comes in from TGW it is forwarded to the GWLB endpoint in the same AZ
+>
+> Any traffic send to these endpoints will go directly to GWLB / VM-Series as a "bump-in-the-wire" and return to the corresponding endpoint
+
+  -  Select Route Table `ps-lab-tgw-attach1` and edit routes
+     -  0.0.0.0/0 -> Gateway Load Balancer Endpoint `outbound1`
+     -  Select vpce Endpoint ID `outbound1` from terraform output
+     -  10.0.0.0/8 -> Gateway Load Balancer Endpoint 
+     -  Select vpce Endpoint ID `eastwest1` from terraform output
+  -  Select Route Table `ps-lab-tgw-attach2` and edit routes
+     -  0.0.0.0/0 -> Gateway Load Balancer Endpoint `outbound2`
+     -  Select vpce Endpoint ID `outbound2` from terraform output
+     -  10.0.0.0/8 -> Gateway Load Balancer Endpoint 
+     -  Select vpce Endpoint ID `eastwest2` from terraform output
+
+//TODO: Add GIF
+<img src="" width=50% height=50%>
+
+**GWLB Endpoint East/West Route Tables**
+
+> &#8505; Here we are defining what will happen for East / West traffic returning from the GWLB / VM-Series.
+> This means traffic has already passed policy / inspection and we now define the direct path to reach the destination.
+>
+> For East / West traffic, this means sending all internal traffic to the TGW where it will then be forwarded directly back to the spoke VPC. 
+> 
+> Note that Backhaul traffic (VPN / DirectConnect attachments to TGW) would also follow this same logic.
+
+  -  Select Route Table `ps-lab-gwlbe-eastwest-1` and edit routes
+     -  10.0.0.0/8 -> Transit Gateway -> Select TGW ID
+  -  Select Route Table `ps-lab-gwlbe-eastwest-2` and edit routes
+     -  10.0.0.0/8 -> Transit Gateway -> Select TGW ID
+
+> For this traffic, routes are identical for both AZs, so doesn't strictly require separate route tables. We maintain the separation only for consistency and clarity.
+
+<img src="" width=50% height=50%>
+
+**GWLB Endpoint Outbound Route Tables**
+
+> &#8505; Here we are defining what will happen for Outbund traffic returning from the GWLB / VM-Series.
+> This means traffic has already passed policy / inspection and we now define the direct path to reach the destination.
+>
+> For Outbound traffic, this means sending all traffic toward the NAT GW in the corresponding AZ. 
+> 
+> We also need to consider the return traffic from the Internet / NAT GW which uses the same GWLB Endpoint. For this we define a path to reach the Spoke VPC summary directly via TGW 
+
+//TODO - Add NAT GW IDs to Terraform output
+
+  -  Select Route Table `ps-lab-gwlbe-outbound-1` and edit routes
+     -  0.0.0.0/0 -> NAT Gateway -> Select NAT GW ID for AZ1
+     -  10.0.0.0/8 -> Transit Gateway -> Select TGW ID
+  -  Select Route Table `ps-lab-gwlbe-outbound-2` and edit routes
+     -  0.0.0.0/0 -> NAT Gateway -> Select NAT GW ID for AZ2
+     -  10.0.0.0/8 -> Transit Gateway -> Select TGW ID
+
+<img src="" width=50% height=50%>
+
+**NAT Gateway Route Tables**
+
+> &#8505; Here we are defining what will happen for return traffic from the Internet for traffic that was initiated outbound.
+> From the perspective of the NAT GW routing, we direct the Spoke VPC summary back to Outbound Endpoint of the respective AZ so the return traffic will be forwarded to GWLB / VM-Series.
+> 
+> Note: The NAT GW subnet is already provisioned with default route pointed to IGW
+
+  -  Select Route Table `ps-lab-natgw1` and edit routes
+     -  10.0.0.0/8 -> Gateway Load Balancer Endpoint `outbound1`
+     -  Select vpce Endpoint ID `outbound1` from terraform output
+  -  Select Route Table `ps-lab-natgw2` and edit routes
+     -  10.0.0.0/8 -> Gateway Load Balancer Endpoint `outbound2`
+     -  Select vpce Endpoint ID `outbound2` from terraform output
+
+<img src="" width=50% height=50%>
+
+</details>
+
 
 ### 3.13.3. Update App1 VPC network for OB/EW with GWLB
 
