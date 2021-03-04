@@ -52,7 +52,7 @@ Example Code block following an action item
   - [3.13. Update AWS Routing for Outbound and East / West (OBEW) Traffic](#313-update-aws-routing-for-outbound-and-east--west-obew-traffic)
     - [3.13.1. Update Transit Gateway (TGW) Route Tables](#3131-update-transit-gateway-tgw-route-tables)
     - [3.13.2. Update Security VPC networking for OB/EW with GWLB](#3132-update-security-vpc-networking-for-obew-with-gwlb)
-    - [3.13.3. Update App1 VPC network for OB/EW with GWLB](#3133-update-app1-vpc-network-for-obew-with-gwlb)
+    - [3.13.3. Update App Spoke VPCs for OB/EW routing with GWLB](#3133-update-app-spoke-vpcs-for-obew-routing-with-gwlb)
     - [3.13.4. Test OB/EW Traffic flows](#3134-test-obew-traffic-flows)
   - [3.14. Configure Inbound Traffic Flows](#314-configure-inbound-traffic-flows)
     - [3.14.1. Update Spokes VPC networking for Inbound inspection with GWLB](#3141-update-spokes-vpc-networking-for-inbound-inspection-with-gwlb)
@@ -619,9 +619,10 @@ vmseries_eips = {
 </details>
 
 
-### 3.13.3. Update App1 VPC network for OB/EW with GWLB
+### 3.13.3. Update App Spoke VPCs for OB/EW routing with GWLB
 
-//TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
+- Add default route in web1 / web2 subnets pointed to TGW
+- Complete in App1 and App2 VPCs
 
 
 ### 3.13.4. Test OB/EW Traffic flows
