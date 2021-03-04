@@ -31,47 +31,52 @@ Example Code block following an action item
   - [1.1. Overview](#11-overview)
   - [1.2. Lab Guide Syntax conventions](#12-lab-guide-syntax-conventions)
   - [1.3. Table of Contents](#13-table-of-contents)
-- [2. Lab Steps](#2-lab-steps)
-  - [2.1. Initialize Lab](#21-initialize-lab)
-    - [2.1.1. Find SSH Key Pair Name](#211-find-ssh-key-pair-name)
-  - [2.2. Update IAM Policies](#22-update-iam-policies)
-  - [2.3. Launch CloudShell](#23-launch-cloudshell)
-  - [2.4. Search Available VM-Series Images (AMIs)](#24-search-available-vm-series-images-amis)
-  - [2.5. Download Terraform](#25-download-terraform)
-  - [2.6. Clone Deployment Git Repository](#26-clone-deployment-git-repository)
-  - [2.7. Update Deployment Values in tfvars](#27-update-deployment-values-in-tfvars)
-  - [2.8. Apply Terraform](#28-apply-terraform)
-  - [2.9. Inspect deployed resources](#29-inspect-deployed-resources)
-    - [2.9.1. Get VM-Series instance screenshot](#291-get-vm-series-instance-screenshot)
-    - [2.9.2. Check VM-Series instance details](#292-check-vm-series-instance-details)
-    - [2.9.3. Check cloudwatch bootstrap logs](#293-check-cloudwatch-bootstrap-logs)
-    - [2.9.4. Check Load Balancers](#294-check-load-balancers)
-  - [2.10. Verify Bootstrap in Panorama](#210-verify-bootstrap-in-panorama)
-  - [2.11. Access VM-Series Management](#211-access-vm-series-management)
-  - [2.12. Fix GWLB Health Probes](#212-fix-gwlb-health-probes)
-  - [2.13. Update AWS Routing for Outbound and East / West (OBEW) Traffic](#213-update-aws-routing-for-outbound-and-east--west-obew-traffic)
-    - [2.13.1. Update Transit Gateway (TGW) Route Tables](#2131-update-transit-gateway-tgw-route-tables)
-    - [2.13.2. Update Security VPC networking for OB/EW with GWLB](#2132-update-security-vpc-networking-for-obew-with-gwlb)
-    - [2.13.3. Update App1 VPC network for OB/EW with GWLB](#2133-update-app1-vpc-network-for-obew-with-gwlb)
-    - [2.13.4. Test OB/EW Traffic flows](#2134-test-obew-traffic-flows)
-  - [2.14. Configure Inbound Traffic Flows](#214-configure-inbound-traffic-flows)
-    - [2.14.1. Update Spokes VPC networking for Inbound inspection with GWLB](#2141-update-spokes-vpc-networking-for-inbound-inspection-with-gwlb)
-    - [2.14.2. Verify HTTP traffic to Spoke web servers](#2142-verify-http-traffic-to-spoke-web-servers)
-    - [2.14.3. Access Spoke web servers via SSH](#2143-access-spoke-web-servers-via-ssh)
-    - [2.14.4. Check Logs for Inbound traffic and Create Security Policies](#2144-check-logs-for-inbound-traffic-and-create-security-policies)
-  - [2.15. Configure GWLB sub-interface associations](#215-configure-gwlb-sub-interface-associations)
-    - [2.15.1. Test Traffic flows after sub-interface association](#2151-test-traffic-flows-after-sub-interface-association)
-  - [2.16. Step 50: Finished](#216-step-50-finished)
+- [2. Lab Topology](#2-lab-topology)
+- [3. Lab Steps](#3-lab-steps)
+  - [3.1. Initialize Lab](#31-initialize-lab)
+    - [3.1.1. Find SSH Key Pair Name](#311-find-ssh-key-pair-name)
+  - [3.2. Update IAM Policies](#32-update-iam-policies)
+  - [3.3. Launch CloudShell](#33-launch-cloudshell)
+  - [3.4. Search Available VM-Series Images (AMIs)](#34-search-available-vm-series-images-amis)
+  - [3.5. Download Terraform](#35-download-terraform)
+  - [3.6. Clone Deployment Git Repository](#36-clone-deployment-git-repository)
+  - [3.7. Update Deployment Values in tfvars](#37-update-deployment-values-in-tfvars)
+  - [3.8. Apply Terraform](#38-apply-terraform)
+  - [3.9. Inspect deployed resources](#39-inspect-deployed-resources)
+    - [3.9.1. Get VM-Series instance screenshot](#391-get-vm-series-instance-screenshot)
+    - [3.9.2. Check VM-Series instance details](#392-check-vm-series-instance-details)
+    - [3.9.3. Check cloudwatch bootstrap logs](#393-check-cloudwatch-bootstrap-logs)
+  - [3.10. Verify Bootstrap in Panorama](#310-verify-bootstrap-in-panorama)
+  - [3.11. Access VM-Series Management](#311-access-vm-series-management)
+  - [3.12. Fix GWLB Health Probes](#312-fix-gwlb-health-probes)
+  - [3.13. Update AWS Routing for Outbound and East / West (OBEW) Traffic](#313-update-aws-routing-for-outbound-and-east--west-obew-traffic)
+    - [3.13.1. Update Transit Gateway (TGW) Route Tables](#3131-update-transit-gateway-tgw-route-tables)
+    - [3.13.2. Update Security VPC networking for OB/EW with GWLB](#3132-update-security-vpc-networking-for-obew-with-gwlb)
+    - [3.13.3. Update App1 VPC network for OB/EW with GWLB](#3133-update-app1-vpc-network-for-obew-with-gwlb)
+    - [3.13.4. Test OB/EW Traffic flows](#3134-test-obew-traffic-flows)
+  - [3.14. Configure Inbound Traffic Flows](#314-configure-inbound-traffic-flows)
+    - [3.14.1. Update Spokes VPC networking for Inbound inspection with GWLB](#3141-update-spokes-vpc-networking-for-inbound-inspection-with-gwlb)
+    - [3.14.2. Verify HTTP traffic to Spoke web servers](#3142-verify-http-traffic-to-spoke-web-servers)
+    - [3.14.3. Access Spoke web servers via SSH](#3143-access-spoke-web-servers-via-ssh)
+    - [3.14.4. Check Logs for Inbound traffic and Create Security Policies](#3144-check-logs-for-inbound-traffic-and-create-security-policies)
+  - [3.15. Configure GWLB sub-interface associations](#315-configure-gwlb-sub-interface-associations)
+    - [3.15.1. Test Traffic flows after sub-interface association](#3151-test-traffic-flows-after-sub-interface-association)
+  - [3.16. Step 50: Finished](#316-step-50-finished)
+
+# 2. Lab Topology
+
+<img src="https://user-images.githubusercontent.com/43679669/109910663-a455be80-7c76-11eb-833d-dd57fe424a97.png">
 
 
-# 2. Lab Steps
-## 2.1. Initialize Lab
+
+# 3. Lab Steps
+## 3.1. Initialize Lab
 
 - Download `Lab Details` File from Qwiklabs interface for later reference
 - Click Open Console and authenticate to AWS account with credentials displayed in Qwiklabbs
 - Verify in correct region 
 
-### 2.1.1. Find SSH Key Pair Name
+### 3.1.1. Find SSH Key Pair Name
 
 - EC2 Console -> Key pairs
 - Copy and record the name of the Key Pair that was generated by Qwiklabs, e.g. `qwikLABS-L17939-10286`
@@ -82,7 +87,7 @@ Example Code block following an action item
 
 TODO: Use SSM for linux instances, then no need to handle keys
 
-## 2.2. Update IAM Policies
+## 3.2. Update IAM Policies
 
 
 - Search for `IAM` in top searchbar (IAM is global)
@@ -103,7 +108,7 @@ TODO: Use SSM for linux instances, then no need to handle keys
 
 ---
 
-## 2.3. Launch CloudShell
+## 3.3. Launch CloudShell
 
 - Search for `cloudshell` in top search bar
 - Close out of the Intro Screen
@@ -117,7 +122,7 @@ TODO: Use SSM for linux instances, then no need to handle keys
 
 ---
 
-## 2.4. Search Available VM-Series Images (AMIs)
+## 3.4. Search Available VM-Series Images (AMIs)
 
 - In cloud console, enter:
 
@@ -158,7 +163,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 ---
 
 
-## 2.5. Download Terraform 
+## 3.5. Download Terraform 
 
 - Download Terraform in Cloudshell
 
@@ -181,7 +186,7 @@ terraform --version
 >Terraform is distributed as a single binary so isn't usually managed by OS package managers. It simply needs to be downloaded and put into a system `$PATH` location. For Cloudshell, we are using the `/home/cloud-shell-user/bin/` so it will be persistent if the sessions times out.
 
 
-## 2.6. Clone Deployment Git Repository 
+## 3.6. Clone Deployment Git Repository 
 
 - Clone the Repository with the terraform to deploy
   
@@ -189,7 +194,7 @@ terraform --version
 git clone https://github.com/PaloAltoNetworks/ps-regional-2021-aws-labs.git && cd ps-regional-2021-aws-labs/terraform/vmseries
 ```
 
-## 2.7. Update Deployment Values in tfvars
+## 3.7. Update Deployment Values in tfvars
 
 
 
@@ -276,7 +281,7 @@ firewalls = [
 
 > &#8505; If you have time left after the rest of the lab activities, later steps will return to do some more digging into the terraform code.
 
-## 2.8. Apply Terraform
+## 3.8. Apply Terraform
 
 - Make sure you are in the appropriate directory
 
@@ -311,7 +316,7 @@ terraform apply
 
 
 
-## 2.9. Inspect deployed resources
+## 3.9. Inspect deployed resources
 
 All resources are now created in AWS, but it will be around 10 minutes until VM-Series are fully initialized and bootstrapped.
 
@@ -327,7 +332,7 @@ In the meantime, lets go look at what you built!
 > &#10067; What needs to happen if you have a typo or missed a value for bootstrap when you deployed?
 
 ---
-### 2.9.1. Get VM-Series instance screenshot
+### 3.9.1. Get VM-Series instance screenshot
 
 - EC2 Dashboard -> Instances -> Select `vmseries01` -> Actions -> Monitor and troubleshoot -> Get instance screenshot
 
@@ -335,7 +340,7 @@ In the meantime, lets go look at what you built!
 
 ---
 
-### 2.9.2. Check VM-Series instance details
+### 3.9.2. Check VM-Series instance details
 
 - EC2 Dashboard -> Instances -> Select `vmseries01` -> Review info / tabs in bottom pane
 
@@ -350,7 +355,7 @@ In the meantime, lets go look at what you built!
 
 ---
 
-### 2.9.3. Check cloudwatch bootstrap logs
+### 3.9.3. Check cloudwatch bootstrap logs
 
 - Search for `cloudwatch` in the top search bar
 - Logs -> Log groups -> PaloAltoNetworksFirewalls
@@ -362,16 +367,8 @@ In the meantime, lets go look at what you built!
 
 ---
 
-### 2.9.4. Check Load Balancers
 
-- Health probes of GWLB
-- Health probes of App VPC NLBs
-
-//TODO - Add steps here
-
----
-
-## 2.10. Verify Bootstrap in Panorama
+## 3.10. Verify Bootstrap in Panorama
 
 > &#8505; We are using a shared Panorama for this lab that is publically accessible. For production deployments, Panorama management should not be exposed to inbound Internet traffic. Each student has their own credentials restricted to Access Domain for only the relevant Device Group & Templates to reduce clutter.
 
@@ -380,13 +377,13 @@ In the meantime, lets go look at what you built!
 - Check Panorama -> Managed Deivces -> Summary
 - Verify your deployed VM-Series are connected and successfully bootstrapped
 - Verify that the auto-commit push succeeded for Shared Policy and Template and that devices are "In sync"
-- Inspect Interface, Zone, and Virtual Router configuration for your template
-- Inspect Security Policies and NAT Policies for your Device Group
+- Inspect Pre-Configured Interface, Zone, and Virtual Router configuration for your template
+- Inspect Pre-Configured Security Policies and NAT Policies for your Device Group
 
 > &#10067; Why are NAT policies not needed for GWLB model?
 
 
-## 2.11. Access VM-Series Management
+## 3.11. Access VM-Series Management
 
 - Most configurations will be done in Panorama, but we will use the local consoles for some steps and validation
 - Refer to `lab-details.txt` from QwikLabs for local credential details
@@ -404,7 +401,7 @@ vmseries_eips = {
 > &#10067; Why don't you have to use SSH key pair to authenticate to these VM-Series?
 
 
-## 2.12. Fix GWLB Health Probes
+## 3.12. Fix GWLB Health Probes
 
 - Check GWLB Target Group status
   - In EC2 Console -> Target Groups -> select `ps-lab-security-gwlb`
@@ -474,15 +471,18 @@ vmseries_eips = {
 > &#10067; Why is the application still detected as incomplete?
 
 
-## 2.13. Update AWS Routing for Outbound and East / West (OBEW) Traffic
+## 3.13. Update AWS Routing for Outbound and East / West (OBEW) Traffic
+
+- The deployed topology does not have all of the AWS routing in place for a working GWLB topology and you must fix it!
+- Refer to the diagram and try to resolve before looking at the specific steps.
 
 
-### 2.13.1. Update Transit Gateway (TGW) Route Tables
+### 3.13.1. Update Transit Gateway (TGW) Route Tables
 
 
 > &#8505; For GWLB model, the TGW routing for Outbound and EastWest (OB/EW) traffic is the same as previous TGW models. Spoke TGW RT directs all traffic to Security VPC. Security TGW RT has routes to reach all spoke VPCs for return traffic.
 >
->For OB/EW, the GWLB doesn't come into play until traffic comes into the Security VPC from TGW
+>For OB/EW flows, the GWLB doesn't come into play until traffic comes into the Security VPC from TGW
 
 - First investigate Transite Gateway Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 
@@ -512,37 +512,37 @@ vmseries_eips = {
 
 </details>
 
-> &#10067; What needs to be done on the TGW route tables in order to bring a new Spoke VPC online for OB/EW traffic?
+> &#10067; What needs to be done on the TGW route tables in order to bring additional Spoke VPCs online for OB/EW traffic?
 
 
-### 2.13.2. Update Security VPC networking for OB/EW with GWLB
-
-//TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
-
-### 2.13.3. Update App1 VPC network for OB/EW with GWLB
+### 3.13.2. Update Security VPC networking for OB/EW with GWLB
 
 //TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
 
+### 3.13.3. Update App1 VPC network for OB/EW with GWLB
 
-### 2.13.4. Test OB/EW Traffic flows
+//TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
+
+
+### 3.13.4. Test OB/EW Traffic flows
 
 //TODO - Add Steps
 E/W, outbound
 
 Inspect FW logs
 
-## 2.14. Configure Inbound Traffic Flows
+## 3.14. Configure Inbound Traffic Flows
 
-### 2.14.1. Update Spokes VPC networking for Inbound inspection with GWLB
+### 3.14.1. Update Spokes VPC networking for Inbound inspection with GWLB
 
 //TODO - Currently TF deploying all VPC / endpoint routing. Want to remove and have add manual steps
 
-### 2.14.2. Verify HTTP traffic to Spoke web servers
+### 3.14.2. Verify HTTP traffic to Spoke web servers
 
 //TODO - Add Steps
 
 
-### 2.14.3. Access Spoke web servers via SSH
+### 3.14.3. Access Spoke web servers via SSH
 
 - ssh from local machine to the NLB associated with app1 and app2 apps
   - hostname will be the FQDN of the NLBs from the terraform output
@@ -557,22 +557,22 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
 
 //TODO - Add Steps
 
-### 2.14.4. Check Logs for Inbound traffic and Create Security Policies
+### 3.14.4. Check Logs for Inbound traffic and Create Security Policies
 
 //TODO - Add Steps
 
 
-## 2.15. Configure GWLB sub-interface associations
+## 3.15. Configure GWLB sub-interface associations
 
 //TODO - Add Steps
 
-### 2.15.1. Test Traffic flows after sub-interface association
+### 3.15.1. Test Traffic flows after sub-interface association
 
 //TODO - Add Steps
 E/W, outbound, inbound
 Inspect logs
 
-## 2.16. Step 50: Finished
+## 3.16. Step 50: Finished
 
 Congratulations!
 
