@@ -1,7 +1,7 @@
 ### VPC ###
 app2_vpc = {
   app2_vpc = {
-    name                 = "app2_spoke_vpc"
+    name                 = "app2-spoke-vpc"
     cidr_block           = "10.250.0.0/23"
     instance_tenancy     = "default"
     enable_dns_support   = true
