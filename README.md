@@ -50,16 +50,20 @@ Example Code block following an action item
   - [3.11. Access VM-Series Management](#311-access-vm-series-management)
   - [3.12. Check bootstrap logs](#312-check-bootstrap-logs)
   - [3.13. Fix GWLB Health Probes](#313-fix-gwlb-health-probes)
-  - [3.14. Inbound Traffic Flows to Spoke App VPCs](#314-inbound-traffic-flows-to-spoke-app-vpcs)
-    - [3.14.1. Update Spokes VPC networking for Inbound inspection with GWLB](#3141-update-spokes-vpc-networking-for-inbound-inspection-with-gwlb)
-    - [3.14.2. Verify HTTP traffic to Spoke web servers](#3142-verify-http-traffic-to-spoke-web-servers)
+  - [3.14. Inbound Traffic Flows to App Spoke VPCs](#314-inbound-traffic-flows-to-app-spoke-vpcs)
+    - [3.14.1. Update App1 Spoke VPC networking for Inbound inspection with GWLB](#3141-update-app1-spoke-vpc-networking-for-inbound-inspection-with-gwlb)
+    - [3.14.2. Update App2 Spoke VPC networking for Inbound inspection with GWLB](#3142-update-app2-spoke-vpc-networking-for-inbound-inspection-with-gwlb)
     - [3.14.3. Access Spoke web servers via SSH](#3143-access-spoke-web-servers-via-ssh)
-    - [3.14.4. Check Logs for Inbound traffic and Create Security Policies](#3144-check-logs-for-inbound-traffic-and-create-security-policies)
+    - [3.14.4. Test Outbound Traffic from App1 Spoke Instances](#3144-test-outbound-traffic-from-app1-spoke-instances)
+    - [3.14.5. Check Inbound Traffic Logs](#3145-check-inbound-traffic-logs)
+    - [3.14.6. Check Outbound Traffic Logs](#3146-check-outbound-traffic-logs)
   - [3.15. Outbound and East / West (OBEW) Traffic Flows](#315-outbound-and-east--west-obew-traffic-flows)
     - [3.15.1. Update Transit Gateway (TGW) Route Tables](#3151-update-transit-gateway-tgw-route-tables)
     - [3.15.2. Update Security VPC networking for OB/EW with GWLB](#3152-update-security-vpc-networking-for-obew-with-gwlb)
     - [3.15.3. Update App Spoke VPCs for OB/EW routing with GWLB](#3153-update-app-spoke-vpcs-for-obew-routing-with-gwlb)
     - [3.15.4. Test OB/EW Traffic flows](#3154-test-obew-traffic-flows)
+    - [3.15.5. Verify HTTP traffic to Spoke web servers](#3155-verify-http-traffic-to-spoke-web-servers)
+    - [3.15.6. Check Logs for Inbound traffic and Create Security Policies](#3156-check-logs-for-inbound-traffic-and-create-security-policies)
   - [3.16. Configure GWLB sub-interface associations](#316-configure-gwlb-sub-interface-associations)
     - [3.16.1. Test Traffic flows after sub-interface association](#3161-test-traffic-flows-after-sub-interface-association)
   - [3.17. Step 50: Finished](#317-step-50-finished)
@@ -436,7 +440,7 @@ vmseries_eips = {
   - Verify health check settings of TCP 80 first `Group details` tab
   - Switch to `Targets` tab and note that the status of both VM-Series is unhealthy
 
-> &#10067; What Protocol and Port is the Target Group configured to use
+> &#10067; What Protocol and Port is the Target Group configured to use?
 
 > &#8505; You can check traffic logs either in Panorama or local device
 
@@ -498,46 +502,109 @@ vmseries_eips = {
 
 > &#10067; Why is the application still detected as incomplete?
 
-## 3.14. Inbound Traffic Flows to Spoke App VPCs
+## 3.14. Inbound Traffic Flows to App Spoke VPCs
 
 - The deployed topology does not have all of the AWS routing in place for a working GWLB topology and you must fix it!
 - Refer to the diagram and try to resolve before looking at the specific steps.
 
-###  3.14.1. Update Spokes VPC networking for Inbound inspection with GWLB
-
-> &#8505; For GWLB model, Inbound traffic for public services comes directly into the spoke Internet Gateway. Ingress VPC route table directs traffic to the GWLB Endpoint in the spoke VPC.
+> &#8505; For GWLB model, Inbound traffic for public services comes directly into the App Spoke Internet Gateway. Ingress VPC route table directs traffic to the GWLB Endpoints in the App Spoke VPC.
 > 
 > Application owners can provision their external facing resources in their VPC (EIP, Public NLB / ALB, etc), but all traffic will be forwarded to Security VPC (via GWLB endpoint) for inspection prior to reaching the resource.
 > 
 > This inbound traffic flow does not involve the Transit Gateway at all.
 
-- First investigate `ps-lab-app1_spoke_vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
-- For inbound traffic, no changes are needed for the `web` route tables
 - Tip: In the VPC Dashboard you can set a filter by VPC, which will apply to any other sections of the dashboard (subnets, route tables, etc)
 
 <img src="https://user-images.githubusercontent.com/43679669/110424278-8b7f4b80-8070-11eb-91e2-87bab5882f21.gif" width=50% height=50%> 
 
+
+### 3.14.1. Update App1 Spoke VPC networking for Inbound inspection with GWLB
+
+- First investigate `ps-lab-app1_spoke_vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- For inbound traffic, no changes are needed for the `web` route tables in the App Spoke VPCs
+- Refer to terraform output for GWLB Endpoint IDs (or identify them in VPC Dashboard)
 
 - **To verify your solution (or shortcut!), expand below for specific steps**
 
 <details>
   <summary>Expand For Specific Steps</summary>
 
-  - VPC Dashboard -> Tranist Gateway Route Tables -> Select `ps-lab-from-spoke-vpcs`
-  -  Check `Associations` tab and verify the two spoke App VPCs are associated
-  -  Check Routes tab and notice there are no existing routes
-  -  Create Static Route (Default to security VPC)
+Starting left to right on the diagram...
+
+  - VPC Dashboard -> Filter by VPC -> `ps-lab-app1_spoke_vpc`
+  - Route Tables -> `ps-lab-app1-igw-edge` -> Routes Tab (bottom panel)
+  - Add Route (app1-alb1 CIDR to app1-gwlbe1)
+     - CIDR: 10.200.0.16/28
+     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
+  - Add Route (app1-alb2 CIDR to app1-gwlbe2)
+     - CIDR: 10.200.1.16/28
+     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
+  - Save Routes
+
+---  
+  - Route Tables -> `ps-lab-app1-gwlbe1` -> Routes Tab (bottom panel)
+  - Add Route (default route to app1-IGW)
      - CIDR: 0.0.0.0/0
-     - Attachment: Security VPC (Name Tag = ps-lab-security-vpc)
+     - Target: Internet Gateway (only one per VPC)
+  - Save Routes
 
-###  3.14.2. Verify HTTP traffic to Spoke web servers
+---  
+  - Route Tables -> `ps-lab-app1-gwlbe2` -> Routes Tab (bottom panel)
+  - Add Route (default route to app1-IGW)
+     - CIDR: 0.0.0.0/0
+     - Target: Internet Gateway (only one per VPC)
+  - Save Routes
+  
+---
+  - Route Tables -> `ps-lab-app1-alb1` -> Routes Tab (bottom panel)
+  - Add Route (default route to app1-gwlbe1)
+     - CIDR: 0.0.0.0/0
+     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
+  - Save Routes
 
-//TODO - Add Steps
+---  
+
+  - Route Tables -> `ps-lab-app1-alb2` -> Routes Tab (bottom panel)
+  - Add Route (default route to app1-gwlbe2)
+     - CIDR: 0.0.0.0/0
+     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound2 GWLBE)
+  - Save Routes
+
+---  
+
+</details>
+
+### 3.14.2. Update App2 Spoke VPC networking for Inbound inspection with GWLB
+
+- First investigate `ps-lab-app2_spoke_vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- For inbound traffic, no changes are needed for the `web` route tables in the App Spoke VPCs
+- Refer to terraform output for GWLB Endpoint IDs (or identify them in VPC Dashboard)
+
+- **To verify your solution (or shortcut!), expand below for specific steps**
+
+<details>
+  <summary>Expand For Specific Steps</summary>
+
+Only `ps-lab-app2-igw-edge` Route Table is missing routes for App2 Spoke
+
+Starting left to right on the diagram...
+
+  - VPC Dashboard -> Filter by VPC -> `ps-lab-app2_spoke_vpc`
+  - Route Tables -> `ps-lab-app2-igw-edge` -> Routes Tab (bottom panel)
+  - Add Route (app1-alb1 CIDR to app2-gwlbe1)
+     - CIDR: 10.250.0.16/28
+     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
+  - Add Route (app1-alb2 CIDR to app2-gwlbe2)
+     - CIDR: 10.250.1.16/28
+     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
+ - Save Routes
+
+</details>
 
 
 ###  3.14.3. Access Spoke web servers via SSH
 
-- ssh from local machine to the NLB associated with app1 and app2 apps
+- ssh from local machine to the App1 and App2 Spoke NLBs
   - hostname will be the FQDN of the NLBs from the terraform output
   - username is `ec2-user`
   - ssh key was downloaded from Qwiklabs console
@@ -546,13 +613,42 @@ vmseries_eips = {
 ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c49.elb.us-west-2.amazonaws.com
 ```
 
-> &#8505; We now have secured inbound connectivity but instances do not yet have a path outbound / inbound
+- Notice the IP displayed in the shell
+- Exit SSH session and reconnect a couple of times
 
-//TODO - Add Steps
+> &#8505; Typically you would only use load balancer for application traffic, not direct access for management.
 
-### 3.14.4. Check Logs for Inbound traffic and Create Security Policies
+> &#10067; What is a better option to provide direct access to instances if needed for management purposes?
 
-//TODO - Add Steps
+###  3.14.4. Test Outbound Traffic from App1 Spoke Instances
+
+- Using an SSH session to App1 instance via NLB, test outbound traffic.
+  
+```ping 8.8.8.8```
+
+```curl http://ifconfig.me```
+
+> &#8505; Note that web instances are configured to update and install web server automatically, but have to have a path outbound first to retreive packages.
+
+###  3.14.5. Check Inbound Traffic Logs
+
+- Panorama -> Monitor Tab -> Traffic
+- Filter for traffic *to* App Spoke 1 `( addr.dst in 10.200.0.0/16 )`
+- Notice that there is already many connection attempts from Internet scans to the App1 Public NLB and being permitted by VM-Series!
+- Notice that VM-Series is able to see the original client source IP for connections to to App Spokes
+- Try to identify your SSH traffic in the logs
+
+> &#10067; Why does VM-Series see the private NLB addresses as the destination instead of the public address?
+
+###  3.14.6. Check Outbound Traffic Logs
+
+> &#8505; Since outbound traffic was not working earlier, let's check to see if it it making it to VM-Series.
+
+- Panorama -> Monitor Tab -> Traffic
+- Filter for traffic *from* App Spoke 1 `( addr.src in 10.200.0.0/16 )`
+- Notice that there is no outbound traffic from the App Spokes yet, so we are likely missing something in routing between App Spoke -> TGW -> GWLB.
+
+> &#8505; We now have visibility and contorl for inbound connectivity but instances do not yet have a path outbound.
 
 
 ## 3.15. Outbound and East / West (OBEW) Traffic Flows
@@ -716,6 +812,13 @@ E/W, outbound
 Inspect FW logs
 
 
+###  3.15.5. Verify HTTP traffic to Spoke web servers
+
+//TODO - Add Steps
+
+### 3.15.6. Check Logs for Inbound traffic and Create Security Policies
+
+//TODO - Add Steps
 
 
 ## 3.16. Configure GWLB sub-interface associations
