@@ -11,22 +11,22 @@ app1_vpc = {
 }
 
 app1_vpc_route_tables = {
-  igw-edge = { name = "igw-edge", igw_association = "app1_vpc" }
-  alb1      = { name = "alb1" }
-  alb2      = { name = "alb2" }
-  gwlbe1    = { name = "gwlbe1" }
-  gwlbe2    = { name = "gwlbe2" }
-  web1      = { name = "web1" }
-  web2      = { name = "web2" }
+  igw-edge = { name = "app1-igw-edge", igw_association = "app1_vpc" }
+  alb1      = { name = "app1-alb1" }
+  alb2      = { name = "app1-alb2" }
+  gwlbe1    = { name = "app1-gwlbe1" }
+  gwlbe2    = { name = "app1-gwlbe2" }
+  web1      = { name = "app1-web1" }
+  web2      = { name = "app1-web2" }
 }
 
 app1_vpc_subnets = {
-  alb1      = { name = "alb1", cidr = "10.200.0.16/28", az = "us-west-2a", rt = "alb1" }
-  alb2      = { name = "alb2", cidr = "10.200.1.16/28", az = "us-west-2b", rt = "alb2" }
-  gwlbe1    = { name = "gwlbe1", cidr = "10.200.0.32/28", az = "us-west-2a", rt = "gwlbe1" }
-  gwlbe2    = { name = "gwlbe2", cidr = "10.200.1.32/28", az = "us-west-2b", rt = "gwlbe2" }
-  web1      = { name = "web1", cidr = "10.200.0.48/28", az = "us-west-2a", rt = "web1" }
-  web2      = { name = "web2", cidr = "10.200.1.48/28", az = "us-west-2b", rt = "web2" }
+  alb1      = { name = "app1-alb1", cidr = "10.200.0.16/28", az = "us-west-2a", rt = "alb1" }
+  alb2      = { name = "app1-alb2", cidr = "10.200.1.16/28", az = "us-west-2b", rt = "alb2" }
+  gwlbe1    = { name = "app1-gwlbe1", cidr = "10.200.0.32/28", az = "us-west-2a", rt = "gwlbe1" }
+  gwlbe2    = { name = "app1-gwlbe2", cidr = "10.200.1.32/28", az = "us-west-2b", rt = "gwlbe2" }
+  web1      = { name = "app1-web1", cidr = "10.200.0.48/28", az = "us-west-2a", rt = "web1" }
+  web2      = { name = "app1-web2", cidr = "10.200.1.48/28", az = "us-west-2b", rt = "web2" }
 }
 
 app1_vpc_endpoints = {
@@ -34,7 +34,7 @@ app1_vpc_endpoints = {
 
 app1_vpc_security_groups = {
   web-server-sg = {
-    name = "web-server-sg"
+    name = "app1-web-server-sg"
     rules = {
       all-outbound = {
         description = "Permit All traffic outbound"
