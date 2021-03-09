@@ -177,6 +177,8 @@ resource "aws_eip" "this" {
     },
     var.tags,
   )
+
+  depends_on = ["aws_instance.pa-vm-series"]
 }
 
 resource "aws_eip_association" "this" {
