@@ -14,6 +14,11 @@ The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panor
 
 This guide is intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. This could be easily adapted for other environments.
 
+```
+Manual Last Updated: 2021-03-09
+Lab Last Tested: 2021-03-09
+```
+
 ## 1.2. Lab Guide Syntax conventions
 
 - Items with a bullet indicate actions that need to be taken to complete the lab. They are sometimes followed with a code block for copy / paste or reference.
@@ -58,12 +63,13 @@ Example Code block following an action item
     - [3.14.5. Check Inbound Traffic Logs](#3145-check-inbound-traffic-logs)
     - [3.14.6. Check Outbound Traffic Logs](#3146-check-outbound-traffic-logs)
   - [3.15. Outbound and East / West (OBEW) Traffic Flows](#315-outbound-and-east--west-obew-traffic-flows)
-    - [3.15.1. Update Transit Gateway (TGW) Route Tables](#3151-update-transit-gateway-tgw-route-tables)
-    - [3.15.2. Update Security VPC networking for OB/EW with GWLB](#3152-update-security-vpc-networking-for-obew-with-gwlb)
-    - [3.15.3. Update App Spoke VPCs for OB/EW routing with GWLB](#3153-update-app-spoke-vpcs-for-obew-routing-with-gwlb)
-    - [3.15.4. Test OB/EW Traffic flows](#3154-test-obew-traffic-flows)
-    - [3.15.5. Verify HTTP traffic to Spoke web servers](#3155-verify-http-traffic-to-spoke-web-servers)
-    - [3.15.6. Check Logs for Inbound traffic and Create Security Policies](#3156-check-logs-for-inbound-traffic-and-create-security-policies)
+    - [3.15.1. Update App1 Spoke VPC for OB/EW routing with GWLB](#3151-update-app1-spoke-vpc-for-obew-routing-with-gwlb)
+    - [3.15.2. Update App2 Spoke VPC for OB/EW routing with GWLB](#3152-update-app2-spoke-vpc-for-obew-routing-with-gwlb)
+    - [3.15.3. Update Transit Gateway (TGW) Route Tables](#3153-update-transit-gateway-tgw-route-tables)
+    - [3.15.4. Update Security VPC networking for OB/EW with GWLB](#3154-update-security-vpc-networking-for-obew-with-gwlb)
+    - [3.15.5. Test OB/EW Traffic flows](#3155-test-obew-traffic-flows)
+    - [3.15.6. Verify HTTP traffic to Spoke web servers](#3156-verify-http-traffic-to-spoke-web-servers)
+    - [3.15.7. Check Logs for Inbound traffic and Create Security Policies](#3157-check-logs-for-inbound-traffic-and-create-security-policies)
   - [3.16. Configure GWLB sub-interface associations](#316-configure-gwlb-sub-interface-associations)
     - [3.16.1. Test Traffic flows after sub-interface association](#3161-test-traffic-flows-after-sub-interface-association)
   - [3.17. Step 50: Finished](#317-step-50-finished)
@@ -461,7 +467,7 @@ vmseries_eips = {
 - **To verify your solution (or shortcut!), expand below for specific steps**
 
 <details>
-  <summary>Expand Me For Specific Steps</summary>
+  <summary style="color:red">Expand Me For Specific Steps</summary>
 
 > &#8505; We can see in the traffic logs that the health probes are being received. So we know they are being permitted by the AWS Security Group. They are being permitted by catch-all security policy but there is no return traffic (Notice 0 Bytes Received in the traffic logs). This indicates the VM-Series dataplane interface is not listening 
 
@@ -527,7 +533,7 @@ vmseries_eips = {
 - **To verify your solution (or shortcut!), expand below for specific steps**
 
 <details>
-  <summary>Expand For Specific Steps</summary>
+  <summary style="color:red">Expand For Specific Steps</summary>
 
 Starting left to right on the diagram...
 
@@ -583,7 +589,7 @@ Starting left to right on the diagram...
 - **To verify your solution (or shortcut!), expand below for specific steps**
 
 <details>
-  <summary>Expand For Specific Steps</summary>
+  <summary style="color:red">Expand For Specific Steps</summary>
 
 Only `ps-lab-app2-igw-edge` Route Table is missing routes for App2 Spoke
 
@@ -648,16 +654,56 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
 - Filter for traffic *from* App Spoke 1 `( addr.src in 10.200.0.0/16 )`
 - Notice that there is no outbound traffic from the App Spokes yet, so we are likely missing something in routing between App Spoke -> TGW -> GWLB.
 
-> &#8505; We now have visibility and contorl for inbound connectivity but instances do not yet have a path outbound.
+> &#8505; We now have visibility and control for inbound connectivity but instances do not yet have a path outbound.
 
 
 ## 3.15. Outbound and East / West (OBEW) Traffic Flows
 
 - The deployed topology does not have all of the AWS routing in place for a working GWLB topology and you must fix it!
-- Refer to the diagram and try to resolve before looking at the specific steps.
+- Refer to the diagram and try to resolve before looking at the specific steps
+- We will work from left to right on the diagram
+
+### 3.15.1. Update App1 Spoke VPC for OB/EW routing with GWLB
+
+- First investigate `ps-lab-app1_spoke_vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+
+- **To verify your solution (or shortcut!), expand below for specific steps**
+
+<details>
+  <summary style="color:red">Expand For Specific Steps</summary>
+
+  - VPC Dashboard -> Filter by VPC -> `ps-lab-app1_spoke_vpc`
+  - Route Tables -> `ps-lab-app1-web1` -> Routes Tab (bottom panel)
+  - Add Route (default route to TGW)
+     - CIDR: 0.0.0.0/0
+     - Target: Transit Gateway (only one available)
+     - Save Routes
+
+---
+
+  - Route Tables -> `ps-lab-app1-web2` -> Routes Tab (bottom panel)
+  - Add Route (default route to TGW)
+     - CIDR: 0.0.0.0/0
+     - Target: Transit Gateway (only one available)
+     - Save Routes
+  
+</details>
+
+### 3.15.2. Update App2 Spoke VPC for OB/EW routing with GWLB
+
+- First investigate `ps-lab-app2_spoke_vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+
+- **To verify your solution (or shortcut!), expand below for specific steps**
+
+<details>
+  <summary style="color:red">Expand For Specific Steps</summary>
+
+- Nothing is missing for `ps-lab-app2_spoke_vpc`! Web1 and Web2 Route Tables already have routes to TGW.
+
+</details>
 
 
-### 3.15.1. Update Transit Gateway (TGW) Route Tables
+### 3.15.3. Update Transit Gateway (TGW) Route Tables
 
 
 > &#8505; For GWLB model, the TGW routing for Outbound and EastWest (OB/EW) traffic is the same as previous TGW models. Spoke TGW RT directs all traffic to Security VPC. Security TGW RT has routes to reach all spoke VPCs for return traffic.
@@ -669,7 +715,7 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
 - **To verify your solution (or shortcut!), expand below for specific steps**
 
 <details>
-  <summary>Expand For Specific Steps</summary>
+  <summary style="color:red">Expand For Specific Steps</summary>
 
   - VPC Dashboard -> Tranist Gateway Route Tables -> Select `ps-lab-from-spoke-vpcs`
   -  Check `Associations` tab and verify the two spoke App VPCs are associated
@@ -695,7 +741,7 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
 > &#10067; What needs to be done on the TGW route tables in order to bring additional Spoke VPCs online for OB/EW traffic?
 
 
-### 3.15.2. Update Security VPC networking for OB/EW with GWLB
+### 3.15.4. Update Security VPC networking for OB/EW with GWLB
 
 > &#8505; The routing and traffic flows can be tricky to grasp, especially when designing for multiple availability zones. For this lab, we are using separate endpoint for Outbound VS EastWest, plus separate endpoint per AZ. Take your time and understand the traffic flows as you configure the routing.
 >
@@ -708,7 +754,7 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
 - **To verify your solution (or shortcut!), expand below for specific steps**
 
 <details>
-  <summary>Expand For Specific Steps</summary>
+  <summary style="color:red">Expand For Specific Steps</summary>
 
   - VPC Dashboard -> Filter by VPC in left menu -> Select `ps-lab-security`
     - Now when checking other sections in this dashboard (route tables, subnets, etc) will be filtered to Security VPC
@@ -798,13 +844,9 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
 </details>
 
 
-### 3.15.3. Update App Spoke VPCs for OB/EW routing with GWLB
-
-- Add default route in web1 / web2 subnets pointed to TGW
-- Complete in App1 and App2 VPCs
 
 
-### 3.15.4. Test OB/EW Traffic flows
+### 3.15.5. Test OB/EW Traffic flows
 
 //TODO - Add Steps
 E/W, outbound
@@ -812,11 +854,11 @@ E/W, outbound
 Inspect FW logs
 
 
-###  3.15.5. Verify HTTP traffic to Spoke web servers
+###  3.15.6. Verify HTTP traffic to Spoke web servers
 
 //TODO - Add Steps
 
-### 3.15.6. Check Logs for Inbound traffic and Create Security Policies
+### 3.15.7. Check Logs for Inbound traffic and Create Security Policies
 
 //TODO - Add Steps
 
@@ -838,6 +880,5 @@ Congratulations!
 You have now successfully ….
 
 
-Manual Last Updated: 2021-02-16
-Lab Last Tested: -
+
 
