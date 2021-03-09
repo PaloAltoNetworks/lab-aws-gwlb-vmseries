@@ -11,22 +11,22 @@ app2_vpc = {
 }
 
 app2_vpc_route_tables = {
-  igw-edge = { name = "igw-edge", igw_association = "app2_vpc" }
-  alb1      = { name = "alb1" }
-  alb2      = { name = "alb2" }
-  gwlbe1    = { name = "gwlbe1" }
-  gwlbe2    = { name = "gwlbe2" }
-  web1      = { name = "web1" }
-  web2      = { name = "web2" }
+  igw-edge = { name = "app2-igw-edge", igw_association = "app2_vpc" }
+  alb1      = { name = "app2-alb1" }
+  alb2      = { name = "app2-alb2" }
+  gwlbe1    = { name = "app2-gwlbe1" }
+  gwlbe2    = { name = "app2-gwlbe2" }
+  web1      = { name = "app2-web1" }
+  web2      = { name = "app2-web2" }
 }
 
 app2_vpc_subnets = {
-  alb1      = { name = "alb1", cidr = "10.250.0.16/28", az = "us-west-2a", rt = "alb1" }
-  alb2      = { name = "alb2", cidr = "10.250.1.16/28", az = "us-west-2b", rt = "alb2" }
-  gwlbe1    = { name = "gwlbe1", cidr = "10.250.0.32/28", az = "us-west-2a", rt = "gwlbe1" }
-  gwlbe2    = { name = "gwlbe2", cidr = "10.250.1.32/28", az = "us-west-2b", rt = "gwlbe2" }
-  web1      = { name = "web1", cidr = "10.250.0.48/28", az = "us-west-2a", rt = "web1" }
-  web2      = { name = "web2", cidr = "10.250.1.48/28", az = "us-west-2b", rt = "web2" }
+  alb1      = { name = "app2-alb1", cidr = "10.250.0.16/28", az = "us-west-2a", rt = "alb1" }
+  alb2      = { name = "app2-alb2", cidr = "10.250.1.16/28", az = "us-west-2b", rt = "alb2" }
+  gwlbe1    = { name = "app2-gwlbe1", cidr = "10.250.0.32/28", az = "us-west-2a", rt = "gwlbe1" }
+  gwlbe2    = { name = "app2-gwlbe2", cidr = "10.250.1.32/28", az = "us-west-2b", rt = "gwlbe2" }
+  web1      = { name = "app2-web1", cidr = "10.250.0.48/28", az = "us-west-2a", rt = "web1" }
+  web2      = { name = "app2-web2", cidr = "10.250.1.48/28", az = "us-west-2b", rt = "web2" }
 }
 
 app2_vpc_endpoints = {
