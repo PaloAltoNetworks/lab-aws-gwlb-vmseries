@@ -46,6 +46,20 @@ module "vpc_routes" {
   transit_gateways  = module.transit_gateways.transit_gateway_ids
 }
 
+module "vpc_routes_additional" {
+  source            = "../modules/vpc_routes"
+  region            = var.region
+  global_tags       = var.global_tags
+  prefix_name_tag   = var.prefix_name_tag
+  vpc_routes        = var.vpc_routes_additional
+  vpc_route_tables  = module.security_vpc.route_table_ids
+  internet_gateways = module.security_vpc.internet_gateway_id
+  nat_gateways      = module.security_vpc.nat_gateway_ids
+  vpc_endpoints     = module.gwlb.endpoint_ids
+  transit_gateways  = module.transit_gateways.transit_gateway_ids
+}
+
+
 # We need to generate a list of subnet IDs
 locals {
   trusted_subnet_ids = [
@@ -126,6 +140,19 @@ module "app1_vpc_routes" {
   global_tags       = var.global_tags
   prefix_name_tag   = var.prefix_name_tag
   vpc_routes        = var.app1_vpc_routes
+  vpc_route_tables  = module.app1_vpc.route_table_ids
+  internet_gateways = module.app1_vpc.internet_gateway_id
+  nat_gateways      = module.app1_vpc.nat_gateway_ids
+  vpc_endpoints     = module.app1_gwlb.endpoint_ids
+  transit_gateways  = module.app1_transit_gateways.transit_gateway_ids
+}
+
+module "app1_vpc_routes_additional" {
+  source            = "../modules/vpc_routes"
+  region            = var.region
+  global_tags       = var.global_tags
+  prefix_name_tag   = var.prefix_name_tag
+  vpc_routes        = var.app1_vpc_routes_additional
   vpc_route_tables  = module.app1_vpc.route_table_ids
   internet_gateways = module.app1_vpc.internet_gateway_id
   nat_gateways      = module.app1_vpc.nat_gateway_ids
@@ -255,6 +282,19 @@ module "app2_vpc_routes" {
   global_tags       = var.global_tags
   prefix_name_tag   = var.prefix_name_tag
   vpc_routes        = var.app2_vpc_routes
+  vpc_route_tables  = module.app2_vpc.route_table_ids
+  internet_gateways = module.app2_vpc.internet_gateway_id
+  nat_gateways      = module.app2_vpc.nat_gateway_ids
+  vpc_endpoints     = module.app2_gwlb.endpoint_ids
+  transit_gateways  = module.app2_transit_gateways.transit_gateway_ids
+}
+
+module "app2_vpc_routes_additional" {
+  source            = "../modules/vpc_routes"
+  region            = var.region
+  global_tags       = var.global_tags
+  prefix_name_tag   = var.prefix_name_tag
+  vpc_routes        = var.app2_vpc_routes_additional
   vpc_route_tables  = module.app2_vpc.route_table_ids
   internet_gateways = module.app2_vpc.internet_gateway_id
   nat_gateways      = module.app2_vpc.nat_gateway_ids

@@ -67,12 +67,15 @@ Example Code block following an action item
     - [3.15.2. Update App2 Spoke VPC for OB/EW routing with TGW](#3152-update-app2-spoke-vpc-for-obew-routing-with-tgw)
     - [3.15.3. Update Transit Gateway (TGW) Route Tables](#3153-update-transit-gateway-tgw-route-tables)
     - [3.15.4. Update Security VPC networking for OB/EW with GWLB](#3154-update-security-vpc-networking-for-obew-with-gwlb)
-    - [3.15.5. Test OB/EW Traffic flows](#3155-test-obew-traffic-flows)
-    - [3.15.6. Verify HTTP traffic to Spoke web servers](#3156-verify-http-traffic-to-spoke-web-servers)
-    - [3.15.7. Check Logs for Inbound traffic and Create Security Policies](#3157-check-logs-for-inbound-traffic-and-create-security-policies)
-  - [3.16. Configure GWLB sub-interface associations](#316-configure-gwlb-sub-interface-associations)
-    - [3.16.1. Test Traffic flows after sub-interface association](#3161-test-traffic-flows-after-sub-interface-association)
-  - [3.17. Step 50: Finished](#317-step-50-finished)
+  - [3.16. Test Traffic Flows](#316-test-traffic-flows)
+    - [3.16.1. Test Outbound Traffic from App1 Spoke Instances](#3161-test-outbound-traffic-from-app1-spoke-instances)
+    - [3.16.1. Test Inbound Web Traffic to App1 Spoke and App2 Spoke](#3161-test-inbound-web-traffic-to-app1-spoke-and-app2-spoke)
+    - [3.16.2. Test E/W Traffic from App1 Spoke Instance to App2 Spoke Instance](#3162-test-ew-traffic-from-app1-spoke-instance-to-app2-spoke-instance)
+  - [3.17. GWLBE / Sub-Interface associations](#317-gwlbe--sub-interface-associations)
+    - [3.17.1. Configure Zones in Panorama](#3171-configure-zones-in-panorama)
+    - [3.17.1. Configure Sub-Interfaces in Panorama](#3171-configure-sub-interfaces-in-panorama)
+    - [3.17.2. Create associations from GWLB Endpoints](#3172-create-associations-from-gwlb-endpoints)
+  - [3.18. Step 50: Finished](#318-step-50-finished)
 
 # 2. Lab Topology
 
@@ -784,7 +787,8 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
      -  Select vpce Endpoint ID `eastwest2` from terraform output
 
 //TODO: Add GIF
-<img src="" width=50% height=50%>
+
+---
 
 **GWLB Endpoint East/West Route Tables**
 
@@ -802,7 +806,8 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
 
 > For this traffic, routes are identical for both AZs, so doesn't strictly require separate route tables. We maintain the separation only for consistency and clarity.
 
-<img src="" width=50% height=50%>
+
+---
 
 **GWLB Endpoint Outbound Route Tables**
 
@@ -822,7 +827,6 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
      -  0.0.0.0/0 -> NAT Gateway -> Select NAT GW ID for AZ2
      -  10.0.0.0/8 -> Transit Gateway -> Select TGW ID
 
-<img src="" width=50% height=50%>
 
 **NAT Gateway Route Tables**
 
@@ -838,41 +842,163 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
      -  10.0.0.0/8 -> Gateway Load Balancer Endpoint `outbound2`
      -  Select vpce Endpoint ID `outbound2` from terraform output
 
-<img src="" width=50% height=50%>
-
 </details>
 
+## 3.16. Test Traffic Flows
+
+At this point all routing should be in place for GWLB topology. Now we will verify traffic flows and check the logs.
+
+> &#8505; Note that web instances in App Spoke VPCs are configured to update and install web server automatically, now that you have provided an outbound path, this should have completed.
+
+###  3.16.1. Test Outbound Traffic from App1 Spoke Instances
+
+- Using an SSH session to App1 instance via NLB, test outbound traffic.
+  
+```ping 8.8.8.8```
+
+```curl http://ifconfig.me```
+
+
+> &#8505; ifconfig.me is a service that just returns your client's public IP (like google "what is my ip" or ipmonkey.com)
+
+- Try the curl to ifconfig.me several times to see if you egress address changes.
+
+> &#10067; What AWS resources have the public IPs you are egressing from?
+
+- Identify these sessions in Panorama traffic logs
+- Identify the sessions for outbound traffic for the automated web server install
+  - Filter `( addr.src in 10.200.0.0/16 ) and ( app eq yum )`
+
+###  3.16.1. Test Inbound Web Traffic to App1 Spoke and App2 Spoke
+
+- Reference terraform output for `app_nlbs_dns`
+- From your local machine browser, attempt connection to http://`app1_nlb`
+- From your local machine browser, attempt connection to http://`app2_nlb`
+- Refresh a few times
+
+> &#8505; Local IP and VM Name in the response will show you which VM you are connected to behind the NLB. Session persistence may keep you pinned to a specific instances
+
+- Identify these sessions in Panorama traffic logs 
+
+
+### 3.16.2. Test E/W Traffic from App1 Spoke Instance to App2 Spoke Instance
+
+- Use EC2 Console to identify the Private IP address of `ps-lab-app2-web-1`
+- Using an SSH session to App1 instance via NLB, test trafic to `ps-lab-app2-web-1`
+
+```ping 10.250.0.x```
+
+```curl http://10.250.0.x```
+
+- Identify these sessions in Panorama traffic logs 
+
+> &#8505; Backhaul traffic flows (VPN or Direct Connect Attachments to TGW) will follow this same general traffic flow as E/W between VPCs.
+
+## 3.17. GWLBE / Sub-Interface associations
+
+Now we have verified inbound, outbound, and east / west traffic flows. We have full visibility of this traffic but as you can see in the logs, everything is wide open!
+
+Since all traffic to GWLB comes in and out of VM-Series on the same interface, it will be tricky to create and manage effective security policies specific to traffic flow directions.
+
+We will now fix this using GWLB sub-interface associations.
+
+> &#8505; Since each GLWB endpoint can be associated with a specific sub-interface, each endpoint can have a separate zone.
+
+> &#8505; This does ***not*** change the overall concept that all traffic from GWLB is an encapsulated bump in the wire and will ingress and egress the same sub-interface. There is no routing between zones.
+
+
+### 3.17.1. Configure Zones in Panorama
+
+- In Panorama select Network Tab -> Template `TPL-STUDENT-BASE-##` -> Zones
+- Add New Zones for each endpoint. Zone Type `Layer3` 
+  - `gwlbe-outbound`
+  - `gwlbe-eastwest`
+  - `gwlbe-inbound-app1`
+  - `gwlbe-inbound-app2`
+
+
+### 3.17.1. Configure Sub-Interfaces in Panorama
+
+> &#8505; No IP configurations are needed for these sub-interfaces.
+
+> &#8505; Unique VLAN Tag must be specified but is not actually used for GWLB GENEVE traffic.
+
+- In Panorama select Network Tab -> Template `TPL-STUDENT-BASE-##` -> Interfaces
+- Highlight ethernet1/1 -> Add Subinterface
+  - Interface Name: `10`
+  - Tag: `10`
+  - Comment: `gwlbe-outbound`
+  - Virtual Router: `gwlb`
+  - Security Zone: `gwlbe-outbound`
+
+---
+
+- Highlight ethernet1/1 -> Add Subinterface
+  - Interface Name: `11`
+  - Tag: `11`
+  - Comment: `gwlbe-eastwest`
+  - Virtual Router: `gwlb`
+  - Security Zone: `gwlbe-eastwest`
+
+---
+
+- Highlight ethernet1/1 -> Add Subinterface
+  - Interface Name: `12`
+  - Tag: `12`
+  - Comment: `gwlbe-inbound-app1`
+  - Virtual Router: `gwlb`
+  - Security Zone: `gwlbe-inbound-app1`
+
+---
+
+- Highlight ethernet1/1 -> Add Subinterface
+  - Interface Name: `13`
+  - Tag: `13`
+  - Comment: `gwlbe-inbound-app2`
+  - Virtual Router: `gwlb`
+  - Security Zone: `gwlbe-inbound-app2`
+
+---
+
+- Commit and Push from Panorama
+
+### 3.17.2. Create associations from GWLB Endpoints
+
+> &#8505; Now we have sub-interfaces and zones, we can associate specific endpoints to sub-interfaces.
+
+> &#8505; For dual-az deployments, there will be two endpoints for each traffic flow. Both will be associated to the same sub-interface.
+
+- Access both VM-Series CLI via SSH
+- Reference terraform output for `endpoint_ids`
+
+
+```
+request plugins vm_series aws gwlb associate interface ethernet1/1.10 vpc-endpoint vpce-0ba2a389dcadbe319
+request plugins vm_series aws gwlb associate interface ethernet1/1.10 vpc-endpoint vpce-02dd7619150b15be3
+request plugins vm_series aws gwlb associate interface ethernet1/1.11 vpc-endpoint vpce-0a46264caf6a87509
+request plugins vm_series aws gwlb associate interface ethernet1/1.11 vpc-endpoint vpce-08f04801d7c17d0bf
+request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint vpce-028d789939ee8c679
+request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint vpce-0b47b2308b848372e
+request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint vpce-01ee2b8b3a1eec93a
+request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint vpce-0ab15378cbb36041f
+
+  "app1-inbound1" = "vpce-028d789939ee8c679"
+  "app1-inbound2" = "vpce-0b47b2308b848372e"
+  "app2-inbound1" = "vpce-01ee2b8b3a1eec93a"
+  "app2-inbound2" = "vpce-0ab15378cbb36041f"
+  "east-west1" = "vpce-0a46264caf6a87509"
+  "east-west2" = "vpce-08f04801d7c17d0bf"
+  "outbound1" = "vpce-0ba2a389dcadbe319"
+  "outbound2" = "vpce-02dd7619150b15be3"
 
 
 
-### 3.15.5. Test OB/EW Traffic flows
+```
 
-//TODO - Add Steps
-E/W, outbound
-
-Inspect FW logs
+> &#8505; As of 10.0.4, this GWLB association is not available to configure duringn bootstrap.
 
 
-###  3.15.6. Verify HTTP traffic to Spoke web servers
-
-//TODO - Add Steps
-
-### 3.15.7. Check Logs for Inbound traffic and Create Security Policies
-
-//TODO - Add Steps
-
-
-## 3.16. Configure GWLB sub-interface associations
-
-//TODO - Add Steps
-
-### 3.16.1. Test Traffic flows after sub-interface association
-
-//TODO - Add Steps
-E/W, outbound, inbound
-Inspect logs
-
-## 3.17. Step 50: Finished
+## 3.18. Step 50: Finished
 
 Congratulations!
 
