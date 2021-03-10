@@ -63,8 +63,8 @@ Example Code block following an action item
     - [3.14.5. Check Inbound Traffic Logs](#3145-check-inbound-traffic-logs)
     - [3.14.6. Check Outbound Traffic Logs](#3146-check-outbound-traffic-logs)
   - [3.15. Outbound and East / West (OBEW) Traffic Flows](#315-outbound-and-east--west-obew-traffic-flows)
-    - [3.15.1. Update App1 Spoke VPC for OB/EW routing with GWLB](#3151-update-app1-spoke-vpc-for-obew-routing-with-gwlb)
-    - [3.15.2. Update App2 Spoke VPC for OB/EW routing with GWLB](#3152-update-app2-spoke-vpc-for-obew-routing-with-gwlb)
+    - [3.15.1. Update App1 Spoke VPC for OB/EW routing with TGW](#3151-update-app1-spoke-vpc-for-obew-routing-with-tgw)
+    - [3.15.2. Update App2 Spoke VPC for OB/EW routing with TGW](#3152-update-app2-spoke-vpc-for-obew-routing-with-tgw)
     - [3.15.3. Update Transit Gateway (TGW) Route Tables](#3153-update-transit-gateway-tgw-route-tables)
     - [3.15.4. Update Security VPC networking for OB/EW with GWLB](#3154-update-security-vpc-networking-for-obew-with-gwlb)
     - [3.15.5. Test OB/EW Traffic flows](#3155-test-obew-traffic-flows)
@@ -238,7 +238,6 @@ vi student.auto.tfvars
 ```
 ssh_key_name     = "qwikLABS-xxx"
 
-### VMSERIES ###
 firewalls = [
   {
     name    = "vmseries01"
@@ -663,7 +662,7 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
 - Refer to the diagram and try to resolve before looking at the specific steps
 - We will work from left to right on the diagram
 
-### 3.15.1. Update App1 Spoke VPC for OB/EW routing with GWLB
+### 3.15.1. Update App1 Spoke VPC for OB/EW routing with TGW
 
 - First investigate `ps-lab-app1_spoke_vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 
@@ -689,7 +688,7 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
   
 </details>
 
-### 3.15.2. Update App2 Spoke VPC for OB/EW routing with GWLB
+### 3.15.2. Update App2 Spoke VPC for OB/EW routing with TGW
 
 - First investigate `ps-lab-app2_spoke_vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 
