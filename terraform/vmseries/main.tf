@@ -197,7 +197,7 @@ module "app1_ec2_cluster" {
   key_name               = var.ssh_key_name
   monitoring             = true
   vpc_security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
-  subnet_id              = module.app1_vpc.subnet_ids["web1"]
+  subnet_ids              = [module.app1_vpc.subnet_ids["web1"], module.app1_vpc.subnet_ids["web2"]]
   user_data_base64 = base64encode(local.web_user_data)
   tags = var.global_tags
 }
@@ -339,7 +339,7 @@ module "app2_ec2_cluster" {
   key_name               = var.ssh_key_name
   monitoring             = true
   vpc_security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
-  subnet_id              = module.app2_vpc.subnet_ids["web1"]
+  subnet_ids              = [module.app2_vpc.subnet_ids["web1"], module.app2_vpc.subnet_ids["web2"]]
   user_data_base64 = base64encode(local.web_user_data)
   tags = var.global_tags
 }

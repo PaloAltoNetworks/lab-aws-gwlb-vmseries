@@ -69,13 +69,14 @@ Example Code block following an action item
     - [3.15.4. Update Security VPC networking for OB/EW with GWLB](#3154-update-security-vpc-networking-for-obew-with-gwlb)
   - [3.16. Test Traffic Flows](#316-test-traffic-flows)
     - [3.16.1. Test Outbound Traffic from App1 Spoke Instances](#3161-test-outbound-traffic-from-app1-spoke-instances)
-    - [3.16.1. Test Inbound Web Traffic to App1 Spoke and App2 Spoke](#3161-test-inbound-web-traffic-to-app1-spoke-and-app2-spoke)
-    - [3.16.2. Test E/W Traffic from App1 Spoke Instance to App2 Spoke Instance](#3162-test-ew-traffic-from-app1-spoke-instance-to-app2-spoke-instance)
+    - [3.16.2. Test Inbound Web Traffic to App1 Spoke and App2 Spoke](#3162-test-inbound-web-traffic-to-app1-spoke-and-app2-spoke)
+    - [3.16.3. Test E/W Traffic from App1 Spoke Instance to App2 Spoke Instance](#3163-test-ew-traffic-from-app1-spoke-instance-to-app2-spoke-instance)
   - [3.17. GWLBE / Sub-Interface associations](#317-gwlbe--sub-interface-associations)
     - [3.17.1. Configure Zones in Panorama](#3171-configure-zones-in-panorama)
-    - [3.17.1. Configure Sub-Interfaces in Panorama](#3171-configure-sub-interfaces-in-panorama)
-    - [3.17.2. Create associations from GWLB Endpoints](#3172-create-associations-from-gwlb-endpoints)
-  - [3.18. Step 50: Finished](#318-step-50-finished)
+    - [3.17.2. Configure Sub-Interfaces in Panorama](#3172-configure-sub-interfaces-in-panorama)
+    - [3.17.3. Create associations from GWLB Endpoints](#3173-create-associations-from-gwlb-endpoints)
+  - [3.18. Review Questions](#318-review-questions)
+  - [3.19. Finished](#319-finished)
 
 # 2. Lab Topology
 
@@ -869,7 +870,7 @@ At this point all routing should be in place for GWLB topology. Now we will veri
 - Identify the sessions for outbound traffic for the automated web server install
   - Filter `( addr.src in 10.200.0.0/16 ) and ( app eq yum )`
 
-###  3.16.1. Test Inbound Web Traffic to App1 Spoke and App2 Spoke
+###  3.16.2. Test Inbound Web Traffic to App1 Spoke and App2 Spoke
 
 - Reference terraform output for `app_nlbs_dns`
 - From your local machine browser, attempt connection to http://`app1_nlb`
@@ -881,7 +882,7 @@ At this point all routing should be in place for GWLB topology. Now we will veri
 - Identify these sessions in Panorama traffic logs 
 
 
-### 3.16.2. Test E/W Traffic from App1 Spoke Instance to App2 Spoke Instance
+### 3.16.3. Test E/W Traffic from App1 Spoke Instance to App2 Spoke Instance
 
 - Use EC2 Console to identify the Private IP address of `ps-lab-app2-web-1`
 - Using an SSH session to App1 instance via NLB, test trafic to `ps-lab-app2-web-1`
@@ -917,7 +918,7 @@ We will now fix this using GWLB sub-interface associations.
   - `gwlbe-inbound-app2`
 
 
-### 3.17.1. Configure Sub-Interfaces in Panorama
+### 3.17.2. Configure Sub-Interfaces in Panorama
 
 > &#8505; No IP configurations are needed for these sub-interfaces.
 
@@ -962,7 +963,7 @@ We will now fix this using GWLB sub-interface associations.
 
 - Commit and Push from Panorama
 
-### 3.17.2. Create associations from GWLB Endpoints
+### 3.17.3. Create associations from GWLB Endpoints
 
 > &#8505; Now we have sub-interfaces and zones, we can associate specific endpoints to sub-interfaces.
 
@@ -970,39 +971,47 @@ We will now fix this using GWLB sub-interface associations.
 
 - Access both VM-Series CLI via SSH
 - Reference terraform output for `endpoint_ids`
-
+ ```endpoint_ids = {
+  "app1-inbound1" = "vpce-0e51ca41845d7e46d"
+  "app1-inbound2" = "vpce-08ecd4e5d4a76984c"
+  "app2-inbound1" = "vpce-0d72d55ab54535809"
+  "app2-inbound2" = "vpce-061d284d04570c3c0"
+  "east-west1" = "vpce-0250aac691a916896"
+  "east-west2" = "vpce-009f5031e90721e20"
+  "outbound1" = "vpce-0e152c50daaa4c388"
+  "outbound2" = "vpce-03a1ab84543184ae8"
+}
+```
+- Use template below to prep CLI commands in a local text editor, replacing ${x} with appropriate Endpoint ID
 
 ```
-request plugins vm_series aws gwlb associate interface ethernet1/1.10 vpc-endpoint vpce-0ba2a389dcadbe319
-request plugins vm_series aws gwlb associate interface ethernet1/1.10 vpc-endpoint vpce-02dd7619150b15be3
-request plugins vm_series aws gwlb associate interface ethernet1/1.11 vpc-endpoint vpce-0a46264caf6a87509
-request plugins vm_series aws gwlb associate interface ethernet1/1.11 vpc-endpoint vpce-08f04801d7c17d0bf
-request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint vpce-028d789939ee8c679
-request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint vpce-0b47b2308b848372e
-request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint vpce-01ee2b8b3a1eec93a
-request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint vpce-0ab15378cbb36041f
-
-  "app1-inbound1" = "vpce-028d789939ee8c679"
-  "app1-inbound2" = "vpce-0b47b2308b848372e"
-  "app2-inbound1" = "vpce-01ee2b8b3a1eec93a"
-  "app2-inbound2" = "vpce-0ab15378cbb36041f"
-  "east-west1" = "vpce-0a46264caf6a87509"
-  "east-west2" = "vpce-08f04801d7c17d0bf"
-  "outbound1" = "vpce-0ba2a389dcadbe319"
-  "outbound2" = "vpce-02dd7619150b15be3"
-
-
+request plugins vm_series aws gwlb associate interface ethernet1/1.10 vpc-endpoint ${outbound1}
+request plugins vm_series aws gwlb associate interface ethernet1/1.10 vpc-endpoint ${outbound2}
+request plugins vm_series aws gwlb associate interface ethernet1/1.11 vpc-endpoint ${east-west1}
+request plugins vm_series aws gwlb associate interface ethernet1/1.11 vpc-endpoint ${east-west2}
+request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${app1-inbound1}
+request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${app1-inbound2}
+request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${app2-inbound1}
+request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${app2-inbound2}
 
 ```
 
-> &#8505; As of 10.0.4, this GWLB association is not available to configure duringn bootstrap.
+- Paste commands into CLI of both VM-Series
+
+- Use show command to verify the asociations
+
+```show plugins vm_series aws gwlb ```
+
+> &#8505; As of 10.0.4, this GWLB association is not available to configure during bootstrap.
 
 
-## 3.18. Step 50: Finished
+
+## 3.18. Review Questions
+
+
+## 3.19. Finished
 
 Congratulations!
-
-You have now successfully ….
 
 
 
