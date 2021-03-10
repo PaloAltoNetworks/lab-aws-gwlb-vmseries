@@ -1,6 +1,5 @@
 ssh_key_name     = "qwikLABS-xxx"
 
-### VMSERIES ###
 firewalls = [
   {
     name    = "vmseries01"
