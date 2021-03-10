@@ -23,6 +23,7 @@ variable firewalls {}
 
 # VPC_ROUTES
 variable vpc_routes {}
+variable vpc_routes_additional { default = {} }
 
 # GWLB
 variable gateway_load_balancers {}
@@ -41,6 +42,7 @@ variable app1_vpc_security_groups { default = {} }
 variable app1_nat_gateways { default = {} }
 variable app1_vpc_endpoints { default = {} }
 variable app1_vpc_routes { default = {} }
+variable app1_vpc_routes_additional { default = {} }
 variable app1_gateway_load_balancers { default = {} }
 variable app1_gateway_load_balancer_endpoints { default = {} }
 variable app1_transit_gateways { default = {} }
@@ -56,6 +58,7 @@ variable app2_vpc_security_groups { default = {} }
 variable app2_nat_gateways { default = {} }
 variable app2_vpc_endpoints { default = {} }
 variable app2_vpc_routes { default = {} }
+variable app2_vpc_routes_additional { default = {} }
 variable app2_gateway_load_balancers { default = {} }
 variable app2_gateway_load_balancer_endpoints { default = {} }
 variable app2_transit_gateways { default = {} }
