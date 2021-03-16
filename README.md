@@ -578,7 +578,7 @@ Starting left to right on the diagram...
      - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
   - Add Route (app1-alb2 CIDR to app1-gwlbe2)
      - CIDR: 10.200.1.16/28
-     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
+     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound2 GWLBE)
   - Save Routes
 
 ---  
