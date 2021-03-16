@@ -632,13 +632,13 @@ Only `ps-lab-app2-igw-edge` Route Table is missing routes for App2 Spoke
 Starting left to right on the diagram...
 
   - VPC Dashboard -> Filter by VPC -> `ps-lab-app2-spoke-vpc`
-  - Route Tables -> `ps-lab-app2-igw-edge` -> Routes Tab (bottom panel)
-  - Add Route (app1-alb1 CIDR to app2-gwlbe1)
+  - Select Route Tables -> `ps-lab-app2-igw-edge` -> Routes Tab (bottom panel)
+  - Add Route (app2-alb1 CIDR to app2-gwlbe1)
      - CIDR: 10.250.0.16/28
-     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
-  - Add Route (app1-alb2 CIDR to app2-gwlbe2)
+     - Target: Gateway Load Balancer Endpoint (ID of app2-inbound1 GWLBE)
+  - Add Route (app2-alb2 CIDR to app2-gwlbe2)
      - CIDR: 10.250.1.16/28
-     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
+     - Target: Gateway Load Balancer Endpoint (ID of app2-inbound2 GWLBE)
  - Save Routes
 
 </details>
