@@ -562,7 +562,7 @@ vmseries_eips = {
 
 ### 3.15.1. Update App1 Spoke VPC networking for Inbound inspection with GWLB
 
-- First investigate `ps-lab-app1_spoke_vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- First investigate `ps-lab-app1-spoke-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 - For inbound traffic, no changes are needed for the `web` route tables in the App Spoke VPCs
 - Refer to terraform output for GWLB Endpoint IDs (or identify them in VPC Dashboard)
 
@@ -573,7 +573,7 @@ vmseries_eips = {
 
 Starting left to right on the diagram...
 
-  - VPC Dashboard -> Filter by VPC -> `ps-lab-app1_spoke_vpc`
+  - VPC Dashboard -> Filter by VPC -> `ps-lab-app1-spoke-vpc`
   - Route Tables -> `ps-lab-app1-igw-edge` -> Routes Tab (bottom panel)
   - Add Route (app1-alb1 CIDR to app1-gwlbe1)
      - CIDR: 10.200.0.16/28
@@ -618,7 +618,7 @@ Starting left to right on the diagram...
 
 ### 3.15.2. Update App2 Spoke VPC networking for Inbound inspection with GWLB
 
-- First investigate `ps-lab-app2_spoke_vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- First investigate `ps-lab-app2-spoke-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 - For inbound traffic, no changes are needed for the `web` route tables in the App Spoke VPCs
 - Refer to terraform output for GWLB Endpoint IDs (or identify them in VPC Dashboard)
 
@@ -631,7 +631,7 @@ Only `ps-lab-app2-igw-edge` Route Table is missing routes for App2 Spoke
 
 Starting left to right on the diagram...
 
-  - VPC Dashboard -> Filter by VPC -> `ps-lab-app2_spoke_vpc`
+  - VPC Dashboard -> Filter by VPC -> `ps-lab-app2-spoke-vpc`
   - Route Tables -> `ps-lab-app2-igw-edge` -> Routes Tab (bottom panel)
   - Add Route (app1-alb1 CIDR to app2-gwlbe1)
      - CIDR: 10.250.0.16/28
