@@ -473,6 +473,8 @@ vmseries_eips = {
 
 ## 3.14. Fix GWLB Health Probes
 
+**Update for NAM, the security policy `gwlb-any` is not prepped on the student DGs. You can make this or just proceed as the traffic will be hitting intrazone-default (with logging) anyway.** 
+
 - Check GWLB Target Group status
   - In EC2 Console -> Target Groups -> select `ps-lab-security-gwlb`
   - Verify health check settings first in the `Group details` tab
@@ -490,7 +492,7 @@ vmseries_eips = {
   - In Panorama UI -> Monitor -> Traffic
   - Analyze the traffic logs for the port 80 traffic
   - Enable Columns to view `Bytes Sent` and `Bytes Received`
-  - Notice that the sessions matching allow policy for `gwlb-permit-any` policy but aging out
+  - Notice that the sessions matching allow policy for <s>`gwlb-any`</s> `intrazone-default` policy but aging out
 
 > &#10067; Why are there two different source addresses in the traffic logs for these GWLB Health Probes?
 
@@ -525,7 +527,7 @@ vmseries_eips = {
       - Dest Addresses: `10.100.0.16/28`, `10.100.1.16/28`
       - Application: `Any`
       - Serivce: `service-http`
-    - Make sure new policy is before the existing catch-all `gwlb-any` policy
+    - <s>Make sure new policy is before the existing catch-all `gwlb-any` policy</s> (not currently prepped on lab DGs)
 
   - Commit and Push your changes
 
@@ -578,7 +580,7 @@ Starting left to right on the diagram...
      - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
   - Add Route (app1-alb2 CIDR to app1-gwlbe2)
      - CIDR: 10.200.1.16/28
-     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
+     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound2 GWLBE)
   - Save Routes
 
 ---  
