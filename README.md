@@ -15,8 +15,8 @@ The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panor
 This guide is intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. This could be easily adapted for other environments.
 
 ```
-Manual Last Updated: 2021-03-09
-Lab Last Tested: 2021-03-09
+Manual Last Updated: 2021-03-15
+Lab Last Tested: 2021-03-15
 ```
 
 ## 1.2. Lab Guide Syntax conventions
@@ -75,8 +75,11 @@ Example Code block following an action item
   - [3.18. GWLBE / Sub-Interface associations](#318-gwlbe--sub-interface-associations)
     - [3.18.1. Configure Zones in Panorama](#3181-configure-zones-in-panorama)
     - [3.18.2. Configure Sub-Interfaces in Panorama](#3182-configure-sub-interfaces-in-panorama)
+  - [- IPv4 -> Type -> `DHCP Client`](#--ipv4---type---dhcp-client)
+  - [- IPv4 -> Type -> `DHCP Client`](#--ipv4---type---dhcp-client-1)
     - [3.18.3. Create associations from GWLB Endpoints](#3183-create-associations-from-gwlb-endpoints)
-  - [3.19. Review Questions](#319-review-questions)
+    - [3.18.3. Create Zone-Based policies for sub-interfaces](#3183-create-zone-based-policies-for-sub-interfaces)
+  - [3.19. Review Lab Quiz Questions](#319-review-lab-quiz-questions)
   - [3.20. Finished](#320-finished)
 
 # 2. Lab Topology
@@ -948,7 +951,7 @@ We will now fix this using GWLB sub-interface associations.
 
 ### 3.18.2. Configure Sub-Interfaces in Panorama
 
-> &#8505; No IP configurations are needed for these sub-interfaces.
+> &#8505; No IP configurations should be needed for these sub-interfaces, but we have discovered some issues with certain traffic flows if the sub-interfaces are not set to DHCP. This is being investigated by engineering.
 
 > &#8505; Unique VLAN Tag must be specified but is not actually used for GWLB GENEVE traffic.
 
@@ -959,6 +962,7 @@ We will now fix this using GWLB sub-interface associations.
   - Comment: `gwlbe-outbound`
   - Virtual Router: `gwlb`
   - Security Zone: `gwlbe-outbound`
+  - IPv4 -> Type -> `DHCP Client`
 
 ---
 
@@ -968,7 +972,7 @@ We will now fix this using GWLB sub-interface associations.
   - Comment: `gwlbe-eastwest`
   - Virtual Router: `gwlb`
   - Security Zone: `gwlbe-eastwest`
-
+  - IPv4 -> Type -> `DHCP Client`
 ---
 
 - Highlight ethernet1/1 -> Add Subinterface
@@ -977,7 +981,7 @@ We will now fix this using GWLB sub-interface associations.
   - Comment: `gwlbe-inbound-app1`
   - Virtual Router: `gwlb`
   - Security Zone: `gwlbe-inbound-app1`
-
+  - IPv4 -> Type -> `DHCP Client`
 ---
 
 - Highlight ethernet1/1 -> Add Subinterface
@@ -986,6 +990,7 @@ We will now fix this using GWLB sub-interface associations.
   - Comment: `gwlbe-inbound-app2`
   - Virtual Router: `gwlb`
   - Security Zone: `gwlbe-inbound-app2`
+  - IPv4 -> Type -> `DHCP Client`
 
 ---
 
@@ -1024,7 +1029,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoi
 
 ```
 
-- Paste commands into CLI of both VM-Series
+- Paste commands into CLI of **both** VM-Series
 
 - Use show command to verify the asociations
 
@@ -1033,8 +1038,69 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoi
 > &#8505; As of 10.0.4, this GWLB association is not available to configure during bootstrap.
 
 
+### 3.18.3. Create Zone-Based policies for sub-interfaces
 
-## 3.19. Review Questions
+> &#8505; Now that each endpoint is associated with a specific zone, we can have more logic with our security policies.
+
+- Generate inbound, outbound, and east/west traffic
+- Check the traffic logs and notice this traffic should now show source / destination zone specific to each traffic flow endpoint
+- Notice Traffic is currently hitting intrazone-default
+- Create security policies specific for the traffic 
+
+---
+- Name: App Spoke Web Subnets Outbound
+  - Source Zone: `gwlbe-outbound`
+  - Source Address: `10.200.0.48/28, 10.200.1.48/28, 10.250.0.48/28, 10.250.0.48/28`
+  - Application: `ssl, web-browsing, yum, ntp`
+  - Destination Zone: `gwlbe-outbound`
+  - Destination Address: `any`
+
+---
+- Name: App Spoke1 to App Spoke2
+  - Source Zone: `gwlbe-eastwest`
+  - Source Address: `10.200.0.48/28, 10.200.1.48/28`
+  - Application: `ssh, web-browsing, ping`
+  - Destination Zone: `gwlbe-eastwest`
+  - Destination Address: `10.250.0.48/28, 10.250.1.48/28`
+
+---
+- Name: App Spoke2 to App Spoke1
+  - Source Zone: `gwlbe-eastwest`
+  - Source Address: `10.250.0.48/28, 10.250.1.48/28`
+  - Application: `ssh, web-browsing, ping`
+  - Destination Zone: `gwlbe-eastwest`
+  - Destination Address: `10.200.0.48/28, 10.200.1.48/28`
+
+---
+- Name: Inbound to App Spoke1 LBs
+  - Source Zone: `gwlbe-inbound-app1`
+  - Source Address: `Your Client IP` (google 'what is my ip' from browser)
+  - Application: `ssh, web-browsing, ping`
+  - Destination Zone: `gwlbe-inbound-app1`
+  - Destination Address: `10.200.0.16/28, 10.200.1.16/28`
+
+---
+- Name: Inbound to App Spoke2 LBs
+  - Source Zone: `gwlbe-inbound-app2`
+  - Source Address: `Your Client IP` (google 'what is my ip' from browser)
+  - Application: `ssh, web-browsing, ping`
+  - Destination Zone: `gwlbe-inbound-app2`
+  - Destination Address: `10.250.0.16/28, 10.250.1.16/28`
+
+---
+- Create deny rule at bottom for all other traffic
+- Name: Deny Any
+  - Source Zone: `any`
+  - Source Address: `any`
+  - Application: `any`
+  - Destination Zone: `any`
+  - Destination Address: `any`
+
+
+- Generate inbound, outbound, and east/west traffic
+- Verify traffic is matching sub-interface based zones as expected
+
+## 3.19. Review Lab Quiz Questions
 
 
 ## 3.20. Finished
