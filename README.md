@@ -962,7 +962,7 @@ We will now fix this using GWLB sub-interface associations.
   - Interface Name: `10`
   - Tag: `10`
   - Comment: `gwlbe-outbound`
-  - Virtual Router: `gwlb`
+  - Virtual Router: `vr-default`
   - Security Zone: `gwlbe-outbound`
   - IPv4 -> Type -> `DHCP Client`
 
@@ -972,7 +972,7 @@ We will now fix this using GWLB sub-interface associations.
   - Interface Name: `11`
   - Tag: `11`
   - Comment: `gwlbe-eastwest`
-  - Virtual Router: `gwlb`
+  - Virtual Router: `vr-default`
   - Security Zone: `gwlbe-eastwest`
   - IPv4 -> Type -> `DHCP Client`
 ---
@@ -981,7 +981,7 @@ We will now fix this using GWLB sub-interface associations.
   - Interface Name: `12`
   - Tag: `12`
   - Comment: `gwlbe-inbound-app1`
-  - Virtual Router: `gwlb`
+  - Virtual Router: `vr-default`
   - Security Zone: `gwlbe-inbound-app1`
   - IPv4 -> Type -> `DHCP Client`
 ---
@@ -990,7 +990,7 @@ We will now fix this using GWLB sub-interface associations.
   - Interface Name: `13`
   - Tag: `13`
   - Comment: `gwlbe-inbound-app2`
-  - Virtual Router: `gwlb`
+  - Virtual Router: `vr-default`
   - Security Zone: `gwlbe-inbound-app2`
   - IPv4 -> Type -> `DHCP Client`
 
