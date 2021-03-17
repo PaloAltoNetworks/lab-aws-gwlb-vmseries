@@ -93,8 +93,8 @@ Example Code block following an action item
 
 - Download `Student Lab Details` File from Qwiklabs interface for later reference
 - Click Open Console and authenticate to AWS account with credentials displayed in Qwiklabbs
-- Verify in correct region 
-
+- Verify your selected region in AWS console (top right) matches the lab-details.txt
+  
 ### 3.1.1. Find SSH Key Pair Name
 
 - EC2 Console -> Key pairs
@@ -202,6 +202,12 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 
 ## 3.6. Download Terraform 
 
+- Make sure CloudShell home directory is clean
+
+```
+rm -rf ~/bin && rm -rf ~/ps-regional-2021-aws-labs/
+```
+
 - Download Terraform in Cloudshell
 
 ```
@@ -234,33 +240,53 @@ git clone https://github.com/PaloAltoNetworks/ps-regional-2021-aws-labs.git && c
 ## 3.8. Update Deployment Values in tfvars
 
 
+For simplicity, only the variable values that need to be modified are in a separate tfvars file.
 
+- **Be very careful to ensure all of the parameters are set correctly. These values will be passed in as User Data for the VM-Series launch. If values are incorrect, the bootstrap will likely fail and you will need to redeploy!**
 
-For simplicity, only the variable values that need to be modified are separated into a separate tfvars file.
+- Make sure you are in the appropriate directory
 
+```
+cd ~/ps-regional-2021-aws-labs/terraform/vmseries
+```
 
-- Use vi to update values in `student.auto.tfvars`
+- Review the 3 options to determine which you want to use to edit the values. If you are unfamiliar with editing files in linux, Option 3 will be easiest.
+
+---
+- ( Option 1 ) Use vi to update values in `student.auto.tfvars`
 
 ```
 vi student.auto.tfvars
 ```
 
-- Update the specifics of your deployment
-- Anything marked with `##` should be replaced with your Student Number
-- Anything marked with `xxx` should be replaced with the appropriate values for this deployment
-- Reference `lab-details.txt` downloaded from QwikLabs console for values
-- Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console!
-
-> &#8505; (Optional) If you don't like vi, you can install nano editor:
-> ```
-> sudo yum install -y nano
-> ```
-
+- Update the specifics of your deployment from the values in `lab-details.txt` from QL console
+  - Set `region` inside of the quotes
+  - Anything marked with `##` should be replaced with your Student Number
+  - Anything marked with `xxx` should be replaced with the appropriate values for this deployment
+  - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
 
 <img src="https://user-images.githubusercontent.com/43679669/108796675-47138c00-7557-11eb-99b4-58141a3cf874.gif" width=50% height=50%>
 
+---
+- ( Option 2 ) If you don't like vi, you can install nano editor:
+```
+sudo yum install -y nano
+nano student.auto.tfvars
+```
+
+- Update the specifics of your deployment from the values in `lab-details.txt` from QL console
+  - Set `region` inside of the quotes
+  - Anything marked with `##` should be replaced with your Student Number
+  - Anything marked with `xxx` should be replaced with the appropriate values for this deployment
+  - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
+
+---
+- ( Option 3 ) Edit in local text editor and upload to CloudShell:
+  - Copy the text below to a local plain-text editor (notepad, etc)
 
 ```
+region           = "xxx"
+
 ssh_key_name     = "qwikLABS-xxx"
 
 firewalls = [
@@ -309,6 +335,27 @@ firewalls = [
 ]
 ```
 
+- Update the specifics of your deployment from the values in `lab-details.txt` from QL console
+  - Set `region` inside of the quotes
+  - Anything marked with `##` should be replaced with your Student Number
+  - Anything marked with `xxx` should be replaced with the appropriate values for this deployment
+  - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
+- Save file locally with name `student.auto.tfvars`
+- In CloudShell select `Actions` -> `Upload file` -> Select your updated file
+- Move uploaded file to appropriate location
+
+```
+mv ~/student.auto.tfvars ~/ps-regional-2021-aws-labs/terraform/vmseries/student.auto.tfvars
+```
+
+---
+
+- Verify the contents of file have the correct values
+
+```
+cat ~/ps-regional-2021-aws-labs/terraform/vmseries/student.auto.tfvars
+```
+
 > &#8505; This deployment is using a [newer feature for basic bootstrapping](https://docs.paloaltonetworks.com/plugins/vm-series-and-panorama-plugins-release-notes/vm-series-plugin/vm-series-plugin-20/vm-series-plugin-201/whats-new-in-vm-series-plugin-201.html) that does not require S3 buckets. Any paramaters normally specified in init-cfg can now be passed directly to the instance via UserData. Prerequisite is the image you are deploying has plugin 2.0.1+ installed
 
 > &#8505; Notice the plugin-op-command to enable the GWLB inspection. There are additional bootstrap parameters planned for 10.0.5 to set GWLB sub-interface associations to endpoints.
@@ -322,7 +369,7 @@ firewalls = [
 - Make sure you are in the appropriate directory
 
 ```
-cd /home/cloudshell-user/ps-regional-2021-aws-labs/terraform/vmseries
+cd ~/ps-regional-2021-aws-labs/terraform/vmseries
 ```
 - Initialize Terraform
 
