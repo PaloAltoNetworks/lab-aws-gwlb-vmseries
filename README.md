@@ -157,6 +157,8 @@ Example Code block following an action item
 
 ## 3.5. Search Available VM-Series Images (AMIs)
 
+> &#8505; We will use us-west-2 for example of using this search and answering the questions, but your actual deployment for this lab may be in a different region.
+
 - In cloud console, enter:
 
 ```
@@ -174,9 +176,9 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 - We see that `10.0.4` AMI is availble, which is what we are targeting for this deployment
 
 
-> &#10067; How many different BYOL AMIs are avilable for 10.x in this region?
+> &#10067; How many different BYOL AMIs are avilable for 10.x in the us-west-2 region?
 > 
-> &#10067; What is the Marketplace AMI ID for 10.0.4 in this region?
+> &#10067; What is the Marketplace AMI ID for 10.0.4 in the us-west-2 region?
 
 > &#10067; What are some options if there is no AMI available for your targetd version?
 
@@ -509,18 +511,20 @@ vmseries_eips = {
 
 - From SSH session on either VM-Series, check the bootstrap summary
   
-```show system bootstrap status```
+```
+show system bootstrap status
+```
 
 - Check the bootstrap detail log
 
-```debug logview component bts_details```
+```
+debug logview component bts_details
+```
 
 > &#8505; If you have Cloudwatch logs enabled, you can see most of this status without SSH session to VM-Series.
 
 
 ## 3.14. Fix GWLB Health Probes
-
-**Update for NAM, the security policy `gwlb-any` is not prepped on the student DGs. You can make this or just proceed as the traffic will be hitting intrazone-default (with logging) anyway.** 
 
 - Check GWLB Target Group status
   - In EC2 Console -> Target Groups -> select `ps-lab-security-gwlb`
@@ -539,7 +543,7 @@ vmseries_eips = {
   - In Panorama UI -> Monitor -> Traffic
   - Analyze the traffic logs for the port 80 traffic
   - Enable Columns to view `Bytes Sent` and `Bytes Received`
-  - Notice that the sessions matching allow policy for <s>`gwlb-any`</s> `intrazone-default` policy but aging out
+  - Notice that the sessions matching allow policy for `GWLB-ANY` policy but aging out
 
 > &#10067; Why are there two different source addresses in the traffic logs for these GWLB Health Probes?
 
