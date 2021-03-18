@@ -1,3 +1,5 @@
+region           = "xxx"
+
 ssh_key_name     = "qwikLABS-xxx"
 
 firewalls = [
