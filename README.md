@@ -84,7 +84,7 @@ Example Code block following an action item
 
 # 2. Lab Topology
 
-<img src="https://user-images.githubusercontent.com/43679669/109910663-a455be80-7c76-11eb-833d-dd57fe424a97.png">
+![GWLB Topology](images/topology.png)
 
 
 
