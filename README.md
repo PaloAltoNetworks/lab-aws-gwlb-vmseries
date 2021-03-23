@@ -1103,7 +1103,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 ---
 - Name: App Spoke Web Subnets Outbound
   - Source Zone: `gwlbe-outbound`
-  - Source Address: `10.200.0.48/28, 10.200.1.48/28, 10.250.0.48/28, 10.250.0.48/28`
+  - Source Address: `10.200.0.48/28, 10.200.1.48/28, 10.250.0.48/28, 10.250.1.48/28`
   - Application: `ssl, web-browsing, yum, ntp`
   - Destination Zone: `gwlbe-outbound`
   - Destination Address: `any`
