@@ -78,7 +78,7 @@ Example Code block following an action item
   - [- IPv4 -> Type -> `DHCP Client`](#--ipv4---type---dhcp-client)
   - [- IPv4 -> Type -> `DHCP Client`](#--ipv4---type---dhcp-client-1)
     - [3.18.3. Create associations from GWLB Endpoints](#3183-create-associations-from-gwlb-endpoints)
-    - [3.18.3. Create Zone-Based policies for sub-interfaces](#3183-create-zone-based-policies-for-sub-interfaces)
+    - [3.18.4. Create Zone-Based policies for sub-interfaces](#3184-create-zone-based-policies-for-sub-interfaces)
   - [3.19. Review Lab Quiz Questions](#319-review-lab-quiz-questions)
   - [3.20. Finished](#320-finished)
 
@@ -1077,8 +1077,8 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.11 vpc-endpoi
 request plugins vm_series aws gwlb associate interface ethernet1/1.11 vpc-endpoint ${east-west2}
 request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${app1-inbound1}
 request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${app1-inbound2}
-request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${app2-inbound1}
-request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${app2-inbound2}
+request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoint ${app2-inbound1}
+request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoint ${app2-inbound2}
 
 ```
 
@@ -1091,7 +1091,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoi
 > &#8505; As of 10.0.4, this GWLB association is not available to configure during bootstrap.
 
 
-### 3.18.3. Create Zone-Based policies for sub-interfaces
+### 3.18.4. Create Zone-Based policies for sub-interfaces
 
 > &#8505; Now that each endpoint is associated with a specific zone, we can have more logic with our security policies.
 
