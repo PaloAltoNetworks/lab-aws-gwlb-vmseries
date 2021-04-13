@@ -22,11 +22,11 @@ app1_vpc_route_tables = {
 
 app1_vpc_subnets = {
   alb1      = { name = "app1-alb1", cidr = "10.200.0.16/28", az = "ap-northeast-1a", rt = "alb1" }
-  alb2      = { name = "app1-alb2", cidr = "10.200.1.16/28", az = "ap-northeast-1b", rt = "alb2" }
+  alb2      = { name = "app1-alb2", cidr = "10.200.1.16/28", az = "ap-northeast-1c", rt = "alb2" }
   gwlbe1    = { name = "app1-gwlbe1", cidr = "10.200.0.32/28", az = "ap-northeast-1a", rt = "gwlbe1" }
-  gwlbe2    = { name = "app1-gwlbe2", cidr = "10.200.1.32/28", az = "ap-northeast-1b", rt = "gwlbe2" }
+  gwlbe2    = { name = "app1-gwlbe2", cidr = "10.200.1.32/28", az = "ap-northeast-1c", rt = "gwlbe2" }
   web1      = { name = "app1-web1", cidr = "10.200.0.48/28", az = "ap-northeast-1a", rt = "web1" }
-  web2      = { name = "app1-web2", cidr = "10.200.1.48/28", az = "ap-northeast-1b", rt = "web2" }
+  web2      = { name = "app1-web2", cidr = "10.200.1.48/28", az = "ap-northeast-1c", rt = "web2" }
 }
 
 app1_vpc_endpoints = {
