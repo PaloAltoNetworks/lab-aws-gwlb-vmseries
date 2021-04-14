@@ -78,12 +78,10 @@ Example Code block following an action item
   - [3.18. GWLBE / Sub-Interface associations](#318-gwlbe--sub-interface-associations)
     - [3.18.1. Configure Zones in Panorama](#3181-configure-zones-in-panorama)
     - [3.18.2. Configure Sub-Interfaces in Panorama](#3182-configure-sub-interfaces-in-panorama)
-  - [3.19. - IPv4 -> Type -> `DHCP Client`](#319---ipv4---type---dhcp-client)
-  - [3.20. - IPv4 -> Type -> `DHCP Client`](#320---ipv4---type---dhcp-client)
-    - [3.20.1. Create associations from GWLB Endpoints](#3201-create-associations-from-gwlb-endpoints)
-    - [3.20.2. Create Zone-Based policies for sub-interfaces](#3202-create-zone-based-policies-for-sub-interfaces)
-  - [3.21. Review Lab Quiz Questions](#321-review-lab-quiz-questions)
-  - [3.22. Finished](#322-finished)
+    - [3.18.3. Create associations from GWLB Endpoints](#3183-create-associations-from-gwlb-endpoints)
+    - [3.18.4. Create Zone-Based policies for sub-interfaces](#3184-create-zone-based-policies-for-sub-interfaces)
+  - [3.19. Review Lab Quiz Questions](#319-review-lab-quiz-questions)
+  - [3.20. Finished](#320-finished)
 
 # 2. Lab Topology
 
@@ -1035,7 +1033,8 @@ We will now fix this using GWLB sub-interface associations.
   - Comment: `gwlbe-eastwest`
   - Virtual Router: `vr-default`
   - Security Zone: `gwlbe-eastwest`
-  3.19. - IPv4 -> Type -> `DHCP Client`
+  - IPv4 -> Type -> `DHCP Client`
+
 ---
 
 - Highlight ethernet1/1 -> Add Subinterface
@@ -1044,7 +1043,8 @@ We will now fix this using GWLB sub-interface associations.
   - Comment: `gwlbe-inbound-app1`
   - Virtual Router: `vr-default`
   - Security Zone: `gwlbe-inbound-app1`
-  3.20. - IPv4 -> Type -> `DHCP Client`
+  - IPv4 -> Type -> `DHCP Client`
+
 ---
 
 - Highlight ethernet1/1 -> Add Subinterface
@@ -1059,7 +1059,7 @@ We will now fix this using GWLB sub-interface associations.
 
 - Commit and Push from Panorama
 
-### 3.20.1. Create associations from GWLB Endpoints
+### 3.18.3. Create associations from GWLB Endpoints
 
 > &#8505; Now we have sub-interfaces and zones, we can associate specific endpoints to sub-interfaces.
 
@@ -1101,7 +1101,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 > &#8505; As of 10.0.4, this GWLB association is not available to configure during bootstrap.
 
 
-### 3.20.2. Create Zone-Based policies for sub-interfaces
+### 3.18.4. Create Zone-Based policies for sub-interfaces
 
 > &#8505; Now that each endpoint is associated with a specific zone, we can have more logic with our security policies.
 
@@ -1163,10 +1163,10 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 - Generate inbound, outbound, and east/west traffic
 - Verify traffic is matching sub-interface based zones as expected
 
-## 3.21. Review Lab Quiz Questions
+## 3.19. Review Lab Quiz Questions
 
 
-## 3.22. Finished
+## 3.20. Finished
 
 Congratulations!
 
