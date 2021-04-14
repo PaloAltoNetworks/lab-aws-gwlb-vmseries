@@ -37,6 +37,9 @@ Example Code block following an action item
   - [1.2. Lab Guide Syntax conventions](#12-lab-guide-syntax-conventions)
   - [1.3. Table of Contents](#13-table-of-contents)
 - [2. Lab Topology](#2-lab-topology)
+  - [2.1. Flow Diagrams](#21-flow-diagrams)
+    - [2.1.1. Outbound Traffic Flows](#211-outbound-traffic-flows)
+    - [2.1.2. Inbound Traffic Flows](#212-inbound-traffic-flows)
 - [3. Lab Steps](#3-lab-steps)
   - [3.1. Initialize Lab](#31-initialize-lab)
     - [3.1.1. Find SSH Key Pair Name](#311-find-ssh-key-pair-name)
@@ -75,18 +78,25 @@ Example Code block following an action item
   - [3.18. GWLBE / Sub-Interface associations](#318-gwlbe--sub-interface-associations)
     - [3.18.1. Configure Zones in Panorama](#3181-configure-zones-in-panorama)
     - [3.18.2. Configure Sub-Interfaces in Panorama](#3182-configure-sub-interfaces-in-panorama)
-  - [- IPv4 -> Type -> `DHCP Client`](#--ipv4---type---dhcp-client)
-  - [- IPv4 -> Type -> `DHCP Client`](#--ipv4---type---dhcp-client-1)
-    - [3.18.3. Create associations from GWLB Endpoints](#3183-create-associations-from-gwlb-endpoints)
-    - [3.18.4. Create Zone-Based policies for sub-interfaces](#3184-create-zone-based-policies-for-sub-interfaces)
-  - [3.19. Review Lab Quiz Questions](#319-review-lab-quiz-questions)
-  - [3.20. Finished](#320-finished)
+  - [3.19. - IPv4 -> Type -> `DHCP Client`](#319---ipv4---type---dhcp-client)
+  - [3.20. - IPv4 -> Type -> `DHCP Client`](#320---ipv4---type---dhcp-client)
+    - [3.20.1. Create associations from GWLB Endpoints](#3201-create-associations-from-gwlb-endpoints)
+    - [3.20.2. Create Zone-Based policies for sub-interfaces](#3202-create-zone-based-policies-for-sub-interfaces)
+  - [3.21. Review Lab Quiz Questions](#321-review-lab-quiz-questions)
+  - [3.22. Finished](#322-finished)
 
 # 2. Lab Topology
 
 ![GWLB Topology](images/topology.png)
 
+## 2.1. Flow Diagrams
 
+Reference these diagrams for a visual of traffic flows through this topology.
+### 2.1.1. Outbound Traffic Flows
+<img src="https://user-images.githubusercontent.com/43679669/114664326-8d6ca800-9cc9-11eb-934e-2742fd6a1800.png" width=30% height=30%>
+
+### 2.1.2. Inbound Traffic Flows
+<img src="https://user-images.githubusercontent.com/43679669/114664190-572f2880-9cc9-11eb-8bd1-216d18dec2ac.png" width=30% height=30%>
 
 # 3. Lab Steps
 ## 3.1. Initialize Lab
@@ -1025,7 +1035,7 @@ We will now fix this using GWLB sub-interface associations.
   - Comment: `gwlbe-eastwest`
   - Virtual Router: `vr-default`
   - Security Zone: `gwlbe-eastwest`
-  - IPv4 -> Type -> `DHCP Client`
+  3.19. - IPv4 -> Type -> `DHCP Client`
 ---
 
 - Highlight ethernet1/1 -> Add Subinterface
@@ -1034,7 +1044,7 @@ We will now fix this using GWLB sub-interface associations.
   - Comment: `gwlbe-inbound-app1`
   - Virtual Router: `vr-default`
   - Security Zone: `gwlbe-inbound-app1`
-  - IPv4 -> Type -> `DHCP Client`
+  3.20. - IPv4 -> Type -> `DHCP Client`
 ---
 
 - Highlight ethernet1/1 -> Add Subinterface
@@ -1049,7 +1059,7 @@ We will now fix this using GWLB sub-interface associations.
 
 - Commit and Push from Panorama
 
-### 3.18.3. Create associations from GWLB Endpoints
+### 3.20.1. Create associations from GWLB Endpoints
 
 > &#8505; Now we have sub-interfaces and zones, we can associate specific endpoints to sub-interfaces.
 
@@ -1091,7 +1101,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 > &#8505; As of 10.0.4, this GWLB association is not available to configure during bootstrap.
 
 
-### 3.18.4. Create Zone-Based policies for sub-interfaces
+### 3.20.2. Create Zone-Based policies for sub-interfaces
 
 > &#8505; Now that each endpoint is associated with a specific zone, we can have more logic with our security policies.
 
@@ -1153,10 +1163,10 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 - Generate inbound, outbound, and east/west traffic
 - Verify traffic is matching sub-interface based zones as expected
 
-## 3.19. Review Lab Quiz Questions
+## 3.21. Review Lab Quiz Questions
 
 
-## 3.20. Finished
+## 3.22. Finished
 
 Congratulations!
 
