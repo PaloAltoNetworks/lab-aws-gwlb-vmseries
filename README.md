@@ -37,6 +37,9 @@ Example Code block following an action item
   - [1.2. Lab Guide Syntax conventions](#12-lab-guide-syntax-conventions)
   - [1.3. Table of Contents](#13-table-of-contents)
 - [2. Lab Topology](#2-lab-topology)
+  - [2.1. Flow Diagrams](#21-flow-diagrams)
+    - [2.1.1. Outbound Traffic Flows](#211-outbound-traffic-flows)
+    - [2.1.2. Inbound Traffic Flows](#212-inbound-traffic-flows)
 - [3. Lab Steps](#3-lab-steps)
   - [3.1. Initialize Lab](#31-initialize-lab)
     - [3.1.1. Find SSH Key Pair Name](#311-find-ssh-key-pair-name)
@@ -75,8 +78,6 @@ Example Code block following an action item
   - [3.18. GWLBE / Sub-Interface associations](#318-gwlbe--sub-interface-associations)
     - [3.18.1. Configure Zones in Panorama](#3181-configure-zones-in-panorama)
     - [3.18.2. Configure Sub-Interfaces in Panorama](#3182-configure-sub-interfaces-in-panorama)
-  - [- IPv4 -> Type -> `DHCP Client`](#--ipv4---type---dhcp-client)
-  - [- IPv4 -> Type -> `DHCP Client`](#--ipv4---type---dhcp-client-1)
     - [3.18.3. Create associations from GWLB Endpoints](#3183-create-associations-from-gwlb-endpoints)
     - [3.18.4. Create Zone-Based policies for sub-interfaces](#3184-create-zone-based-policies-for-sub-interfaces)
   - [3.19. Review Lab Quiz Questions](#319-review-lab-quiz-questions)
@@ -86,7 +87,14 @@ Example Code block following an action item
 
 ![GWLB Topology](images/topology.png)
 
+## 2.1. Flow Diagrams
 
+Reference these diagrams for a visual of traffic flows through this topology.
+### 2.1.1. Outbound Traffic Flows
+<img src="https://user-images.githubusercontent.com/43679669/114664326-8d6ca800-9cc9-11eb-934e-2742fd6a1800.png" width=30% height=30%>
+
+### 2.1.2. Inbound Traffic Flows
+<img src="https://user-images.githubusercontent.com/43679669/114664190-572f2880-9cc9-11eb-8bd1-216d18dec2ac.png" width=30% height=30%>
 
 # 3. Lab Steps
 ## 3.1. Initialize Lab
@@ -1026,6 +1034,7 @@ We will now fix this using GWLB sub-interface associations.
   - Virtual Router: `vr-default`
   - Security Zone: `gwlbe-eastwest`
   - IPv4 -> Type -> `DHCP Client`
+
 ---
 
 - Highlight ethernet1/1 -> Add Subinterface
@@ -1035,6 +1044,7 @@ We will now fix this using GWLB sub-interface associations.
   - Virtual Router: `vr-default`
   - Security Zone: `gwlbe-inbound-app1`
   - IPv4 -> Type -> `DHCP Client`
+
 ---
 
 - Highlight ethernet1/1 -> Add Subinterface
