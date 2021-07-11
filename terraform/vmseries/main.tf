@@ -18,7 +18,7 @@ locals {
 module "security_vpc" {
   source           = "../modules/vpc"
   global_tags      = var.global_tags
-  region           = var.regiojn
+  region           = var.region
   prefix_name_tag  = var.prefix_name_tag
   vpc              = var.security_vpc
   vpc_route_tables = var.security_vpc_route_tables
