@@ -41,18 +41,18 @@ security_vpc_route_tables = {
 }
 
 security_vpc_subnets = {
-  mgmt1            = { name = "mgmt1", cidr = "10.100.0.0/28", az = "eu-west-1a", rt = "mgmt1" }
-  mgmt2            = { name = "mgmt2", cidr = "10.100.1.0/28", az = "eu-west-1b", rt = "mgmt2" }
-  data1            = { name = "data1", cidr = "10.100.0.16/28", az = "eu-west-1a", rt = "data1" }
-  data2            = { name = "data2", cidr = "10.100.1.16/28", az = "eu-west-1b", rt = "data2" }
-  gwlbe-eastwest-1 = { name = "gwlbe-eastwest-1", cidr = "10.100.0.32/28", az = "eu-west-1a", rt = "gwlbe-eastwest-1" }
-  gwlbe-eastwest-2 = { name = "gwlbe-eastwest-2", cidr = "10.100.1.32/28", az = "eu-west-1b", rt = "gwlbe-eastwest-2" }
-  gwlbe-outbound-1 = { name = "gwlbe-outbound-1", cidr = "10.100.0.48/28", az = "eu-west-1a", rt = "gwlbe-outbound-1" }
-  gwlbe-outbound-2 = { name = "gwlbe-outbound-2", cidr = "10.100.1.48/28", az = "eu-west-1b", rt = "gwlbe-outbound-2" }
-  tgw-attach1      = { name = "tgw-attach1", cidr = "10.100.0.64/28", az = "eu-west-1a", rt = "tgw-attach1" }
-  tgw-attach2      = { name = "tgw-attach2", cidr = "10.100.1.64/28", az = "eu-west-1b", rt = "tgw-attach2" }
-  natgw1           = { name = "natgw1", cidr = "10.100.0.80/28", az = "eu-west-1a", rt = "natgw1" }
-  natgw2           = { name = "natgw2", cidr = "10.100.1.80/28", az = "eu-west-1b", rt = "natgw2" }
+  mgmt1            = { name = "mgmt1", cidr = "10.100.0.0/28", az = "a", rt = "mgmt1" }
+  mgmt2            = { name = "mgmt2", cidr = "10.100.1.0/28", az = "c", rt = "mgmt2" }
+  data1            = { name = "data1", cidr = "10.100.0.16/28", az = "a", rt = "data1" }
+  data2            = { name = "data2", cidr = "10.100.1.16/28", az = "c", rt = "data2" }
+  gwlbe-eastwest-1 = { name = "gwlbe-eastwest-1", cidr = "10.100.0.32/28", az = "a", rt = "gwlbe-eastwest-1" }
+  gwlbe-eastwest-2 = { name = "gwlbe-eastwest-2", cidr = "10.100.1.32/28", az = "c", rt = "gwlbe-eastwest-2" }
+  gwlbe-outbound-1 = { name = "gwlbe-outbound-1", cidr = "10.100.0.48/28", az = "a", rt = "gwlbe-outbound-1" }
+  gwlbe-outbound-2 = { name = "gwlbe-outbound-2", cidr = "10.100.1.48/28", az = "c", rt = "gwlbe-outbound-2" }
+  tgw-attach1      = { name = "tgw-attach1", cidr = "10.100.0.64/28", az = "a", rt = "tgw-attach1" }
+  tgw-attach2      = { name = "tgw-attach2", cidr = "10.100.1.64/28", az = "c", rt = "tgw-attach2" }
+  natgw1           = { name = "natgw1", cidr = "10.100.0.80/28", az = "a", rt = "natgw1" }
+  natgw2           = { name = "natgw2", cidr = "10.100.1.80/28", az = "c", rt = "natgw2" }
 }
 
 security_nat_gateways = {
