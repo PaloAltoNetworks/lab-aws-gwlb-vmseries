@@ -37,3 +37,12 @@ resource "null_resource" "panorama-python" {
     }
   }
 }
+
+output "Lab Info" {
+  value = {
+    "Panorama URL" = "https://${var.panorama_host}"
+    "Student User" = "student-${random_id.student.id}"
+    "Student Password"  = "student-${random_id.student.id}"
+    "Notes" = "Login using these blah blah"
+  }
+}
