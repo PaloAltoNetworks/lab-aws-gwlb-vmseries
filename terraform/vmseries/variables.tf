@@ -6,6 +6,22 @@ variable fw_instance_type {}
 variable fw_license_type {}
 variable fw_version {}
 variable ssh_key_name {}
+
+### Panorama API Connection
+
+variable "panorama_host" {
+  default = ""
+}
+
+variable "panorama_username" {
+  description = "Username for terraform and python to authenticate to Panorama API"
+  default =  ""
+}
+
+variable "panorama_password" {
+  description = "Username for terraform and python to authenticate to Panorama API"
+  default = ""
+}
 #variable public_key_path {}
 
 ### VPC

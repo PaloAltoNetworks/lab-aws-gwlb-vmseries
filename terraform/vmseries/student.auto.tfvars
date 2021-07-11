@@ -46,8 +46,3 @@ firewalls = [
     ]
   }
 ]
-
-
-#authcodes=xxxxxx
-#mgmt-interface-swap=enable
-#plugin-op-commands=aws-gwlb-inspect:enable
