@@ -1,3 +1,18 @@
+### Locals to build bootstrap options
+
+locals {
+  bootstrap_options = {
+      mgmt-interface-swap = "enable"
+      plugin-op-commands  = "aws-gwlb-inspect:enable"
+      type                = "dhcp-client"
+      tplname             = "TPL-STUDENT-STACK-${random_id.student.id}"
+      dgname              = "DG-STUDENT-${random_id.student.id}"
+      panorama-server     = var.panorama_host
+      vm-auth-key         = var.vm_auth_key
+      authcodes           = var.authcodes 
+  }
+}
+
 ### Module calls for Security VPC and base infrastructure
 
 module "security_vpc" {
@@ -13,10 +28,6 @@ module "security_vpc" {
   security_groups  = var.security_vpc_security_groups
 }
 
-#resource "aws_key_pair" "lab" {
-#  key_name   = var.ssh_key_name
-#  public_key = file(var.public_key_path)
-#}
 
 module "vmseries" {
   source              = "../modules/vmseries"
@@ -27,11 +38,29 @@ module "vmseries" {
   fw_version          = var.fw_version
   fw_instance_type    = var.fw_instance_type
   tags                = var.global_tags
-  firewalls           = var.firewalls
   interfaces          = var.interfaces
   subnets_map         = module.security_vpc.subnet_ids
   security_groups_map = module.security_vpc.security_group_ids
-  # addtional_interfaces = var.addtional_interfaces
+  firewalls = [
+  {
+    name    = "vmseries01-${random_id.student.id}"
+    fw_tags = {}
+    bootstrap_options = merge(local.bootstrap_options, { "hostname" = "vmseries01-${random_id.student.id}"})
+    interfaces = [
+      { name = "vmseries01-data", index = "0" },
+      { name = "vmseries01-mgmt", index = "1" },
+    ]
+  },
+  {
+    name    = "vmseries02-${random_id.student.id}"
+    fw_tags = {}
+    bootstrap_options = merge(local.bootstrap_options, { "hostname" = "vmseries02-${random_id.student.id}"})
+    interfaces = [
+      { name = "vmseries02-data", index = "0" },
+      { name = "vmseries02-mgmt", index = "1" },
+    ]
+  }
+]
 }
 
 module "vpc_routes" {
