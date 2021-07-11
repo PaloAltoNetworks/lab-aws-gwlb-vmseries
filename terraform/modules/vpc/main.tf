@@ -108,7 +108,7 @@ resource "aws_subnet" "this" {
     if lookup(subnet, "existing", null) != true ? true : false
   }
   cidr_block        = each.value.cidr
-  availability_zone = lookup(each.value, "az", null)
+  availability_zone = "${var.region}${lookup(each.value, "az", null)}"
   tags              = merge({ Name = "${var.prefix_name_tag}${each.value.name}" }, var.global_tags, lookup(each.value, "local_tags", {}))
   vpc_id            = local.combined_vpc["vpc_id"]
   map_public_ip_on_launch = lookup(each.value, "public_ip", null)
