@@ -38,7 +38,7 @@ resource "null_resource" "panorama-python" {
   }
 }
 
-output "Lab Info" {
+output "lab_info" {
   value = {
     "Panorama URL" = "https://${var.panorama_host}"
     "Student User" = "student-${random_id.student.id}"
