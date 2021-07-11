@@ -3,6 +3,7 @@
 module "security_vpc" {
   source           = "../modules/vpc"
   global_tags      = var.global_tags
+  region           = var.regiojn
   prefix_name_tag  = var.prefix_name_tag
   vpc              = var.security_vpc
   vpc_route_tables = var.security_vpc_route_tables
@@ -126,6 +127,7 @@ EOF
 module "app1_vpc" {
   source           = "../modules/vpc"
   global_tags      = var.global_tags
+  region           = var.region
   prefix_name_tag  = var.prefix_name_tag
   vpc              = var.app1_vpc
   vpc_route_tables = var.app1_vpc_route_tables
@@ -267,6 +269,7 @@ resource "aws_lb_target_group_attachment" "app1_http" {
 module "app2_vpc" {
   source           = "../modules/vpc"
   global_tags      = var.global_tags
+  region           = var.region
   prefix_name_tag  = var.prefix_name_tag
   vpc              = var.app2_vpc
   vpc_route_tables = var.app2_vpc_route_tables
