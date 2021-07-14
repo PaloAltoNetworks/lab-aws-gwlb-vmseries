@@ -46,7 +46,8 @@ module "vmseries" {
   security_groups_map = module.security_vpc.security_group_ids
   firewalls = [
   {
-    name    = "vmseries01-${local.student_id}"
+    name    = "vmseries01"
+    name_tag = "vmseries01-${local.student_id}"
     fw_tags = {}
     bootstrap_options = merge(local.bootstrap_options, { "hostname" = "vmseries01-${local.student_id}"})
     interfaces = [
@@ -55,7 +56,8 @@ module "vmseries" {
     ]
   },
   {
-    name    = "vmseries02-${local.student_id}"
+    name        = "vmseries02"
+    name_tag    = "vmseries02-${local.student_id}"
     fw_tags = {}
     bootstrap_options = merge(local.bootstrap_options, { "hostname" = "vmseries02-${local.student_id}"})
     interfaces = [
