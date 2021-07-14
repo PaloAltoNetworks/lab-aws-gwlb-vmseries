@@ -5,13 +5,16 @@ locals {
       mgmt-interface-swap = "enable"
       plugin-op-commands  = "aws-gwlb-inspect:enable"
       type                = "dhcp-client"
-      tplname             = "TPL-STUDENT-STACK-${random_id.student.id}"
-      dgname              = "DG-STUDENT-${random_id.student.id}"
+      tplname             = "TPL-STUDENT-STACK-${local.student_id}"
+      dgname              = "DG-STUDENT-${local.student_id}"
       panorama-server     = var.panorama_host
       vm-auth-key         = var.vm_auth_key
       authcodes           = var.authcodes 
   }
+
+  student_id = random_id.student.id
 }
+
 
 ### Module calls for Security VPC and base infrastructure
 
@@ -43,18 +46,18 @@ module "vmseries" {
   security_groups_map = module.security_vpc.security_group_ids
   firewalls = [
   {
-    name    = "vmseries01-${random_id.student.id}"
+    name    = "vmseries01-${local.student_id}"
     fw_tags = {}
-    bootstrap_options = merge(local.bootstrap_options, { "hostname" = "vmseries01-${random_id.student.id}"})
+    bootstrap_options = merge(local.bootstrap_options, { "hostname" = "vmseries01-${local.student_id}"})
     interfaces = [
       { name = "vmseries01-data", index = "0" },
       { name = "vmseries01-mgmt", index = "1" },
     ]
   },
   {
-    name    = "vmseries02-${random_id.student.id}"
+    name    = "vmseries02-${local.student_id}"
     fw_tags = {}
-    bootstrap_options = merge(local.bootstrap_options, { "hostname" = "vmseries02-${random_id.student.id}"})
+    bootstrap_options = merge(local.bootstrap_options, { "hostname" = "vmseries02-${local.student_id}"})
     interfaces = [
       { name = "vmseries02-data", index = "0" },
       { name = "vmseries02-mgmt", index = "1" },
