@@ -46,9 +46,10 @@ resource "panos_panorama_virtual_router" "example" {
 
 resource "panos_panorama_security_rule_group" "this" {
     position_keyword = "bottom"
-    position_reference = "Temporary Permit Any on GWLB main interface"
+    
     rule {
         name = "gwlb-permit-any"
+        description = "Temporary Permit Any on GWLB main interface"
         source_zones = [panos_panorama_zone.gwlb.name]
         source_addresses = ["any"]
         source_users = ["any"]
