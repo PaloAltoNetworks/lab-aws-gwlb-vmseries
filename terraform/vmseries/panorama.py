@@ -23,6 +23,13 @@ def build_admin_user():
                   '<profile>PASUMMIT-RBAC-ROLE</profile></entry></dg-template-profiles></custom></role-based>' \
                   '</permissions><phash>{}</phash>'.format(student_id, phash)
     pano.xapi.set(xpath=admin_add_xp, element=admin_add_e)
+
+    # Build Admin user on local template
+    template_admin_add_xp = "/config/devices/entry[@name='localhost.localdomain']/template/entry[@name='TPL-STUDENT-BASE-{}']/config/mgt-config/users/entry[@name='student-{}']".format(student_id, student_id)
+    template_admin_add_e = '<permissions><role-based><superuser>yes</superuser></role-based></permissions><phash>{}</phash>'.format(phash)
+
+    pano.xapi.set(xpath=template_admin_add_xp, element=template_admin_add_e)
+
 def do_commit():
     try:
         result = pano.commit_all(sync_all=True, exception=True, sync=True,
