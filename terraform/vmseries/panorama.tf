@@ -48,7 +48,7 @@ resource "panos_panorama_security_rule_group" "this" {
     position_keyword = "bottom"
     device_group = panos_panorama_device_group.this.name
     rule {
-        name = "gwlb-permit-any"
+        name = "student-gwlb-any"
         description = "Temporary Permit Any on GWLB main interface"
         source_zones = [panos_panorama_zone.gwlb.name]
         source_addresses = ["any"]
