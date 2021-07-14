@@ -2,10 +2,6 @@ resource "random_id" "student" {
   byte_length = 4
 }
 
-output "test" {
-  value = null_resource.panorama-python
-}
-
 resource "panos_panorama_template" "this" {
   name = "TPL-STUDENT-BASE-${random_id.student.id}"
 }
@@ -43,6 +39,6 @@ output "lab_info" {
     "Panorama URL" = "https://${var.panorama_host}"
     "Student User" = "student-${random_id.student.id}"
     "Student Password"  = "student-${random_id.student.id}"
-    "Notes" = "Login using these blah blah"
+    "LNotes" = "Login using these blah blah"
   }
 }

@@ -270,9 +270,7 @@ vi student.auto.tfvars
 ```
 
 - Update the specifics of your deployment from the values in `lab-details.txt` from QL console
-  - Set `region` inside of the quotes
-  - Anything marked with `##` should be replaced with your Student Number
-  - Anything marked with `xxx` should be replaced with the appropriate values for this deployment
+  - Set all values inside of the empty quotes
   - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
 
 <img src="https://user-images.githubusercontent.com/43679669/108796675-47138c00-7557-11eb-99b4-58141a3cf874.gif" width=50% height=50%>
@@ -285,9 +283,7 @@ nano student.auto.tfvars
 ```
 
 - Update the specifics of your deployment from the values in `lab-details.txt` from QL console
-  - Set `region` inside of the quotes
-  - Anything marked with `##` should be replaced with your Student Number
-  - Anything marked with `xxx` should be replaced with the appropriate values for this deployment
+  - Set all values inside of the empty quotes
   - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
 
 ---
@@ -295,60 +291,17 @@ nano student.auto.tfvars
   - Copy the text below to a local plain-text editor (notepad, etc)
 
 ```
-region           = "xxx"
-
-ssh_key_name     = "qwikLABS-xxx"
-
-firewalls = [
-  {
-    name    = "vmseries01"
-    fw_tags = {}
-    bootstrap_options = {
-      mgmt-interface-swap = "enable"
-      plugin-op-commands  = "aws-gwlb-inspect:enable"
-      type                = "dhcp-client"
-      hostname            = "lab##_vmseries01"
-      tplname             = "TPL-STUDENT-STACK-##"
-      dgname              = "DG-STUDENT-##"
-      panorama-server     = "xxx"
-      panorama-server-2   = "xxx"
-      vm-auth-key         = "xxx"
-      authcodes           = "xxx"
-      op-command-modes    = ""
-    }
-    interfaces = [
-      { name = "vmseries01-data", index = "0" },
-      { name = "vmseries01-mgmt", index = "1" },
-    ]
-  },
-  {
-    name    = "vmseries02"
-    fw_tags = {}
-    bootstrap_options = {
-      mgmt-interface-swap = "enable"
-      plugin-op-commands  = "aws-gwlb-inspect:enable"
-      type                = "dhcp-client"
-      hostname            = "lab##_vmseries02"
-      tplname             = "TPL-STUDENT-STACK-##"
-      dgname              = "DG-STUDENT-##"
-      panorama-server     = "xxx"
-      panorama-server-2   = "xxx"
-      vm-auth-key         = "xxx"
-      authcodes           = "xxx"
-      op-command-modes    = ""
-    }
-    interfaces = [
-      { name = "vmseries02-data", index = "0" },
-      { name = "vmseries02-mgmt", index = "1" },
-    ]
-  }
-]
+region              = ""
+ssh_key_name        = ""
+panorama_host       = ""
+panorama_username   = ""
+panorama_password   = ""
+vm_auth_key         = ""
+authcodes           = ""
 ```
 
 - Update the specifics of your deployment from the values in `lab-details.txt` from QL console
-  - Set `region` inside of the quotes
-  - Anything marked with `##` should be replaced with your Student Number
-  - Anything marked with `xxx` should be replaced with the appropriate values for this deployment
+  - Set all values inside of the empty quotes
   - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
 - Save file locally with name `student.auto.tfvars`
 - In CloudShell select `Actions` -> `Upload file` -> Select your updated file
