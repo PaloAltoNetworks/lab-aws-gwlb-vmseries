@@ -201,7 +201,7 @@ resource "aws_instance" "pa-vm-series" {
   instance_type                        = var.fw_instance_type
   tags = merge(
     {
-      "Name" = format("%s", each.value.name)
+      "Name" = format("%s", each.value.name_tag)
     },
     var.tags, each.value.fw_tags
   )
