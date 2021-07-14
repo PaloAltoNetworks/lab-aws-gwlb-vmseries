@@ -15,8 +15,8 @@ The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panor
 This guide is intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. This could be easily adapted for other environments.
 
 ```
-Manual Last Updated: 2021-03-15
-Lab Last Tested: 2021-03-15
+Manual Last Updated: 2021-07-14
+Lab Last Tested: 2021-07-14
 ```
 
 ## 1.2. Lab Guide Syntax conventions
@@ -1057,7 +1057,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 
 ```show plugins vm_series aws gwlb ```
 
-> &#8505; As of 10.0.4, this GWLB association is not available to configure during bootstrap.
+> &#8505; The GWLB endpoint associations can also be set as [bootstrap parameters](https://docs.paloaltonetworks.com/vm-series/10-0/vm-series-deployment/set-up-the-vm-series-firewall-on-aws/vm-series-integration-with-gateway-load-balancer/integrate-the-vm-series-with-an-aws-gateway-load-balancer/associate-a-vpc-endpoint-with-a-vm-series-interface.html).
 
 
 ### 3.18.4. Create Zone-Based policies for sub-interfaces
