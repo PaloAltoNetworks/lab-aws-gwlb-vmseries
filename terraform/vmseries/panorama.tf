@@ -17,6 +17,44 @@ resource "panos_panorama_device_group" "this" {
   description = "Student Device Group ${random_id.student.id}"
 }
 
+resource "panos_panorama_ethernet_interface" "eth1" {
+    name = "ethernet1/1"
+    template = panos_panorama_template.this.name
+    mode = "layer3"
+    enable_dhcp = true
+    create_dhcp_default_route = true
+    dhcp_default_route_metric = 10
+}
+
+resource "panos_panorama_zone" "gwlb" {
+    name = "gwlb"
+    template = panos_panorama_template.this.name
+    mode = "layer3"
+    interfaces = [
+        panos_panorama_ethernet_interface.eth1.name
+    ]
+}
+
+resource "panos_panorama_security_rule_group" "this" {
+    position_keyword = "bottom"
+    position_reference = "Temporary Permit Any on GWLB main interface"
+    rule {
+        name = "gwlb-permit-any"
+        source_zones = ["${panos_panorama_zone.gwlb.name}"]
+        source_addresses = ["any"]
+        source_users = ["any"]
+        hip_profiles = ["any"]
+        destination_zones = ["${panos_panorama_zone.gwlb.name}"]
+        destination_addresses = ["any"]
+        applications = ["any"]
+        services = ["any"]
+        categories = ["any"]
+        action = "allow"
+        log_setting = "default"
+    }
+}
+
+
 resource "null_resource" "panorama-python" {
   depends_on = [panos_panorama_template_stack.this, panos_panorama_device_group.this]
 
