@@ -218,6 +218,12 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 rm -rf ~/bin && rm -rf ~/ps-regional-2021-aws-labs/
 ```
 
+- Install PAN-OS SDK for Python
+
+```
+pip3 install pan-os-python
+```
+
 - Download Terraform in Cloudshell
 
 ```
