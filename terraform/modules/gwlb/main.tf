@@ -50,7 +50,6 @@ resource "aws_lb_target_group" "this" {
     port     = "80"
     protocol = "TCP"
   }
-  tags = merge({ Name = "${var.prefix_name_tag}${each.value.name}" }, var.global_tags, lookup(each.value, "local_tags", {}))
 }
 
 locals {
