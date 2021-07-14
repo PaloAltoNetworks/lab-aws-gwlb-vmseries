@@ -35,16 +35,25 @@ resource "panos_panorama_zone" "gwlb" {
     ]
 }
 
+resource "panos_panorama_virtual_router" "example" {
+    template = panos_panorama_template.this.name
+    name = "vr-default"
+    interfaces = [
+        panos_panorama_ethernet_interface.eth1.name
+        ]
+}
+
+
 resource "panos_panorama_security_rule_group" "this" {
     position_keyword = "bottom"
     position_reference = "Temporary Permit Any on GWLB main interface"
     rule {
         name = "gwlb-permit-any"
-        source_zones = ["${panos_panorama_zone.gwlb.name}"]
+        source_zones = [panos_panorama_zone.gwlb.name]
         source_addresses = ["any"]
         source_users = ["any"]
         hip_profiles = ["any"]
-        destination_zones = ["${panos_panorama_zone.gwlb.name}"]
+        destination_zones = [panos_panorama_zone.gwlb.name]
         destination_addresses = ["any"]
         applications = ["any"]
         services = ["any"]
