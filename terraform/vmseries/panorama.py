@@ -32,7 +32,8 @@ def do_commit():
         return False
 def panorama_commit():
     try:
-        commit_cmd = panorama.PanoramaCommit(device_groups=[f"DG-STUDENT-{student_id}"], templates=[f"TPL-STUDENT-BASE-{student_id}"], template_stacks=[f"TPL-STUDENT-STACK-{student_id}"])
+        commit_cmd = panorama.PanoramaCommit()
+        #commit_cmd = panorama.PanoramaCommit(device_groups=[f"DG-STUDENT-{student_id}"], templates=[f"TPL-STUDENT-BASE-{student_id}"], template_stacks=[f"TPL-STUDENT-STACK-{student_id}"])
         result = pano.commit(cmd=commit_cmd, sync=True, exception=True)
         return result
     except:
