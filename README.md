@@ -1117,6 +1117,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
   - Application: `any`
   - Destination Zone: `any`
   - Destination Address: `any`
+  - Action: `Deny`
 
 
 - Generate inbound, outbound, and east/west traffic
