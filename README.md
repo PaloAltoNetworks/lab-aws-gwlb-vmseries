@@ -358,7 +358,9 @@ terraform apply
 
 - It should take 5-10 minutes for terraform to finish deploying all resources
 
-- When complete, you will see a list of outputs. Copy these locally so you can reference them in later steps
+- When complete, you will see a list of outputs. **Copy these locally so you can reference them in later steps**
+
+- One of these outputs is a dynamically generated student username and password for accessing Panorama later.
 
 - If you do get an error, first try to run `terraform apply` again to finish update of any pending resources. Notify lab instructor if there are still issues.
 
@@ -432,7 +434,8 @@ In the meantime, lets go look at what you built!
 
 > &#8505; We are using a shared Panorama for this lab that is publicly accessible. For production deployments, Panorama management should not be exposed to inbound Internet traffic. Each student has their own credentials restricted to Access Domain for only the relevant Device Group & Templates to reduce clutter.
 
-- Refer to `lab-details.txt` from QwikLabs for connection and credential details for Panorama
+- Refer to the terraform output you copied earlier for the student credentials for Panorama. These credentials are associted wtih access domain so you can see your devices without without the clutter of other students in the shared Panorama.
+- If you need superuser access to Panorama for some reason, refer to `lab-details.txt` from QwikLabs for connection and credential details for Panorama
 - Login to Panorama web interface with student credentials
 - Check Panorama -> Managed Devices -> Summary
 - Verify your deployed VM-Series are connected and successfully bootstrapped
@@ -446,7 +449,16 @@ In the meantime, lets go look at what you built!
 ## 3.12. Access VM-Series Management
 
 - Most configurations will be done in Panorama, but we will use the local consoles for some steps and validation
-- Refer to `lab-details.txt` from QwikLabs for local credential details
+- Refer to the terraform output you copied earlier for the student credentials for VM-Series. These are the same credentials you used for Panorama.
+
+```
+lab_info = {
+  "Panorama URL" = "https://52.35.251.133"
+  "Student Password" = "student-xxxxxx"
+  "Student User" = "student-xxxxxx"
+}
+```
+
 - Refer to the output you copied from your terraform deployment for the public EIPs associated to each VM-Series management interface
   
 ```
