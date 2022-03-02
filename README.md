@@ -327,8 +327,6 @@ cat ~/ps-regional-2021-aws-labs/terraform/vmseries/student.auto.tfvars
 
 > &#8505; This deployment is using a [newer feature for basic bootstrapping](https://docs.paloaltonetworks.com/plugins/vm-series-and-panorama-plugins-release-notes/vm-series-plugin/vm-series-plugin-20/vm-series-plugin-201/whats-new-in-vm-series-plugin-201.html) that does not require S3 buckets. Any parameters normally specified in init-cfg can now be passed directly to the instance via UserData. Prerequisite is the image you are deploying has plugin 2.0.1+ installed
 
-> &#8505; Notice the plugin-op-command to enable the GWLB inspection. There are additional bootstrap parameters planned for 10.0.5 to set GWLB sub-interface associations to endpoints.
-
 > &#10067; What are some bootstrap options that won't be possible with this basic bootstrap method?
 
 > &#8505; If you have time left after the rest of the lab activities, later steps will return to do some more digging into the terraform code.
