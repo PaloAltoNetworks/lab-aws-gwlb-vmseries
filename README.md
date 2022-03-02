@@ -824,7 +824,7 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
     - Now when checking other sections in this dashboard (route tables, subnets, etc) will be filtered to Security VPC
   -  Select Route Tables section
   -  Look through the route tables. Most have no routes!
-  -  Identify Security VPC in the Topology Diagram ane we will start from left-to-right
+  -  Identify Security VPC in the Topology Diagram and start from left-to-right
 
 **TGW Attach Route Tables**
 
