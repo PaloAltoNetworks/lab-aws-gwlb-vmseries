@@ -303,6 +303,8 @@ module "app1_ssm" {
   source                    = "bridgecrewio/session-manager/aws"
   version                   = "0.3.0"
   vpc_id                    = module.app1_vpc.vpc_id.vpc_id
+  bucket_name               = "my-session-logs"
+  access_log_bucket_name    = "my-session-access-logs"
   tags                      = {
                                 Function = "ssm"
                               }
@@ -458,6 +460,8 @@ module "app2_ssm" {
   source                    = "bridgecrewio/session-manager/aws"
   version                   = "0.3.0"
   vpc_id                    = module.app2_vpc.vpc_id.vpc_id
+  bucket_name               = "my-session-logs"
+  access_log_bucket_name    = "my-session-access-logs"
   tags                      = {
                                 Function = "ssm"
                               }
