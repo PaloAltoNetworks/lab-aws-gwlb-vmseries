@@ -87,6 +87,6 @@ output "lab_info" {
     "Panorama URL" = "https://${var.panorama_host}"
     "Student User" = "student-${random_id.student.id}"
     "Student Password"  = "student-${random_id.student.id}"
-    "LNotes" = "Login using these blah blah"
+    "Notes" = "Login to the shared Panorama with these credentials that are specific to your deployment"
   }
 }
