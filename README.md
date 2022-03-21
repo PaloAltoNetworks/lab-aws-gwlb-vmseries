@@ -1,4 +1,4 @@
-# 1. PS Regional Training 2021 AWS Labs
+# 1. VM-Series on AWS Gateway Load Balancer Lab
 
 
 <img src="https://www.paloaltonetworks.com/content/dam/pan/en_US/images/logos/brand/primary-company-logo/Parent-logo.png" width=50% height=50%>
