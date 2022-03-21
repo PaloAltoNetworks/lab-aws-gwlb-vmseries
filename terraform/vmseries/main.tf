@@ -228,6 +228,7 @@ module "app1_ec2_cluster" {
   name                   = "${var.prefix_name_tag}app1-web"
   instance_count         = 2
   associate_public_ip_address = false
+  iam_instance_profile   = module.app1_ssm.iam_profile_name
 
   ami                    = data.aws_ami.amazon-linux-2.id
   instance_type          = "t2.micro"
@@ -298,6 +299,17 @@ resource "aws_lb_target_group_attachment" "app1_http" {
   target_id        = module.app1_ec2_cluster.id[count.index]
 }
 
+module "app1_ssm" {
+  source                    = "bridgecrewio/session-manager/aws"
+  version                   = "0.3.0"
+  vpc_id                    = module.app1_vpc.vpc_id.vpc_id
+  tags                      = {
+                                Function = "ssm"
+                              }
+  enable_log_to_s3          = false
+  enable_log_to_cloudwatch  = false
+  vpc_endpoints_enabled     = true
+}
 
 ### Module calls for app2 VPC
 
@@ -370,6 +382,7 @@ module "app2_ec2_cluster" {
 
   name                   = "${var.prefix_name_tag}app2-web"
   instance_count         = 2
+  iam_instance_profile   = module.app1_ssm.iam_profile_name
   associate_public_ip_address = false
 
   ami                    = data.aws_ami.amazon-linux-2.id
@@ -439,4 +452,16 @@ resource "aws_lb_target_group_attachment" "app2_http" {
   count            = 2
   target_group_arn = module.app2_nlb.target_group_arns[1]
   target_id        = module.app2_ec2_cluster.id[count.index]
+}
+
+module "app2_ssm" {
+  source                    = "bridgecrewio/session-manager/aws"
+  version                   = "0.3.0"
+  vpc_id                    = module.app2_vpc.vpc_id.vpc_id
+  tags                      = {
+                                Function = "ssm"
+                              }
+  enable_log_to_s3          = false
+  enable_log_to_cloudwatch  = false
+  vpc_endpoints_enabled     = true
 }
