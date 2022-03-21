@@ -44,16 +44,37 @@ resource "panos_panorama_virtual_router" "example" {
 }
 
 
-resource "panos_panorama_security_rule_group" "this" {
+# resource "panos_panorama_security_rule_group" "this" {
+#     position_keyword = "bottom"
+#     device_group = panos_panorama_device_group.this.name
+#     rule {
+#         name = "student-gwlb-any"
+#         description = "Temporary Permit Any on GWLB main interface"
+#         source_zones = [panos_panorama_zone.gwlb.name]
+#         source_addresses = ["any"]
+#         source_users = ["any"]
+#         #hip_profiles = ["any"]
+#         destination_zones = [panos_panorama_zone.gwlb.name]
+#         destination_addresses = ["any"]
+#         applications = ["any"]
+#         services = ["any"]
+#         categories = ["any"]
+#         action = "allow"
+#         log_setting = "default"
+#     }
+# }
+
+resource "panos_security_rule_group" "this" {
     position_keyword = "bottom"
     device_group = panos_panorama_device_group.this.name
+    rulebase = "pre-rulebase"
     rule {
         name = "student-gwlb-any"
         description = "Temporary Permit Any on GWLB main interface"
         source_zones = [panos_panorama_zone.gwlb.name]
         source_addresses = ["any"]
         source_users = ["any"]
-        hip_profiles = ["any"]
+        #hip_profiles = ["any"]
         destination_zones = [panos_panorama_zone.gwlb.name]
         destination_addresses = ["any"]
         applications = ["any"]
@@ -63,6 +84,8 @@ resource "panos_panorama_security_rule_group" "this" {
         log_setting = "default"
     }
 }
+
+
 
 
 resource "null_resource" "panorama-python" {
