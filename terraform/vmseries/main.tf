@@ -5,6 +5,7 @@ locals {
       mgmt-interface-swap = "enable"
       plugin-op-commands  = "aws-gwlb-inspect:enable"
       type                = "dhcp-client"
+      cgname              = "PANORAMA-LOG-COLLECTOR"
       tplname             = "TPL-STUDENT-STACK-${local.student_id}"
       dgname              = "DG-STUDENT-${local.student_id}"
       panorama-server     = var.panorama_host

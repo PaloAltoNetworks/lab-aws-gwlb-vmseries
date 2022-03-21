@@ -2,13 +2,13 @@
 prefix_name_tag  = "ps-lab-"
 fw_instance_type = "m5.xlarge"
 fw_license_type  = "byol"
-fw_version       = "10.0.4" //Leave empty to be updated
+fw_version       = "10.0.9" //Leave empty to be updated
 
 
 global_tags = {
   managedBy  = "terraform"
   application = "Palo Alto Networks VM-Series GWLB"
-  owner = "PS Regional Training 2021"
+  owner = "Professional Services Lab"
 }
 
 
