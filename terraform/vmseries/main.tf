@@ -456,16 +456,16 @@ resource "aws_lb_target_group_attachment" "app2_http" {
   target_id        = module.app2_ec2_cluster.id[count.index]
 }
 
-module "app2_ssm" {
-  source                    = "bridgecrewio/session-manager/aws"
-  version                   = "0.3.0"
-  vpc_id                    = module.app2_vpc.vpc_id.vpc_id
-  bucket_name               = "my-session-logs"
-  access_log_bucket_name    = "my-session-access-logs"
-  tags                      = {
-                                Function = "ssm"
-                              }
-  enable_log_to_s3          = false
-  enable_log_to_cloudwatch  = false
-  vpc_endpoints_enabled     = true
-}
+# module "app2_ssm" {
+#   source                    = "bridgecrewio/session-manager/aws"
+#   version                   = "0.3.0"
+#   vpc_id                    = module.app2_vpc.vpc_id.vpc_id
+#   bucket_name               = "my-session-logs"
+#   access_log_bucket_name    = "my-session-access-logs"
+#   tags                      = {
+#                                 Function = "ssm"
+#                               }
+#   enable_log_to_s3          = false
+#   enable_log_to_cloudwatch  = false
+#   vpc_endpoints_enabled     = true
+# }
