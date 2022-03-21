@@ -156,6 +156,21 @@ until sudo systemctl enable httpd; do echo "Retrying"; sleep 5; done
 EOF
 }
 
+### SSM external module for managing app servers
+module "ssm" {
+  source                    = "bridgecrewio/session-manager/aws"
+  version                   = "0.3.0"
+  #vpc_id                    = module.app1_vpc.vpc_id.vpc_id
+  bucket_name               = "my-session-logs"
+  access_log_bucket_name    = "my-session-access-logs"
+  tags                      = {
+                                Function = "ssm"
+                              }
+  enable_log_to_s3          = false
+  enable_log_to_cloudwatch  = false
+  vpc_endpoints_enabled     = false
+}
+
 
 ### Module calls for app2 VPC
 
@@ -299,19 +314,38 @@ resource "aws_lb_target_group_attachment" "app1_http" {
   target_id        = module.app1_ec2_cluster.id[count.index]
 }
 
-module "app1_ssm" {
-  source                    = "bridgecrewio/session-manager/aws"
-  version                   = "0.3.0"
-  vpc_id                    = module.app1_vpc.vpc_id.vpc_id
-  bucket_name               = "my-session-logs"
-  access_log_bucket_name    = "my-session-access-logs"
-  tags                      = {
-                                Function = "ssm"
-                              }
-  enable_log_to_s3          = false
-  enable_log_to_cloudwatch  = false
-  vpc_endpoints_enabled     = true
+##################################################################
+# Session Manager VPC Endpoints for App1 VPC
+##################################################################
+
+# SSM, EC2Messages, and SSMMessages endpoints are required for Session Manager
+resource "aws_vpc_endpoint" "app1_ssm" {
+  vpc_id            = module.app1_vpc.vpc_id.vpc_id
+  subnet_ids        = [module.app1_vpc.subnet_ids["web1"], module.app1_vpc.subnet_ids["web2"]]
+  service_name      = "com.amazonaws.${var.region}.ssm"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
+  tags                = var.global_tags
 }
+
+resource "aws_vpc_endpoint" "app1_ec2messages" {
+  vpc_id            = module.app1_vpc.vpc_id.vpc_id
+  subnet_ids        = [module.app1_vpc.subnet_ids["web1"], module.app1_vpc.subnet_ids["web2"]]
+  service_name      = "com.amazonaws.${var.region}.ec2messages"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
+  tags                = var.global_tags
+}
+
+resource "aws_vpc_endpoint" "app1_ssmmessages" {
+  vpc_id            = module.app1_vpc.vpc_id.vpc_id
+  subnet_ids        = [module.app1_vpc.subnet_ids["web1"], module.app1_vpc.subnet_ids["web2"]]
+  service_name      = "com.amazonaws.${var.region}.ssmmessages"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
+  tags                = var.global_tags
+}
+
 
 ### Module calls for app2 VPC
 
@@ -456,16 +490,35 @@ resource "aws_lb_target_group_attachment" "app2_http" {
   target_id        = module.app2_ec2_cluster.id[count.index]
 }
 
-# module "app2_ssm" {
-#   source                    = "bridgecrewio/session-manager/aws"
-#   version                   = "0.3.0"
-#   vpc_id                    = module.app2_vpc.vpc_id.vpc_id
-#   bucket_name               = "my-session-logs"
-#   access_log_bucket_name    = "my-session-access-logs"
-#   tags                      = {
-#                                 Function = "ssm"
-#                               }
-#   enable_log_to_s3          = false
-#   enable_log_to_cloudwatch  = false
-#   vpc_endpoints_enabled     = true
-# }
+
+##################################################################
+# Session Manager VPC Endpoints for App2 VPC
+##################################################################
+
+# SSM, EC2Messages, and SSMMessages endpoints are required for Session Manager
+resource "aws_vpc_endpoint" "app2_ssm" {
+  vpc_id            = module.app2_vpc.vpc_id.vpc_id
+  subnet_ids        = [module.app2_vpc.subnet_ids["web1"], module.app2_vpc.subnet_ids["web2"]]
+  service_name      = "com.amazonaws.${var.region}.ssm"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
+  tags                = var.global_tags
+}
+
+resource "aws_vpc_endpoint" "app2_ec2messages" {
+  vpc_id            = module.app2_vpc.vpc_id.vpc_id
+  subnet_ids        = [module.app2_vpc.subnet_ids["web1"], module.app2_vpc.subnet_ids["web2"]]
+  service_name      = "com.amazonaws.${var.region}.ec2messages"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
+  tags                = var.global_tags
+}
+
+resource "aws_vpc_endpoint" "app2_ssmmessages" {
+  vpc_id            = module.app2_vpc.vpc_id.vpc_id
+  subnet_ids        = [module.app2_vpc.subnet_ids["web1"], module.app2_vpc.subnet_ids["web2"]]
+  service_name      = "com.amazonaws.${var.region}.ssmmessages"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
+  tags                = var.global_tags
+}
