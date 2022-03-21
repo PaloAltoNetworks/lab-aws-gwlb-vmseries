@@ -243,7 +243,7 @@ module "app1_ec2_cluster" {
   name                   = "${var.prefix_name_tag}app1-web"
   instance_count         = 2
   associate_public_ip_address = false
-  iam_instance_profile   = module.app1_ssm.iam_profile_name
+  iam_instance_profile   = module.ssm.iam_profile_name
 
   ami                    = data.aws_ami.amazon-linux-2.id
   instance_type          = "t2.micro"
@@ -418,7 +418,7 @@ module "app2_ec2_cluster" {
 
   name                   = "${var.prefix_name_tag}app2-web"
   instance_count         = 2
-  iam_instance_profile   = module.app1_ssm.iam_profile_name
+  iam_instance_profile   = module.ssm.iam_profile_name
   associate_public_ip_address = false
 
   ami                    = data.aws_ami.amazon-linux-2.id
