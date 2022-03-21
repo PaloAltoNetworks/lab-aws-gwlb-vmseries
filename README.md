@@ -32,7 +32,7 @@ Example Code block following an action item
 
 ## 1.3. Table of Contents
 
-- [1. PS Regional Training 2021 AWS Labs](#1-ps-regional-training-2021-aws-labs)
+- [1. VM-Series on AWS Gateway Load Balancer Lab](#1-vm-series-on-aws-gateway-load-balancer-lab)
   - [1.1. Overview](#11-overview)
   - [1.2. Lab Guide Syntax conventions](#12-lab-guide-syntax-conventions)
   - [1.3. Table of Contents](#13-table-of-contents)
@@ -181,7 +181,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-10* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2 --query 'Images[].[ImageId,Name]'
 ```
 
-- We see that `10.0.4` AMI is available, which is what we are targeting for this deployment
+- We see that `10.0.9` AMI is available, which is what we are targeting for this deployment
 
 
 > &#10067; How many different BYOL AMIs are available for 10.x in the us-west-2 region?
@@ -201,7 +201,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 >   "payg2" = "806j2of0qy5osgjjixq9gqc6g"
 >```
 
-> &#8505; The name tag of the image should be standard and can be used for the filter. For example `PA-VM-AWS-9.1*`, `PA-VM-AWS-9.1.3*`, `PA-VM-AWS-10*`. This is the same logic the terraform will use to lookup the AMI based on the `fw_version` variable.
+> &#8505; The name tag of the image should be standard and can be used for the filter. For example `PA-VM-AWS-10.1*`, `PA-VM-AWS-9.1.3*`, `PA-VM-AWS-10*`. This is the same logic the terraform will use to lookup the AMI based on the `fw_version` variable.
 
 > &#8505; Not needed for this lab, but when deploying VM-Series from EC2 console, it will default to the latest version. You can instead go to the AWS Marketplace to subscribe to the offering and select previous versions to deploy the desired AMI
 > 
@@ -215,7 +215,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 - Make sure CloudShell home directory is clean
 
 ```
-rm -rf ~/bin && rm -rf ~/ps-regional-2021-aws-labs/
+rm -rf ~/bin && rm -rf ~/lab-aws-gwlb-vmseries/
 ```
 
 - Install PAN-OS SDK for Python
@@ -235,7 +235,7 @@ mkdir /home/cloudshell-user/bin/ && wget https://releases.hashicorp.com/terrafor
 terraform version
 ```
 
-> &#8505; Terraform projects often have version constraints in the code to protect against potentially breaking syntax changes when new version is released. For this project, the [version constraint](https://github.com/PaloAltoNetworks/ps-regional-2021-aws-labs/blob/main/terraform/vmseries/versions.tf) is:
+> &#8505; Terraform projects often have version constraints in the code to protect against potentially breaking syntax changes when new version is released. For this project, the [version constraint](https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries/blob/main/terraform/vmseries/versions.tf) is:
 > ```
 > terraform {
 >  required_version = ">=0.12.29, <0.14"
@@ -250,7 +250,7 @@ terraform version
 - Clone the Repository with the terraform to deploy
   
 ```
-git clone https://github.com/PaloAltoNetworks/ps-regional-2021-aws-labs.git && cd ps-regional-2021-aws-labs/terraform/vmseries
+git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git && cd lab-aws-gwlb-vmseries/terraform/vmseries
 ```
 
 ## 3.8. Update Deployment Values in tfvars
@@ -263,7 +263,7 @@ For simplicity, only the variable values that need to be modified are in a separ
 - Make sure you are in the appropriate directory
 
 ```
-cd ~/ps-regional-2021-aws-labs/terraform/vmseries
+cd ~/lab-aws-gwlb-vmseries/terraform/vmseries
 ```
 
 - Review the 3 options to determine which you want to use to edit the values. If you are unfamiliar with editing files in linux, Option 3 will be easiest.
@@ -314,7 +314,7 @@ authcodes           = ""
 - Move uploaded file to appropriate location
 
 ```
-mv ~/student.auto.tfvars ~/ps-regional-2021-aws-labs/terraform/vmseries/student.auto.tfvars
+mv ~/student.auto.tfvars ~/lab-aws-gwlb-vmseries/terraform/vmseries/student.auto.tfvars
 ```
 
 ---
@@ -322,7 +322,7 @@ mv ~/student.auto.tfvars ~/ps-regional-2021-aws-labs/terraform/vmseries/student.
 - Verify the contents of file have the correct values
 
 ```
-cat ~/ps-regional-2021-aws-labs/terraform/vmseries/student.auto.tfvars
+cat ~/lab-aws-gwlb-vmseries/terraform/vmseries/student.auto.tfvars
 ```
 
 > &#8505; This deployment is using a [newer feature for basic bootstrapping](https://docs.paloaltonetworks.com/plugins/vm-series-and-panorama-plugins-release-notes/vm-series-plugin/vm-series-plugin-20/vm-series-plugin-201/whats-new-in-vm-series-plugin-201.html) that does not require S3 buckets. Any parameters normally specified in init-cfg can now be passed directly to the instance via UserData. Prerequisite is the image you are deploying has plugin 2.0.1+ installed
@@ -336,7 +336,7 @@ cat ~/ps-regional-2021-aws-labs/terraform/vmseries/student.auto.tfvars
 - Make sure you are in the appropriate directory
 
 ```
-cd ~/ps-regional-2021-aws-labs/terraform/vmseries
+cd ~/lab-aws-gwlb-vmseries/terraform/vmseries
 ```
 - Initialize Terraform
 
