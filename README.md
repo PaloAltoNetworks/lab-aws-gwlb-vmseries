@@ -1146,6 +1146,14 @@ Congratulations!
 
 ## 3.21. Bonus - Overlay Routing
 
+Overlay Routing enalbes the VM-Series to strip off the GENEVE encapsulation and use standard routing behavior to determine the next hop. Most commonly this is used as a method to maintain a separate Public or Internet facing zone for outbound traffic. When the return traffic is received by VM-Series, it will be re-encapsulated and sent to the same endpoint where the session originated.
+
+We will update our existing infrastructure to use overlay routing. On the udpated diagram, you will see the changes on the right side where the NAT Gateways are replaced and instead an additional public interface and EIPs are attached to the VM-series.
+
+![GWLB Topology](images/overlay-topology.png)
+
+
+
 ### 3.21.1. Create Public Interfaces for VM-Series
 
 - Delete the existing NAT Gateways, as there is a default limit of 5 EIPs per VPC. And they will no longer be needed.
