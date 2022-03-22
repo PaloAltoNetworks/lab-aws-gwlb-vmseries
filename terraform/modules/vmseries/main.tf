@@ -156,6 +156,7 @@ resource "aws_network_interface" "this" {
   subnet_id         = var.subnets_map[each.value.subnet_name]
   source_dest_check = lookup(each.value, "source_dest_check", null) != null ? each.value.source_dest_check : null
   security_groups   = [var.security_groups_map[each.value.security_group]]
+  description       = each.value.name
   tags = merge(
     {
       "Name" = format("%s", each.value.name)
