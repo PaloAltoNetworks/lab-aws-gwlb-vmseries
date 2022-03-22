@@ -62,10 +62,10 @@ Example Code block following an action item
   - [3.15. Inbound Traffic Flows to App Spoke VPCs](#315-inbound-traffic-flows-to-app-spoke-vpcs)
     - [3.15.1. Update App1 Spoke VPC networking for Inbound inspection with GWLB](#3151-update-app1-spoke-vpc-networking-for-inbound-inspection-with-gwlb)
     - [3.15.2. Update App2 Spoke VPC networking for Inbound inspection with GWLB](#3152-update-app2-spoke-vpc-networking-for-inbound-inspection-with-gwlb)
-    - [3.15.3. Access Spoke web servers via SSH](#3153-access-spoke-web-servers-via-ssh)
-    - [3.15.4. Test Outbound Traffic from App1 Spoke Instances](#3154-test-outbound-traffic-from-app1-spoke-instances)
-    - [3.15.5. Check Inbound Traffic Logs](#3155-check-inbound-traffic-logs)
-    - [3.15.6. Check Outbound Traffic Logs](#3156-check-outbound-traffic-logs)
+    - [3.15.3. Test Inbound Traffic to Spoke Web Apps](#3153-test-inbound-traffic-to-spoke-web-apps)
+    - [3.15.3. Test Outbound Traffic from App1 Spoke Instance](#3153-test-outbound-traffic-from-app1-spoke-instance)
+    - [3.15.4. Check Inbound Traffic Logs](#3154-check-inbound-traffic-logs)
+    - [3.15.5. Check Outbound Traffic Logs](#3155-check-outbound-traffic-logs)
   - [3.16. Outbound and East / West (OBEW) Traffic Flows](#316-outbound-and-east--west-obew-traffic-flows)
     - [3.16.1. Update App1 Spoke VPC for OB/EW routing with TGW](#3161-update-app1-spoke-vpc-for-obew-routing-with-tgw)
     - [3.16.2. Update App2 Spoke VPC for OB/EW routing with TGW](#3162-update-app2-spoke-vpc-for-obew-routing-with-tgw)
@@ -82,6 +82,12 @@ Example Code block following an action item
     - [3.18.4. Create Zone-Based policies for sub-interfaces](#3184-create-zone-based-policies-for-sub-interfaces)
   - [3.19. Review Lab Quiz Questions](#319-review-lab-quiz-questions)
   - [3.20. Finished](#320-finished)
+  - [3.21. Bonus - Overlay Routing](#321-bonus---overlay-routing)
+    - [3.21.1. Create Public Interfaces for VM-Series](#3211-create-public-interfaces-for-vm-series)
+    - [3.21.2. Associate the EIPs to the Public Interfaces](#3212-associate-the-eips-to-the-public-interfaces)
+    - [3.21.3. Configure Networking and Policies in Panorama](#3213-configure-networking-and-policies-in-panorama)
+    - [3.21.3. Enable Overlay mode](#3213-enable-overlay-mode)
+    - [3.21.4. Test Outbound Traffic](#3214-test-outbound-traffic)
 
 # 2. Lab Topology
 
@@ -555,7 +561,7 @@ debug logview component bts_details
       - Dest Addresses: `10.100.0.16/28`, `10.100.1.16/28`
       - Application: `Any`
       - Serivce: `service-http`
-    - <s>Make sure new policy is before the existing catch-all `gwlb-any` policy</s> (not currently prepped on lab DGs)
+    - Make sure new policy is before the existing catch-all `gwlb-any` policy
 
   - Commit and Push your changes
 
@@ -671,36 +677,33 @@ Starting left to right on the diagram...
 
 </details>
 
+###  3.15.3. Test Inbound Traffic to Spoke Web Apps
 
-###  3.15.3. Access Spoke web servers via SSH
+Generate some HTTP traffic to the web apps using the DNS name of the Public NLB that is in front of the web compute instances. URL will be the FQDN of the NLBs from the terraform output
 
-- ssh from local machine to the App1 and App2 Spoke NLBs
-  - hostname will be the FQDN of the NLBs from the terraform output
-  - username is `ec2-user`
-  - ssh key was downloaded from Qwiklabs console
+- Reference terraform output for `app_nlbs_dns`
+- From your local machine browser, attempt connection to http://`app1_nlb`
+- From your local machine browser, attempt connection to http://`app2_nlb`
+- Refresh a few times
 
-```
-ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c49.elb.us-west-2.amazonaws.com
-```
+> &#8505; The inbound routing should now be in place, but you will not get a response yet as the instances are not yet running a web server.
 
-- Notice the IP displayed in the shell
-- Exit SSH session and reconnect a couple of times
 
-> &#8505; Typically you would only use load balancer for application traffic, not direct access for management.
+###  3.15.3. Test Outbound Traffic from App1 Spoke Instance
 
-> &#10067; What are better practices to provide direct access to instances if needed for management purposes?
+Access the spoke web servers console using the AWS Systems Manager connect
 
-###  3.15.4. Test Outbound Traffic from App1 Spoke Instances
+- Navigate to Instances view in the EC2 Console
+- Select `ps-lab-app1-web-1` and click Connect button in the top right
+- From the Shell, try to generate outbound traffic
 
-- Using an SSH session to App1 instance via NLB, test outbound traffic.
-  
 ```ping 8.8.8.8```
 
 ```curl http://ifconfig.me```
 
-> &#8505; Note that web instances are configured to update and install web server automatically, but have to have a path outbound first to retrieve packages.
+> &#8505; Note that web instances are configured to update and install web server automatically, but they first must have a working outbound path to the Internet to retrieve packages.
 
-###  3.15.5. Check Inbound Traffic Logs
+###  3.15.4. Check Inbound Traffic Logs
 
 - Panorama -> Monitor Tab -> Traffic
 - Filter for traffic *to* App Spoke 1 `( addr.dst in 10.200.0.0/16 )`
@@ -710,7 +713,7 @@ ssh -i ~/.ssh/qwikLABS-L17939-10296.pem ec2-user@ps-lab-app1-nlb-d42f371991908c4
 
 > &#10067; Why does VM-Series see the private NLB addresses as the destination instead of the public address?
 
-###  3.15.6. Check Outbound Traffic Logs
+###  3.15.5. Check Outbound Traffic Logs
 
 > &#8505; Since outbound traffic was not working earlier, let's check to see if it it making it to VM-Series.
 
@@ -914,7 +917,7 @@ At this point all routing should be in place for GWLB topology. Now we will veri
 
 ###  3.17.1. Test Outbound Traffic from App1 Spoke Instances
 
-- Using an SSH session to App1 instance via NLB, test outbound traffic.
+- Using an Console Connect session to an App1 web instance, test outbound traffic.
   
 ```ping 8.8.8.8```
 
@@ -946,7 +949,7 @@ At this point all routing should be in place for GWLB topology. Now we will veri
 ### 3.17.3. Test E/W Traffic from App1 Spoke Instance to App2 Spoke Instance
 
 - Use EC2 Console to identify the Private IP address of `ps-lab-app2-web-1`
-- Using an SSH session to App1 instance via NLB, test traffic to `ps-lab-app2-web-1`
+- Using an Console Connection session on App1 instance, test traffic to `ps-lab-app2-web-1`
 
 ```ping 10.250.0.x```
 
@@ -1072,12 +1075,12 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 
 ### 3.18.4. Create Zone-Based policies for sub-interfaces
 
-> &#8505; Now that each endpoint is associated with a specific zone, we can have more logic with our security policies.
+> &#8505; Now that each endpoint is associated with a specific zone, we can have more logic with our security policies. Important to understand that although we have associated each endpoint to separate sub-interfaces, all of the traffic flows are still intra-zone. VM-Series will return traffic back to the same endpoint that it came in from.
 
 - Generate inbound, outbound, and east/west traffic
 - Check the traffic logs and notice this traffic should now show source / destination zone specific to each traffic flow endpoint
-- Notice Traffic is currently hitting intrazone-default
-- Create security policies specific for the traffic 
+- Notice Traffic is currently hitting the `intrazone-default` policy
+- Create security policies specific for this traffic 
 
 ---
 - Name: App Spoke Web Subnets Outbound
@@ -1107,7 +1110,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 - Name: Inbound to App Spoke1 LBs
   - Source Zone: `gwlbe-inbound-app1`
   - Source Address: `Your Client IP` (google 'what is my ip' from browser)
-  - Application: `ssh, web-browsing, ping`
+  - Application: `web-browsing, ping`
   - Destination Zone: `gwlbe-inbound-app1`
   - Destination Address: `10.200.0.16/28, 10.200.1.16/28`
 
@@ -1115,13 +1118,13 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 - Name: Inbound to App Spoke2 LBs
   - Source Zone: `gwlbe-inbound-app2`
   - Source Address: `Your Client IP` (google 'what is my ip' from browser)
-  - Application: `ssh, web-browsing, ping`
+  - Application: `web-browsing, ping`
   - Destination Zone: `gwlbe-inbound-app2`
   - Destination Address: `10.250.0.16/28, 10.250.1.16/28`
 
 ---
-- Create deny rule at bottom for all other traffic
-- Name: Deny Any
+- Update the final `student-gwlb-any` catch-all policy to deny all traffic instead of allow
+- Name: student-gwlb-any
   - Source Zone: `any`
   - Source Address: `any`
   - Application: `any`
@@ -1141,4 +1144,132 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 Congratulations!
 
 
+## 3.21. Bonus - Overlay Routing
 
+### 3.21.1. Create Public Interfaces for VM-Series
+
+- Delete the existing NAT Gateways, as there is a default limit of 5 EIPs per VPC. And they will no longer be needed.
+
+<img src="https://user-images.githubusercontent.com/43679669/159411034-da0bffbf-ed04-4f21-bfe6-214aeb928e66.png" width=80% height=50%>
+
+- Create New Pulbic ENIs
+  - Navigate to EC2 Console -> Network Interface
+  - Create Network Interface
+    - Description: `vmseries01-public`
+    - Subnet: `ps-lab-natgw1`
+    - Security Group: `ps-lab-vmseries-data`
+    - Tags: `Name` = `vmseries01-public`
+
+<img src="https://user-images.githubusercontent.com/43679669/159412907-f3c32816-a91d-4c3a-b913-a83457b4c2bf.png" width=50% height=50%>
+
+- After interface is created:
+  - Select it on the list
+  - Go to Actions -> Change Source/Dest Check
+  - UNCHECK the box and save
+  - Go to Actions -> Attach
+  - Attach to the `vmseries01` instance
+
+- *Repeat all steps above to create and attach interface for `vmseries02`!*
+
+### 3.21.2. Associate the EIPs to the Public Interfaces
+- In VPC Console, Navigate to Elastic IP Addresses
+- You will see two EIPs that were previously used for the NAT Gateways. We will repurpose these for the VM-Series public interfaces.
+- Update the Name tags for the EIPs used by the NAT Gateways
+    - Name: `vmseries01-public`
+    - Name: `vmseries02-public`
+- Associate `vmseries01-public` EIP to the ENI you created
+  -  Highlight the EIP and select Actions -> Associate
+  -  Resource Type: Network Interface
+  -  Select the Interface that has a name matching `vmseries01-public`
+  -  Select the private IP address from the dropdown menu
+  -  Create
+
+<img src="https://user-images.githubusercontent.com/43679669/159410909-983b7579-77e4-42df-ad7b-f916c71d69c3.png" width=50% height=50%>
+
+-  *Repeat for `vmseries02-public`*
+
+### 3.21.3. Configure Networking and Policies in Panorama
+
+> &#8505; Overlay routing presents a problem when using multiple AZs. Since the next hop is different for each AZ, we can no longer use identical configurations for all VMs. We can accept the gateway from DHCP for the public interface, but need to create a static route for return traffic to the inside. There are several methods to handle this, for this manual deployment using device-specific variables is arguably the cleanest approach. 
+
+- Add new ethernet1/2 Interface
+  - Slot: `Slot 1`
+  - Interface Name: `ethernet1/2`
+  - Comment: `Public Interface - Overlay Routing`
+  - Interface Type: `Layer 3`
+  - Virtual Router: `vr-default`
+  - Zone: Create new zone named `public`
+  - IPv4: Type DHCP Client
+  - IPv4: Leave Box CHECKED to "Automatically create default route pointing to default gateway provided by server"
+
+![eth1-2-overlay](https://user-images.githubusercontent.com/43679669/159412926-7c665e65-bcdb-44c1-8f27-a806aff8fa7a.png)
+
+- Edit ethernet1/1 Interface and UNCHECK the box to "Automatically create default route pointing to default gateway provided by server"
+
+- Create static route for internal summary using a Panorama template variable for the next-hop
+  - Name: `Spoke VPC Summary`
+  - Destination: `10.0.0.0/8`
+  - Interface: `ethernet1/1`
+  - Next Hop: `IP Address`
+  - Next Hop: Create Variable
+    - Name: $inside-next-hop
+    - Type: `IP Netmask` -> None
+    - Description: `AWS Inside Data subnet gateway per AZ`
+  - Click OK to finish creation of the static route
+
+
+![variable-next-hop](https://user-images.githubusercontent.com/43679669/159412946-f3ec0a09-3ac9-4dc7-9d5c-db721b75a971.png)
+
+- Set Next-Hop variable value per device
+  - Panorama Tab -> Managed Devices -> Summary
+  - For vmseries01, select Create under the Variable column
+  - Select No for the prompt to clone
+  - Highlight the `$inside-next-hop` variable and select override
+  - Set the value to `10.100.0.17` which is the gateway of the ps-lab-data1 inside subnet for first AZ
+  - Repeate for vmseries02 using value of `10.100.1.17`
+
+
+- Navigate to Policies and update the zone of the outbound policy to use the new zone
+  - Policy Name: `App Spoke Web Subnets Outbound`
+  - Desitnation Zone: Change from `gwlbe-outbound` to `public`
+
+- Create NAT Policy for the outbound overlay traffic
+  - Policy Name: `outbound-overlay`
+  - Source Zone: `gwlbe-outboune`
+  - Destination Zone: `public`
+  - Translated Packet:
+    - Type: `Dynamic IP and Port`
+    - Address Type: `Interface Address`
+    - Interface: `ethernet1/2`
+    - IP Type: `IP`
+    - None
+
+![nat-policy](https://user-images.githubusercontent.com/43679669/159412966-86b6bc17-8677-41dd-9d86-9389e7d07ba1.png)
+
+### 3.21.3. Enable Overlay mode
+
+- SSH to vmseries-01
+- Enable Overlay Routing
+
+```request plugins vm_series aws gwlb overlay-routing enable yes```
+
+- Reboot the VM so the new interface that was attached will come up. Reboot should take around 5 minutes.
+
+```request restart system```
+
+- Repeat on vmseries-02
+
+### 3.21.4. Test Outbound Traffic
+
+- Using an Console Connect session to an App1 web instance, test outbound traffic.
+  
+```yum update```
+
+```curl http://ifconfig.me```
+
+
+- Try the curl to ifconfig.me several times to see if you egress address changes.
+
+> &#10067; What AWS resources now have the public IPs you are egressing from?
+
+- Identify these sessions in Panorama traffic logs and verify the zones, NAT translation, and overlay routing behavior.
