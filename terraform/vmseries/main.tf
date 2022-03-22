@@ -329,6 +329,16 @@ resource "aws_vpc_endpoint" "app1_ssm" {
   tags                = merge(var.global_tags, { "Name" = "ps-lab-app1-ssm-endpoint"})
 }
 
+resource "aws_vpc_endpoint" "app1_kms" {
+  vpc_id            = module.app1_vpc.vpc_id.vpc_id
+  subnet_ids        = [module.app1_vpc.subnet_ids["web1"], module.app1_vpc.subnet_ids["web2"]]
+  service_name      = "com.amazonaws.${var.region}.kms"
+  vpc_endpoint_type = "Interface"
+  private_dns_enabled = true
+  security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
+  tags                = merge(var.global_tags, { "Name" = "ps-lab-app1-kms-endpoint"})
+}
+
 resource "aws_vpc_endpoint" "app1_ec2messages" {
   vpc_id            = module.app1_vpc.vpc_id.vpc_id
   subnet_ids        = [module.app1_vpc.subnet_ids["web1"], module.app1_vpc.subnet_ids["web2"]]
@@ -507,6 +517,16 @@ resource "aws_vpc_endpoint" "app2_ssm" {
   private_dns_enabled = true
   security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
   tags                = merge(var.global_tags, { "Name" = "ps-lab-ap2-ssm-endpoint"})
+}
+
+resource "aws_vpc_endpoint" "app2_kms" {
+  vpc_id            = module.app2_vpc.vpc_id.vpc_id
+  subnet_ids        = [module.app2_vpc.subnet_ids["web1"], module.app2_vpc.subnet_ids["web2"]]
+  service_name      = "com.amazonaws.${var.region}.kms"
+  vpc_endpoint_type = "Interface"
+  private_dns_enabled = true
+  security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
+  tags                = merge(var.global_tags, { "Name" = "ps-lab-app2-kms-endpoint"})
 }
 
 resource "aws_vpc_endpoint" "app2_ec2messages" {
