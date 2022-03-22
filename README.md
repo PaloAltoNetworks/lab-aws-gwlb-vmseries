@@ -192,7 +192,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 
 > &#10067; How many different BYOL AMIs are available for 10.x in the us-west-2 region?
 > 
-> &#10067; What is the Marketplace AMI ID for 10.0.4 in the us-west-2 region?
+> &#10067; What is the Marketplace AMI ID for 10.0.9 in the us-west-2 region?
 
 > &#10067; What are some options if there is no AMI available for your targeted version?
 
@@ -233,10 +233,10 @@ pip3 install pan-os-python
 - Download Terraform in Cloudshell
 
 ```
-mkdir /home/cloudshell-user/bin/ && wget https://releases.hashicorp.com/terraform/0.13.6/terraform_0.13.6_linux_amd64.zip && unzip terraform_0.13.6_linux_amd64.zip && rm terraform_0.13.6_linux_amd64.zip && mv terraform /home/cloudshell-user/bin/terraform
+mkdir /home/cloudshell-user/bin/ && wget https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_linux_amd64.zip && unzip terraform_1.1.7_linux_amd64.zip && rm terraform_1.1.7_linux_amd64.zip && mv terraform /home/cloudshell-user/bin/terraform
 ```
 
-- Verify Terraform 0.13.6 is installed
+- Verify Terraform 1.1.7 is installed
 ```
 terraform version
 ```
@@ -244,7 +244,7 @@ terraform version
 > &#8505; Terraform projects often have version constraints in the code to protect against potentially breaking syntax changes when new version is released. For this project, the [version constraint](https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries/blob/main/terraform/vmseries/versions.tf) is:
 > ```
 > terraform {
->  required_version = ">=0.12.29, <0.14"
+>  required_version = ">=0.12.29, <1.2"
 >}
 >```
 >
