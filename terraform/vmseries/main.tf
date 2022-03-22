@@ -324,8 +324,9 @@ resource "aws_vpc_endpoint" "app1_ssm" {
   subnet_ids        = [module.app1_vpc.subnet_ids["web1"], module.app1_vpc.subnet_ids["web2"]]
   service_name      = "com.amazonaws.${var.region}.ssm"
   vpc_endpoint_type = "Interface"
+  private_dns_enabled = true
   security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
-  tags                = var.global_tags
+  tags                = merge(var.global_tags, { "Name" = "ps-lab-app1-ssm-endpoint"})
 }
 
 resource "aws_vpc_endpoint" "app1_ec2messages" {
@@ -333,8 +334,9 @@ resource "aws_vpc_endpoint" "app1_ec2messages" {
   subnet_ids        = [module.app1_vpc.subnet_ids["web1"], module.app1_vpc.subnet_ids["web2"]]
   service_name      = "com.amazonaws.${var.region}.ec2messages"
   vpc_endpoint_type = "Interface"
+  private_dns_enabled = true
   security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
-  tags                = var.global_tags
+  tags                = merge(var.global_tags, { "Name" = "ps-lab-app1-ec2messages-endpoint"})
 }
 
 resource "aws_vpc_endpoint" "app1_ssmmessages" {
@@ -342,8 +344,9 @@ resource "aws_vpc_endpoint" "app1_ssmmessages" {
   subnet_ids        = [module.app1_vpc.subnet_ids["web1"], module.app1_vpc.subnet_ids["web2"]]
   service_name      = "com.amazonaws.${var.region}.ssmmessages"
   vpc_endpoint_type = "Interface"
+  private_dns_enabled = true
   security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
-  tags                = var.global_tags
+  tags                = merge(var.global_tags, { "Name" = "ps-lab-app1-ssmmessages-endpoint"})
 }
 
 
@@ -501,17 +504,19 @@ resource "aws_vpc_endpoint" "app2_ssm" {
   subnet_ids        = [module.app2_vpc.subnet_ids["web1"], module.app2_vpc.subnet_ids["web2"]]
   service_name      = "com.amazonaws.${var.region}.ssm"
   vpc_endpoint_type = "Interface"
+  private_dns_enabled = true
   security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
-  tags                = var.global_tags
+  tags                = merge(var.global_tags, { "Name" = "ps-lab-ap2-ssm-endpoint"})
 }
 
 resource "aws_vpc_endpoint" "app2_ec2messages" {
   vpc_id            = module.app2_vpc.vpc_id.vpc_id
   subnet_ids        = [module.app2_vpc.subnet_ids["web1"], module.app2_vpc.subnet_ids["web2"]]
   service_name      = "com.amazonaws.${var.region}.ec2messages"
+  private_dns_enabled = true
   vpc_endpoint_type = "Interface"
   security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
-  tags                = var.global_tags
+  tags                = merge(var.global_tags, { "Name" = "ps-lab-ap2-ec2messages-endpoint"})
 }
 
 resource "aws_vpc_endpoint" "app2_ssmmessages" {
@@ -519,6 +524,7 @@ resource "aws_vpc_endpoint" "app2_ssmmessages" {
   subnet_ids        = [module.app2_vpc.subnet_ids["web1"], module.app2_vpc.subnet_ids["web2"]]
   service_name      = "com.amazonaws.${var.region}.ssmmessages"
   vpc_endpoint_type = "Interface"
+  private_dns_enabled = true
   security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
-  tags                = var.global_tags
+  tags                = merge(var.global_tags, { "Name" = "ps-lab-ap2-ssmmessages-endpoint"})
 }
