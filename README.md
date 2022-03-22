@@ -15,8 +15,8 @@ The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panor
 This guide is intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. This could be easily adapted for other environments.
 
 ```
-Manual Last Updated: 2021-07-14
-Lab Last Tested: 2021-07-14
+Manual Last Updated: 2022-03-21
+Lab Last Tested: 2022-03-21
 ```
 
 ## 1.2. Lab Guide Syntax conventions
