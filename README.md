@@ -285,8 +285,6 @@ vi student.auto.tfvars
   - Set all values inside of the empty quotes
   - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
 
-<img src="https://user-images.githubusercontent.com/43679669/108796675-47138c00-7557-11eb-99b4-58141a3cf874.gif" width=50% height=50%>
-
 ---
 - ( Option 2 ) If you don't like vi, you can install nano editor:
 ```
