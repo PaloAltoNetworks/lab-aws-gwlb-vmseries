@@ -63,9 +63,9 @@ Example Code block following an action item
     - [3.15.1. Update App1 Spoke VPC networking for Inbound inspection with GWLB](#3151-update-app1-spoke-vpc-networking-for-inbound-inspection-with-gwlb)
     - [3.15.2. Update App2 Spoke VPC networking for Inbound inspection with GWLB](#3152-update-app2-spoke-vpc-networking-for-inbound-inspection-with-gwlb)
     - [3.15.3. Test Inbound Traffic to Spoke Web Apps](#3153-test-inbound-traffic-to-spoke-web-apps)
-    - [3.15.3. Test Outbound Traffic from App1 Spoke Instance](#3153-test-outbound-traffic-from-app1-spoke-instance)
-    - [3.15.4. Check Inbound Traffic Logs](#3154-check-inbound-traffic-logs)
-    - [3.15.5. Check Outbound Traffic Logs](#3155-check-outbound-traffic-logs)
+    - [3.15.4. Test Outbound Traffic from App1 Spoke Instance](#3154-test-outbound-traffic-from-app1-spoke-instance)
+    - [3.15.5. Check Inbound Traffic Logs](#3155-check-inbound-traffic-logs)
+    - [3.15.6. Check Outbound Traffic Logs](#3156-check-outbound-traffic-logs)
   - [3.16. Outbound and East / West (OBEW) Traffic Flows](#316-outbound-and-east--west-obew-traffic-flows)
     - [3.16.1. Update App1 Spoke VPC for OB/EW routing with TGW](#3161-update-app1-spoke-vpc-for-obew-routing-with-tgw)
     - [3.16.2. Update App2 Spoke VPC for OB/EW routing with TGW](#3162-update-app2-spoke-vpc-for-obew-routing-with-tgw)
@@ -80,14 +80,14 @@ Example Code block following an action item
     - [3.18.2. Configure Sub-Interfaces in Panorama](#3182-configure-sub-interfaces-in-panorama)
     - [3.18.3. Create associations from GWLB Endpoints](#3183-create-associations-from-gwlb-endpoints)
     - [3.18.4. Create Zone-Based policies for sub-interfaces](#3184-create-zone-based-policies-for-sub-interfaces)
-  - [3.19. Review Lab Quiz Questions](#319-review-lab-quiz-questions)
-  - [3.20. Finished](#320-finished)
-  - [3.21. Bonus - Overlay Routing](#321-bonus---overlay-routing)
-    - [3.21.1. Create Public Interfaces for VM-Series](#3211-create-public-interfaces-for-vm-series)
-    - [3.21.2. Associate the EIPs to the Public Interfaces](#3212-associate-the-eips-to-the-public-interfaces)
-    - [3.21.3. Configure Networking and Policies in Panorama](#3213-configure-networking-and-policies-in-panorama)
-    - [3.21.3. Enable Overlay mode](#3213-enable-overlay-mode)
-    - [3.21.4. Test Outbound Traffic](#3214-test-outbound-traffic)
+  - [3.19. Overlay Routing](#319-overlay-routing)
+    - [3.19.1. Create Public Interfaces for VM-Series](#3191-create-public-interfaces-for-vm-series)
+    - [3.19.2. Associate the EIPs to the Public Interfaces](#3192-associate-the-eips-to-the-public-interfaces)
+    - [3.19.3. Configure Networking and Policies in Panorama](#3193-configure-networking-and-policies-in-panorama)
+    - [3.19.4. Enable Overlay mode](#3194-enable-overlay-mode)
+    - [3.19.5. Test Outbound Traffic](#3195-test-outbound-traffic)
+  - [3.20. Review Lab Quiz Questions](#320-review-lab-quiz-questions)
+  - [3.21. Finished](#321-finished)
 
 # 2. Lab Topology
 
@@ -687,7 +687,7 @@ Generate some HTTP traffic to the web apps using the DNS name of the Public NLB 
 > &#8505; The inbound routing should now be in place, but you will not get a response yet as the instances are not yet running a web server.
 
 
-###  3.15.3. Test Outbound Traffic from App1 Spoke Instance
+###  3.15.4. Test Outbound Traffic from App1 Spoke Instance
 
 Access the spoke web servers console using the AWS Systems Manager connect
 
@@ -701,7 +701,7 @@ Access the spoke web servers console using the AWS Systems Manager connect
 
 > &#8505; Note that web instances are configured to update and install web server automatically, but they first must have a working outbound path to the Internet to retrieve packages.
 
-###  3.15.4. Check Inbound Traffic Logs
+###  3.15.5. Check Inbound Traffic Logs
 
 - Panorama -> Monitor Tab -> Traffic
 - Filter for traffic *to* App Spoke 1 `( addr.dst in 10.200.0.0/16 )`
@@ -711,7 +711,7 @@ Access the spoke web servers console using the AWS Systems Manager connect
 
 > &#10067; Why does VM-Series see the private NLB addresses as the destination instead of the public address?
 
-###  3.15.5. Check Outbound Traffic Logs
+###  3.15.6. Check Outbound Traffic Logs
 
 > &#8505; Since outbound traffic was not working earlier, let's check to see if it it making it to VM-Series.
 
@@ -1134,15 +1134,10 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 - Generate inbound, outbound, and east/west traffic
 - Verify traffic is matching sub-interface based zones as expected
 
-## 3.19. Review Lab Quiz Questions
 
 
-## 3.20. Finished
 
-Congratulations!
-
-
-## 3.21. Bonus - Overlay Routing
+## 3.19. Overlay Routing
 
 Overlay Routing enalbes the VM-Series to strip off the GENEVE encapsulation and use standard routing behavior to determine the next hop. Most commonly this is used as a method to maintain a separate Public or Internet facing zone for outbound traffic. When the return traffic is received by VM-Series, it will be re-encapsulated and sent to the same endpoint where the session originated.
 
@@ -1152,7 +1147,7 @@ We will update our existing infrastructure to use overlay routing. On the udpate
 
 
 
-### 3.21.1. Create Public Interfaces for VM-Series
+### 3.19.1. Create Public Interfaces for VM-Series
 
 - Delete the existing NAT Gateways, as there is a default limit of 5 EIPs per VPC. And they will no longer be needed.
 
@@ -1177,7 +1172,7 @@ We will update our existing infrastructure to use overlay routing. On the udpate
 
 - *Repeat all steps above to create and attach interface for `vmseries02`!*
 
-### 3.21.2. Associate the EIPs to the Public Interfaces
+### 3.19.2. Associate the EIPs to the Public Interfaces
 - In VPC Console, Navigate to Elastic IP Addresses
 - You will see two EIPs that were previously used for the NAT Gateways. We will repurpose these for the VM-Series public interfaces.
 - Update the Name tags for the EIPs used by the NAT Gateways
@@ -1194,7 +1189,7 @@ We will update our existing infrastructure to use overlay routing. On the udpate
 
 -  *Repeat for `vmseries02-public`*
 
-### 3.21.3. Configure Networking and Policies in Panorama
+### 3.19.3. Configure Networking and Policies in Panorama
 
 > &#8505; Overlay routing presents a problem when using multiple AZs. Since the next hop is different for each AZ, we can no longer use identical configurations for all VMs. We can accept the gateway from DHCP for the public interface, but need to create a static route for return traffic to the inside. There are several methods to handle this, for this manual deployment using device-specific variables is arguably the cleanest approach. 
 
@@ -1252,7 +1247,7 @@ We will update our existing infrastructure to use overlay routing. On the udpate
 
 ![nat-policy](https://user-images.githubusercontent.com/43679669/159412966-86b6bc17-8677-41dd-9d86-9389e7d07ba1.png)
 
-### 3.21.3. Enable Overlay mode
+### 3.19.4. Enable Overlay mode
 
 - SSH to vmseries-01
 - Enable Overlay Routing
@@ -1265,7 +1260,7 @@ We will update our existing infrastructure to use overlay routing. On the udpate
 
 - Repeat on vmseries-02
 
-### 3.21.4. Test Outbound Traffic
+### 3.19.5. Test Outbound Traffic
 
 - Using an Console Connect session to an App1 web instance, test outbound traffic.
   
@@ -1279,3 +1274,12 @@ We will update our existing infrastructure to use overlay routing. On the udpate
 > &#10067; What AWS resources now have the public IPs you are egressing from?
 
 - Identify these sessions in Panorama traffic logs and verify the zones, NAT translation, and overlay routing behavior.
+
+
+## 3.20. Review Lab Quiz Questions
+
+Submit your answers for the Lab Questions found throughout this guide.
+
+## 3.21. Finished
+
+Congratulations!
