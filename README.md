@@ -30,6 +30,8 @@ Example Code block following an action item
 
 > &#10067; Items with question mark icon are questions that should be answered on the quiz
 
+Use the corresponding [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8kurjB0n7M-WvFOaqfRCuY6OemWf6okQheGO5LMQ/viewform) that relates to the questions you will see inside this guide to test your knowledge!
+
 ## 1.3. Table of Contents
 
 - [1. VM-Series on AWS Gateway Load Balancer Lab](#1-vm-series-on-aws-gateway-load-balancer-lab)
@@ -108,6 +110,7 @@ Reference these diagrams for a visual of traffic flows through this topology.
 - Download `Student Lab Details` File from Qwiklabs interface for later reference
 - Click Open Console and authenticate to AWS account with credentials displayed in Qwiklabs
 - Verify your selected region in AWS console (top right) matches the lab-details.txt
+- Open the [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8kurjB0n7M-WvFOaqfRCuY6OemWf6okQheGO5LMQ/viewform) to answer questions as you go through the guide
   
 ### 3.1.1. Find SSH Key Pair Name
 
@@ -198,9 +201,9 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 - We see that `10.0.9` AMI is available, which is what we are targeting for this deployment
 
 
-> &#10067; How many different BYOL AMIs are available for 10.x in the us-west-2 region?
+> &#10067; How many different BYOL AMIs are available for 10.1.x in the us-west-2 region?
 > 
-> &#10067; What is the Marketplace AMI ID for 10.0.9 in the us-west-2 region?
+> &#10067; What is the BYOL Marketplace AMI ID for 10.2.0 in the us-east-1 region?
 
 > &#10067; What are some options if there is no AMI available for your targeted version?
 
@@ -410,8 +413,6 @@ In the meantime, lets go look at what you built!
 
 
 > &#10067; What is the instance type? 
-
-> &#10067; Which BYOL model(s) would this instance type be appropriate for?
 
 > &#10067; How many interfaces are associated to the VM-Series? 
 
