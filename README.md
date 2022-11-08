@@ -15,8 +15,8 @@ The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panor
 This guide is intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. This could be easily adapted for other environments.
 
 ```
-Manual Last Updated: 2022-03-21
-Lab Last Tested: 2022-03-21
+Manual Last Updated: 2022-11-08
+Lab Last Tested: 2022-11-08
 ```
 
 ## 1.2. Lab Guide Syntax conventions
@@ -127,12 +127,13 @@ Reference these diagrams for a visual of traffic flows through this topology.
 - In IAM dashboard select Users -> awsstudent
 - Expand `default_policy`, Edit Policy -> Visual Editor
 - Find the Deny Action for `Cloud Shell` and click `Remove` on the right
+- Also remove the Deny actions for all actions containing `Marketplace`
 - Select `Review policy`
 - Select `Save changes`
 
 ---
 
-<img src="https://user-images.githubusercontent.com/43679669/108776959-1882ba80-7531-11eb-8b8e-3247db81c3de.gif" width=50% height=50%>
+<img src="https://user-images.githubusercontent.com/43679669/200521132-07ca60f0-2186-49cc-b6ac-4c3477de3abf.png" width=50% height=50%>
 
 
 > &#8505; Qwiklabs has an explicit Deny for CloudShell. However, we have permissions to remove this deny policy. Take a look at the other Deny statements while you are here.
@@ -148,10 +149,17 @@ Reference these diagrams for a visual of traffic flows through this topology.
 > &#8505; The QwikLabs fleet should automatically be subscribed to VM-Series BYOL and PAYG Bundle 2. However, there have been some intermittent issues, so we will verify and correct if needed.
 
 - Search for `AWS Marketplace Subscriptions` in top search bar
-- Verify that there are two subscriptions, as seen in the screenshot.
+- Verify that there is an active subscription for `VM-Series Next-Generation Firewall (BYOL and ELA)`, as seen in the screenshot.
 - Notify lab instructor if you are missing subscriptions
 
 <img src="https://user-images.githubusercontent.com/43679669/111218782-9294e500-85ad-11eb-9f9a-ab59c5c018ec.gif" width=50% height=50%>
+
+- If you do not have the subscription, select `Discover Products` and search for `palo alto`
+- Select `VM-Series Next-Generation Firewall (BYOL and ELA)`
+- Continue to Subscribe
+- Accept Terms
+- Allow a few moments for the Subscription to be processed
+- Exit out of the Marketplace
 
 ---
 
