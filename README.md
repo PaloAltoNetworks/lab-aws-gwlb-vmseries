@@ -94,7 +94,7 @@ Use the corresponding [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8
 
 # 2. Lab Topology
 
-![GWLB Topology](images/topology.png)
+![GWLB Topology](docs/images/topology.png)
 
 ## 2.1. Flow Diagrams
 
@@ -1156,7 +1156,7 @@ Overlay Routing enalbes the VM-Series to strip off the GENEVE encapsulation and 
 
 We will update our existing infrastructure to use overlay routing. On the udpated diagram, you will see the changes on the right side where the NAT Gateways are replaced and instead an additional public interface and EIPs are attached to the VM-series.
 
-![GWLB Topology](images/overlay-topology.png)
+![GWLB Topology](docs/images/overlay-topology.png)
 
 
 
