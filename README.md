@@ -260,7 +260,7 @@ terraform version
 > &#8505; Terraform projects often have version constraints in the code to protect against potentially breaking syntax changes when new version is released. For this project, the [version constraint](https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries/blob/main/terraform/vmseries/versions.tf) is:
 > ```
 > terraform {
->  required_version = ">=0.12.29, <1.2"
+>  required_version = ">=0.12.29, <2.0"
 >}
 >```
 >
