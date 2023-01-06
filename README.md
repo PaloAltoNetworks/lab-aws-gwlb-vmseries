@@ -109,7 +109,7 @@ Reference these diagrams for a visual of traffic flows through this topology.
 
 - Download `Student Lab Details` File from Qwiklabs interface for later reference
 - Click Open Console and authenticate to AWS account with credentials displayed in Qwiklabs
-- Verify your selected region in AWS console (top right) matches the lab-details.txt
+- Verify your selected region in AWS console (top right) matches the aws-gwlb-lab-secrets.txt
 - Open the [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8kurjB0n7M-WvFOaqfRCuY6OemWf6okQheGO5LMQ/viewform) to answer questions as you go through the guide
   
 ### 3.1.1. Find SSH Key Pair Name
@@ -172,6 +172,7 @@ Reference these diagrams for a visual of traffic flows through this topology.
 
 ## 3.4. Launch CloudShell
 
+- *Verify you are in the assigned region!*
 - Search for `cloudshell` in top search bar
 - Close out of the Intro Screen
 - Allow a few moments for it to initialize
@@ -296,7 +297,7 @@ cd ~/lab-aws-gwlb-vmseries/terraform/vmseries
 vi student.auto.tfvars
 ```
 
-- Update the specifics of your deployment from the values in `lab-details.txt` from QL console
+- Update the specifics of your deployment from the values in `aws-gwlb-lab-secrets.txt` from QL console
   - Set all values inside of the empty quotes
   - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
 
@@ -307,7 +308,7 @@ sudo yum install -y nano
 nano student.auto.tfvars
 ```
 
-- Update the specifics of your deployment from the values in `lab-details.txt` from QL console
+- Update the specifics of your deployment from the values in `aws-gwlb-lab-secrets.txt` from QL console
   - Set all values inside of the empty quotes
   - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
 
@@ -325,7 +326,7 @@ vm_auth_key         = ""
 authcodes           = ""
 ```
 
-- Update the specifics of your deployment from the values in `lab-details.txt` from QL console
+- Update the specifics of your deployment from the values in `aws-gwlb-lab-secrets.txt` from QL console
   - Set all values inside of the empty quotes
   - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
 - Save file locally with name `student.auto.tfvars`
@@ -378,8 +379,6 @@ terraform apply
 - It should take 5-10 minutes for terraform to finish deploying all resources
 
 - When complete, you will see a list of outputs. **Copy these locally so you can reference them in later steps**
-
-- One of these outputs is a dynamically generated student username and password for accessing Panorama later.
 
 - If you do get an error, first try to run `terraform apply` again to finish update of any pending resources. Notify lab instructor if there are still issues.
 
@@ -451,8 +450,8 @@ In the meantime, lets go look at what you built!
 
 > &#8505; We are using a shared Panorama for this lab that is publicly accessible. For production deployments, Panorama management should not be exposed to inbound Internet traffic. Each student has their own credentials restricted to Access Domain for only the relevant Device Group & Templates to reduce clutter.
 
-- Refer to the terraform output you copied earlier for the student credentials for Panorama. These credentials are associted wtih access domain so you can see your devices without without the clutter of other students in the shared Panorama.
-- If you need superuser access to Panorama for some reason, refer to `lab-details.txt` from QwikLabs for connection and credential details for Panorama
+- Refer to the terraform output you copied earlier for your Panorama public IP
+- Refer to `aws-gwlb-lab-secrets.txt` from QwikLabs for Panorama credentials
 - Login to Panorama web interface with student credentials
 - Check Panorama -> Managed Devices -> Summary
 - Verify your deployed VM-Series are connected and successfully bootstrapped
@@ -466,15 +465,6 @@ In the meantime, lets go look at what you built!
 ## 3.12. Access VM-Series Management
 
 - Most configurations will be done in Panorama, but we will use the local consoles for some steps and validation
-- Refer to the terraform output you copied earlier for the student credentials for VM-Series. These are the same credentials you used for Panorama.
-
-```
-lab_info = {
-  "Panorama URL" = "https://52.35.251.133"
-  "Student Password" = "student-xxxxxx"
-  "Student User" = "student-xxxxxx"
-}
-```
 
 - Refer to the output you copied from your terraform deployment for the public EIPs associated to each VM-Series management interface
   
@@ -484,6 +474,8 @@ vmseries_eips = {
   "vmseries02-mgmt" = "44.237.145.237"
 }
 ```
+- Refer to `aws-gwlb-lab-secrets.txt` from QwikLabs for local credentials for the VM-Series instances. This will be the same credentials you used for Panorama.
+
 - Establish a connection to both VM-Series Web UI via HTTPS
 - Establish a connection to both VM-Series CLI via SSH
 
@@ -553,7 +545,7 @@ debug logview component bts_details
 > &#8505; We can see in the traffic logs that the health probes are being received. So we know they are being permitted by the AWS Security Group. They are being permitted by catch-all security policy but there is no return traffic (Notice 0 Bytes Received in the traffic logs). This indicates the VM-Series dataplane interface is not listening 
 
   - Create and add Interface Management profile to eth1/1
-    - In Panorama select Network Tab -> Template `TPL-STUDENT-BASE-##`
+    - In Panorama select Network Tab -> Template `tpl-aws-gwlb-lab`
     - Create Interface Management Profile
       - Name: `gwlb-health-probe`
       - Services: HTTP
@@ -563,7 +555,7 @@ debug logview component bts_details
 <img src="https://user-images.githubusercontent.com/43679669/109861732-9fb8e800-7c2d-11eb-87b7-98e794ce8131.gif" width=50% height=50%>
 
   - Create a specific security policies for these health probes to keep logging clean
-    - In Panorama select Policies Tab -> Device Group `DG-STUDENT-##`
+    - In Panorama select Policies Tab -> Device Group `AWS-GWLB-LAB`
     - Create new security policy
       - Name: `gwlb-health-probe`
       - Source Zone: `gwlb`
@@ -572,7 +564,7 @@ debug logview component bts_details
       - Dest Addresses: `10.100.0.16/28`, `10.100.1.16/28`
       - Application: `Any`
       - Serivce: `service-http`
-    - Make sure new policy is before the existing catch-all `gwlb-any` policy
+    - Make sure new policy is before the existing catch-all `student-gwlb-any` policy
 
   - Commit and Push your changes
 
@@ -985,7 +977,7 @@ We will now fix this using GWLB sub-interface associations.
 
 ### 3.18.1. Configure Zones in Panorama
 
-- In Panorama select Network Tab -> Template `TPL-STUDENT-BASE-##` -> Zones
+- In Panorama select Network Tab -> Template `tpl-aws-gwlb-lab` -> Zones
 - Add New Zones for each endpoint. Zone Type `Layer3` 
   - `gwlbe-outbound`
   - `gwlbe-eastwest`
@@ -999,7 +991,7 @@ We will now fix this using GWLB sub-interface associations.
 
 > &#8505; Unique VLAN Tag must be specified but is not actually used for GWLB GENEVE traffic.
 
-- In Panorama select Network Tab -> Template `TPL-STUDENT-BASE-##` -> Interfaces
+- In Panorama select Network Tab -> Template `tpl-aws-gwlb-lab` -> Interfaces
 - Highlight ethernet1/1 -> Add Subinterface
   - Interface Name: `10`
   - Tag: `10`
@@ -1092,6 +1084,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 - Check the traffic logs and notice this traffic should now show source / destination zone specific to each traffic flow endpoint
 - Notice Traffic is currently hitting the `intrazone-default` policy
 - Create security policies specific for this traffic 
+- There are address objects prepped for some sources / destinations
 
 ---
 - Name: App Spoke Web Subnets Outbound
