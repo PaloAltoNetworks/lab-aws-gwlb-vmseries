@@ -2,11 +2,11 @@
 
 variable "region" {
   description = "AWS Region."
-  default     = "us-east-1"
+  default     = "us-west-2"
   type        = string
 }
 
-variable "name_prefix" {
+variable "prefix_name_tag" {
   description = "Prefix use for creating unique names."
   default     = ""
   type        = string
@@ -23,61 +23,25 @@ variable "global_tags" {
 
 ### Network
 
-variable "vpc_name" {
-  description = "VPC Name."
-  default     = "security-vpc"
-  type        = string
-}
+### Global
+variable ssh_key_name { default = "qwikLABS"}
 
-variable "vpc_cidr" {
-  description = "AWS VPC Cidr block."
-  type        = string
-}
+### APP1 Variables
 
-variable "vpc_routes_outbound_destin_cidrs" {
-  description = "VPC Routes outbound cidr"
-  type        = list(string)
-}
+variable management_vpc { default = {} }
+variable management_vpc_route_tables { default = {} }
+variable management_vpc_subnets { default = {} }
+variable management_vpc_security_groups { default = {} }
+variable management_nat_gateways { default = {} }
+variable management_vpc_endpoints { default = {} }
+variable management_vpc_routes { default = {} }
+variable management_vpc_routes_additional { default = {} }
+variable management_gateway_load_balancers { default = {} }
+variable management_gateway_load_balancer_endpoints { default = {} }
+variable management_transit_gateways { default = {} }
+variable management_transit_gateway_vpc_attachments { default = {} }
+variable management_transit_gateway_peerings { default = {} }
 
-variable "vpc_subnets" {
-  description = "Security VPC subnets CIDR"
-  default     = {}
-  type        = map(any)
-}
-
-variable "vpc_security_groups" {
-  description = <<-EOF
-  Security VPC security groups settings.
-  Structure looks like this:
-  ```
-  {
-    security_group_name = {
-      {
-        name = "security_group_name"
-        rules = {
-          all_outbound = {
-            description = "Permit All traffic outbound"
-            type        = "egress", from_port = "0", to_port = "0", protocol = "-1"
-            cidr_blocks = ["0.0.0.0/0"]
-          }
-          https = {
-            description = "Permit HTTPS"
-            type        = "ingress", from_port = "443", to_port = "443", protocol = "tcp"
-            cidr_blocks = ["0.0.0.0/0"]
-          }
-          ssh = {
-            description = "Permit SSH"
-            type        = "ingress", from_port = "22", to_port = "22", protocol = "tcp"
-            cidr_blocks = ["0.0.0.0/0"]
-          }
-        }
-      }
-    }
-  }
-  ```
-  EOF
-  type        = map(any)
-}
 
 ### Panorama
 
