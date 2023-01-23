@@ -77,7 +77,7 @@ module "management_transit_gateways" {
 }
 
 module "panorama" {
-  source = "../../modules/panorama"
+  source = "../modules/panorama"
 
   availability_zone      = var.panorama_az
   panorama_ami_id        = var.panorama_ami_id
@@ -99,7 +99,7 @@ module "panorama" {
 }
 
 # module "security_vpc" {
-#   source = "../../modules/vpc"
+#   source = "../modules/vpc"
 
 #   cidr_block              = var.vpc_cidr
 #   create_internet_gateway = true
@@ -112,7 +112,7 @@ module "panorama" {
 
 # module "security_subnet_sets" {
 #   for_each = toset(distinct([for _, v in var.vpc_subnets : v.set]))
-#   source   = "../../modules/subnet_set"
+#   source   = "../modules/subnet_set"
 
 #   cidrs               = { for k, v in var.vpc_subnets : k => v if v.set == each.key }
 #   has_secondary_cidrs = module.security_vpc.has_secondary_cidrs
@@ -135,7 +135,7 @@ module "panorama" {
 
 # module "security_vpc_routes" {
 #   for_each = { for route in local.security_vpc_routes : "${route.subnet_key}_${route.to_cidr}" => route }
-#   source   = "../../modules/vpc_route"
+#   source   = "../modules/vpc_route"
 
 #   next_hop_set    = each.value.next_hop_set
 #   route_table_ids = module.security_subnet_sets[each.value.subnet_key].unique_route_table_ids
