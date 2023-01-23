@@ -23,11 +23,6 @@ variable "global_tags" {
 
 ### Network
 
-### Global
-variable ssh_key_name { default = "qwikLABS"}
-
-### APP1 Variables
-
 variable management_vpc { default = {} }
 variable management_vpc_route_tables { default = {} }
 variable management_vpc_subnets { default = {} }
