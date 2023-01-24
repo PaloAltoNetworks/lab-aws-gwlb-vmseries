@@ -126,11 +126,14 @@ panorama_create_public_ip = true
 panorama_ebs_encrypted    = false
 #panorama_ebs_kms_key_alias = "panoramamainkms" <-- use this variable when you have own KMS key.
 
-panorama_ebs_volumes = [
-  {
-    name            = "ebs-1"
-    ebs_device_name = "/dev/sdb"
-    ebs_size        = "2000"
-    ebs_encrypted   = true
-  }
-]
+panorama_ebs_volumes = []
+
+
+# panorama_ebs_volumes = [
+#   {
+#     name            = "ebs-1"
+#     ebs_device_name = "/dev/sdb"
+#     ebs_size        = "2000"
+#     ebs_encrypted   = true
+#   }
+# ]

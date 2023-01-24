@@ -67,7 +67,7 @@ module "panorama" {
   availability_zone      = var.panorama_az
   panorama_ami_id        = var.panorama_ami_id
   create_public_ip       = var.panorama_create_public_ip
-  ebs_volumes            = null
+  ebs_volumes            = var.panorama_ebs_volumes
   name                   = var.panorama_deployment_name
   ebs_kms_key_alias      = try(data.aws_kms_alias.current_arn[0].arn, null)
   panorama_version       = var.panorama_version
