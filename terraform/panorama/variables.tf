@@ -40,6 +40,12 @@ variable management_transit_gateway_peerings { default = {} }
 
 ### Panorama
 
+variable "panorama_ami_id" {
+  description = "AMI ID if using a custom image. Leave null to detect from marketplace"
+  type        = string
+  default     = null
+}
+
 variable "panorama_az" {
   description = "Availability zone where Panorama was be deployed."
   type        = string

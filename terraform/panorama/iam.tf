@@ -33,7 +33,7 @@ data "aws_iam_policy" "iam_policy_arn" {
 resource "aws_iam_policy_attachment" "panorama_iam_attach" {
   count = var.panorama_create_iam_role ? 1 : 0
 
-  name       = "${var.name_prefix}panorama_ro_iam_policy_attachment"
+  name       = "${var.prefix_name_tag}panorama_ro_iam_policy_attachment"
   roles      = [aws_iam_role.panorama_read_only_role[0].name]
   policy_arn = data.aws_iam_policy.iam_policy_arn[0].arn
 }
@@ -41,6 +41,6 @@ resource "aws_iam_policy_attachment" "panorama_iam_attach" {
 resource "aws_iam_instance_profile" "panorama_instance_profile" {
   count = var.panorama_create_iam_instance_profile ? 1 : 0
 
-  name = "${var.name_prefix}panorama_iam_att_profile"
+  name = "${var.prefix_name_tag}panorama_iam_att_profile"
   role = var.panorama_existing_iam_role_name != "" ? var.panorama_existing_iam_role_name : aws_iam_role.panorama_read_only_role[0].name
 }
