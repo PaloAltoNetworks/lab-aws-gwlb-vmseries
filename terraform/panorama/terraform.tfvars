@@ -34,6 +34,7 @@ management_vpc_endpoints = {
 management_transit_gateways = {
   lab = {
     name     = "lab-tgw"
+    asn      = "65200"
     existing = false
     route_tables = {
       security-in = { name = "from-security-vpc", existing = false }
@@ -118,7 +119,7 @@ panorama_create_iam_role             = true
 #panorama_existing_iam_role_name = "PanoramaROCuratedRole" <-- use this variable to attach existing IAM Role.
 
 ## Panorama
-panorama_ssh_key_name     = "qwikLABS"
+panorama_ssh_key_name     = "qwikLABS*"
 panorama_ami_id           = "ami-0de23a5f895edf40a"
 panorama_az               = "us-west-2a"
 panorama_create_public_ip = true
