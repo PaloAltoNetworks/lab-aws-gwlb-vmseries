@@ -48,20 +48,6 @@ module "management_vpc_routes" {
   vpc_route_tables  = module.management_vpc.route_table_ids
   internet_gateways = module.management_vpc.internet_gateway_id
   nat_gateways      = module.management_vpc.nat_gateway_ids
-  vpc_endpoints     = module.management_gwlb.endpoint_ids
-  transit_gateways  = module.management_transit_gateways.transit_gateway_ids
-}
-
-module "management_vpc_routes_additional" {
-  source            = "../modules/vpc_routes"
-  region            = var.region
-  global_tags       = var.global_tags
-  prefix_name_tag   = var.prefix_name_tag
-  vpc_routes        = var.management_vpc_routes_additional
-  vpc_route_tables  = module.management_vpc.route_table_ids
-  internet_gateways = module.management_vpc.internet_gateway_id
-  nat_gateways      = module.management_vpc.nat_gateway_ids
-  vpc_endpoints     = module.management_gwlb.endpoint_ids
   transit_gateways  = module.management_transit_gateways.transit_gateway_ids
 }
 
@@ -73,7 +59,6 @@ module "management_transit_gateways" {
   vpcs                            = module.management_vpc.vpc_id
   transit_gateways                = var.management_transit_gateways
   transit_gateway_vpc_attachments = var.management_transit_gateway_vpc_attachments
-  depends_on = [module.gwlb] // Depends on GWLB being created in security VPC
 }
 
 module "panorama" {

@@ -2,7 +2,7 @@
 resource "aws_iam_role" "panorama_read_only_role" {
   count = var.panorama_create_iam_role ? 1 : 0
 
-  name               = "${var.name_prefix}PanoramaReadOnly"
+  name               = "${var.prefix_name_tag}PanoramaReadOnly"
   description        = "Allow read-only access to AWS resources."
   assume_role_policy = <<EOF
 {

@@ -1,6 +1,6 @@
 ## General
 region                = "us-west-2"
-name_prefix           = "panorama-"
+prefix_name_tag       = "management-"
 
 global_tags = {
   ManagedBy   = "terraform"
