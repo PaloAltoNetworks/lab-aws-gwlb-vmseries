@@ -73,7 +73,7 @@ module "panorama" {
   panorama_version       = var.panorama_version
   ssh_key_name           = data.aws_key_pair.panorama.key_name
   subnet_id              = module.management_vpc.subnet_ids["management1"]
-  vpc_security_group_ids = [module.app1_vpc.security_group_ids["panorama"]]
+  vpc_security_group_ids = [module.management_vpc.security_group_ids["panorama"]]
   panorama_iam_role      = var.panorama_create_iam_instance_profile == false ? null : aws_iam_instance_profile.panorama_instance_profile[0].name
 
   global_tags = var.global_tags

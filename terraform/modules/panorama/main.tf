@@ -1,6 +1,6 @@
 # Panorama AMI ID lookup based on license type, region, version
 data "aws_ami" "this" {
-  count = var.vmseries_ami_id != null ? 0 : 1
+  count = var.panorama_ami_id != null ? 0 : 1
 
   most_recent = true
   owners      = ["aws-marketplace"]

@@ -17,7 +17,8 @@ variable "global_tags" {
 # Panorama
 variable "panorama_ami_id" {
   description = "Custom AMI ID for Panorama image. If specific, will be preferred over marketplace lookup"
-  default = null
+  type        = string
+  default     = null
 }
 
 variable "product_code" {
