@@ -245,13 +245,11 @@ module "app1_gwlb" {
 }
 
 
-module "app1_ec2_cluster" {
+module "app1_ec2_az1" {
   source                 = "terraform-aws-modules/ec2-instance/aws"
   version                = "~> 4.3"
 
-  for_each               = toset(["1", "2"])
-
-  name                   = "${var.prefix_name_tag}app1-web-${each.key}"
+  name                   = "${var.prefix_name_tag}app1-web-az1"
   associate_public_ip_address = false
   iam_instance_profile   = module.ssm.iam_profile_name
 
@@ -260,7 +258,26 @@ module "app1_ec2_cluster" {
   key_name               = var.ssh_key_name
   monitoring             = true
   vpc_security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
-  subnet_ids              = [module.app1_vpc.subnet_ids["web1"], module.app1_vpc.subnet_ids["web2"]]
+  subnet_id              = module.app1_vpc.subnet_ids["web1"]
+  user_data_base64 = base64encode(local.web_user_data)
+  tags = var.global_tags
+}
+
+
+module "app1_ec2_az2" {
+  source                 = "terraform-aws-modules/ec2-instance/aws"
+  version                = "~> 4.3"
+
+  name                   = "${var.prefix_name_tag}app1-web-az2"
+  associate_public_ip_address = false
+  iam_instance_profile   = module.ssm.iam_profile_name
+
+  ami                    = data.aws_ami.amazon-linux-2.id
+  instance_type          = "t2.micro"
+  key_name               = var.ssh_key_name
+  monitoring             = true
+  vpc_security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
+  subnet_id              = module.app1_vpc.subnet_ids["web2"]
   user_data_base64 = base64encode(local.web_user_data)
   tags = var.global_tags
 }
@@ -312,16 +329,24 @@ module "app1_nlb" {
   ]
 }
 
-resource "aws_lb_target_group_attachment" "app1_ssh" {
-  count            = 2
+resource "aws_lb_target_group_attachment" "app1_ssh_az1" {
   target_group_arn = module.app1_nlb.target_group_arns[0]
-  target_id        = module.app1_ec2_cluster.id[count.index]
+  target_id        = module.app1_ec2_az1.id
 }
 
-resource "aws_lb_target_group_attachment" "app1_http" {
-  count            = 2
+resource "aws_lb_target_group_attachment" "app1_http_az1" {
   target_group_arn = module.app1_nlb.target_group_arns[1]
-  target_id        = module.app1_ec2_cluster.id[count.index]
+  target_id        = module.app1_ec2_az1.id
+}
+
+resource "aws_lb_target_group_attachment" "app1_ssh_az2" {
+  target_group_arn = module.app1_nlb.target_group_arns[0]
+  target_id        = module.app1_ec2_az2.id
+}
+
+resource "aws_lb_target_group_attachment" "app1_http_az2" {
+  target_group_arn = module.app1_nlb.target_group_arns[1]
+  target_id        = module.app1_ec2_az2.id
 }
 
 ##################################################################
@@ -435,26 +460,42 @@ module "app2_gwlb" {
 }
 
 
-module "app2_ec2_cluster" {
+module "app2_ec2_az1" {
   source                 = "terraform-aws-modules/ec2-instance/aws"
   version                = "~> 4.3"
 
-  for_each               = toset(["1", "2"])
-  name                   = "${var.prefix_name_tag}app2-web-${each.key}"
-  
-  iam_instance_profile   = module.ssm.iam_profile_name
+  name                   = "${var.prefix_name_tag}app2-web-az1"
   associate_public_ip_address = false
+  iam_instance_profile   = module.ssm.iam_profile_name
 
   ami                    = data.aws_ami.amazon-linux-2.id
   instance_type          = "t2.micro"
   key_name               = var.ssh_key_name
   monitoring             = true
   vpc_security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
-  subnet_ids              = [module.app2_vpc.subnet_ids["web1"], module.app2_vpc.subnet_ids["web2"]]
+  subnet_id              = module.app2_vpc.subnet_ids["web1"]
   user_data_base64 = base64encode(local.web_user_data)
   tags = var.global_tags
 }
 
+
+module "app2_ec2_az2" {
+  source                 = "terraform-aws-modules/ec2-instance/aws"
+  version                = "~> 4.3"
+
+  name                   = "${var.prefix_name_tag}app2-web-az2"
+  associate_public_ip_address = false
+  iam_instance_profile   = module.ssm.iam_profile_name
+
+  ami                    = data.aws_ami.amazon-linux-2.id
+  instance_type          = "t2.micro"
+  key_name               = var.ssh_key_name
+  monitoring             = true
+  vpc_security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
+  subnet_id              = module.app2_vpc.subnet_ids["web2"]
+  user_data_base64 = base64encode(local.web_user_data)
+  tags = var.global_tags
+}
 
 ##################################################################
 # Network Load Balancer with Elastic IPs attached
@@ -502,18 +543,25 @@ module "app2_nlb" {
   ]
 }
 
-resource "aws_lb_target_group_attachment" "app2_ssh" {
-  count            = 2
+resource "aws_lb_target_group_attachment" "app2_ssh_az1" {
   target_group_arn = module.app2_nlb.target_group_arns[0]
-  target_id        = module.app2_ec2_cluster.id[count.index]
+  target_id        = module.app2_ec2_az1.id
 }
 
-resource "aws_lb_target_group_attachment" "app2_http" {
-  count            = 2
+resource "aws_lb_target_group_attachment" "app2_http_az1" {
   target_group_arn = module.app2_nlb.target_group_arns[1]
-  target_id        = module.app2_ec2_cluster.id[count.index]
+  target_id        = module.app2_ec2_az1.id
 }
 
+resource "aws_lb_target_group_attachment" "app2_ssh_az2" {
+  target_group_arn = module.app2_nlb.target_group_arns[0]
+  target_id        = module.app2_ec2_az2.id
+}
+
+resource "aws_lb_target_group_attachment" "app2_http_az2" {
+  target_group_arn = module.app2_nlb.target_group_arns[1]
+  target_id        = module.app2_ec2_az2.id
+}
 
 ##################################################################
 # Session Manager VPC Endpoints for App2 VPC
