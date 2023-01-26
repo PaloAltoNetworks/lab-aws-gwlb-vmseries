@@ -249,8 +249,9 @@ module "app1_ec2_cluster" {
   source                 = "terraform-aws-modules/ec2-instance/aws"
   version                = "~> 4.3"
 
-  name                   = "${var.prefix_name_tag}app1-web"
-  instance_count         = 2
+  for_each               = toset(["1", "2"])
+
+  name                   = "${var.prefix_name_tag}app1-web-${each.key}"
   associate_public_ip_address = false
   iam_instance_profile   = module.ssm.iam_profile_name
 
@@ -438,8 +439,9 @@ module "app2_ec2_cluster" {
   source                 = "terraform-aws-modules/ec2-instance/aws"
   version                = "~> 4.3"
 
-  name                   = "${var.prefix_name_tag}app2-web"
-  instance_count         = 2
+  for_each               = toset(["1", "2"])
+  name                   = "${var.prefix_name_tag}app2-web-${each.key}"
+  
   iam_instance_profile   = module.ssm.iam_profile_name
   associate_public_ip_address = false
 
