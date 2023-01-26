@@ -255,7 +255,7 @@ module "app1_ec2_az1" {
 
   ami                    = data.aws_ami.amazon-linux-2.id
   instance_type          = "t2.micro"
-  key_name               = var.ssh_key_name
+  key_name               = data.aws_key_pair.vmseries.key_name
   monitoring             = true
   vpc_security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
   subnet_id              = module.app1_vpc.subnet_ids["web1"]
@@ -274,7 +274,7 @@ module "app1_ec2_az2" {
 
   ami                    = data.aws_ami.amazon-linux-2.id
   instance_type          = "t2.micro"
-  key_name               = var.ssh_key_name
+  key_name               = data.aws_key_pair.vmseries.key_name
   monitoring             = true
   vpc_security_group_ids = [module.app1_vpc.security_group_ids["web-server-sg"]]
   subnet_id              = module.app1_vpc.subnet_ids["web2"]
@@ -470,7 +470,7 @@ module "app2_ec2_az1" {
 
   ami                    = data.aws_ami.amazon-linux-2.id
   instance_type          = "t2.micro"
-  key_name               = var.ssh_key_name
+  key_name               = data.aws_key_pair.vmseries.key_name
   monitoring             = true
   vpc_security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
   subnet_id              = module.app2_vpc.subnet_ids["web1"]
@@ -489,7 +489,7 @@ module "app2_ec2_az2" {
 
   ami                    = data.aws_ami.amazon-linux-2.id
   instance_type          = "t2.micro"
-  key_name               = var.ssh_key_name
+  key_name               = data.aws_key_pair.vmseries.key_name
   monitoring             = true
   vpc_security_group_ids = [module.app2_vpc.security_group_ids["web-server-sg"]]
   subnet_id              = module.app2_vpc.subnet_ids["web2"]

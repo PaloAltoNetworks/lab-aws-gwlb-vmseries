@@ -8,7 +8,7 @@ output endpoint_ids {
 
 output app_nlbs_dns {
   value = {
-    app1_nlb = module.app1_nlb.this_lb_dns_name
-    app2_nlb = module.app2_nlb.this_lb_dns_name
+    app1_nlb = module.app1_nlb.lb_dns_name
+    app2_nlb = module.app2_nlb.lb_dns_name
   }
 }
