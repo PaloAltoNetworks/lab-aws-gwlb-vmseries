@@ -66,6 +66,7 @@ module "panorama" {
 
   availability_zone      = var.panorama_az
   panorama_ami_id        = var.panorama_ami_id
+  private_ip_address     = var.private_ip_address
   create_public_ip       = var.panorama_create_public_ip
   ebs_volumes            = var.panorama_ebs_volumes
   name                   = var.panorama_deployment_name

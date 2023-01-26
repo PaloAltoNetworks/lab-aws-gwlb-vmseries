@@ -122,6 +122,7 @@ panorama_create_iam_role             = true
 panorama_ssh_key_name     = "qwikLABS*"
 panorama_ami_id           = "ami-0de23a5f895edf40a"
 panorama_az               = "us-west-2a"
+private_ip_address        = "192.168.10.10"
 panorama_create_public_ip = true
 panorama_ebs_encrypted    = false
 #panorama_ebs_kms_key_alias = "panoramamainkms" <-- use this variable when you have own KMS key.

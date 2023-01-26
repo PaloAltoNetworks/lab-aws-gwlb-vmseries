@@ -121,3 +121,9 @@ EOF
   default     = ""
   type        = string
 }
+
+variable "private_ip_address" {
+  description = "If provided, associates a private IP address to the Panorama instance."
+  type        = string
+  default     = null
+}
