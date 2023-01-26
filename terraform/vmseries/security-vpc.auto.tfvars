@@ -2,7 +2,9 @@
 prefix_name_tag  = "ps-lab-"
 fw_instance_type = "m5.xlarge"
 fw_license_type  = "byol"
-fw_version       = "10.0.9" //Leave empty to be updated
+fw_version       = "10.2.3-h2" //Leave empty to be updated
+vmseries_ssh_key_name     = "qwikLABS*"
+
 
 
 global_tags = {
@@ -390,8 +392,9 @@ gateway_load_balancer_endpoints = {
 
 transit_gateways = {
   gwlb = {
-    name     = "tgw"
+    name     = "lab-tgw"
     asn      = "65200"
+    existing = true
     route_tables = {
       security-in = { name = "from-security-vpc"}
       spoke-in = { name = "from-spoke-vpcs"}

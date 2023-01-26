@@ -5,7 +5,10 @@ variable global_tags {}
 variable fw_instance_type {}
 variable fw_license_type {}
 variable fw_version {}
-variable ssh_key_name {}
+variable "vmseries_ssh_key_name" {
+  description = "SSH key used to login into VM-Series EC2 server."
+  type        = string
+}
 
 ### Panorama API Connection
 
