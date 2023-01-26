@@ -87,7 +87,7 @@ app2_gateway_load_balancer_endpoints = {
 
 app2_transit_gateways = {
   gwlb = {
-    name     = "ps-lab-tgw"
+    name     = "management-lab-tgw"
     existing = true
     route_tables = {
       security-in = { name = "ps-lab-from-security-vpc", existing = true }
