@@ -168,7 +168,7 @@ EOF
 ### SSM external module for managing app servers
 module "ssm" {
   source                    = "bridgecrewio/session-manager/aws"
-  version                   = "0.3.0"
+  version                   = "0.4.2"
   #vpc_id                    = module.app1_vpc.vpc_id.vpc_id
   bucket_name               = "my-session-logs"
   access_log_bucket_name    = "my-session-access-logs"
@@ -247,7 +247,7 @@ module "app1_gwlb" {
 
 module "app1_ec2_cluster" {
   source                 = "terraform-aws-modules/ec2-instance/aws"
-  version                = "~> 2.0"
+  version                = "~> 4.3"
 
   name                   = "${var.prefix_name_tag}app1-web"
   instance_count         = 2
@@ -270,7 +270,7 @@ module "app1_ec2_cluster" {
 ##################################################################
 module "app1_nlb" {
   source  = "terraform-aws-modules/alb/aws"
-  version = "~> 5.0"
+  version = "~> 8.2"
 
   name = "${var.prefix_name_tag}app1-nlb"
 
@@ -436,7 +436,7 @@ module "app2_gwlb" {
 
 module "app2_ec2_cluster" {
   source                 = "terraform-aws-modules/ec2-instance/aws"
-  version                = "~> 2.0"
+  version                = "~> 4.3"
 
   name                   = "${var.prefix_name_tag}app2-web"
   instance_count         = 2
@@ -459,7 +459,7 @@ module "app2_ec2_cluster" {
 ##################################################################
 module "app2_nlb" {
   source  = "terraform-aws-modules/alb/aws"
-  version = "~> 5.0"
+  version = "~> 8.2"
 
   name = "${var.prefix_name_tag}app2-nlb"
 
