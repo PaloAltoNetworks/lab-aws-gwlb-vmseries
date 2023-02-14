@@ -6,7 +6,7 @@
 ## 1.1. Overview
 
 ----------
-WARNING: This repository contains deployment code and lab guide for learning GWLB traffic flows with VM-Series. Some configuration and resources are intentionally ommitted to be left as troubleshooting excercises. 
+This repository contains deployment code and lab guide for learning GWLB traffic flows with VM-Series. Some configuration and resources are intentionally ommitted to be left as troubleshooting excercises. 
 
 ***Do not use this for a production deployment or an easy demo environment!***
 
