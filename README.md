@@ -6,11 +6,11 @@
 ## 1.1. Overview
 
 ----------
-This repository contains deployment code and lab guide learning GWLB traffic flows with VM-Series. Some configuration and resources are intentionally ommitted to be left as troubleshooting and learning excercises. 
+WARNING: This repository contains deployment code and lab guide for learning GWLB traffic flows with VM-Series. Some configuration and resources are intentionally ommitted to be left as troubleshooting excercises. 
 
-**In other words, do not use this for a production deployment or an easy demo deployment!**
+***Do not use this for a production deployment or an easy demo environment!***
 
-There are regularly maintained terraform modules for VM-Series deployments that are published on the [HashiCorp Registry](https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest). The [vmseries_combined_with_gwlb_natgw](https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest/examples/vmseries_combined_with_gwlb_natgw) example closely matches the design from this learning lab.
+There are regularly maintained terraform modules for VM-Series deployments in AWS that are published on the [HashiCorp Registry](https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest). The [vmseries_combined_with_gwlb_natgw](https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest/examples/vmseries_combined_with_gwlb_natgw) example closely matches the design from this learning lab.
 
 ----------
 
