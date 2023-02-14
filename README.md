@@ -5,6 +5,16 @@
 
 ## 1.1. Overview
 
+----------
+This repository contains deployment code and lab guide learning GWLB traffic flows with VM-Series. Some configuration and resources are intentionally ommitted to be left as troubleshooting and learning excercises. 
+
+**In other words, do not use this for a production deployment or an easy demo deployment!**
+
+There are regularly maintained terraform modules for VM-Series deployments that are published on the [HashiCorp Registry](https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest). The [vmseries_combined_with_gwlb_natgw](https://registry.terraform.io/modules/PaloAltoNetworks/vmseries-modules/aws/latest/examples/vmseries_combined_with_gwlb_natgw) example closely matches the design from this learning lab.
+
+----------
+
+
 This lab will involve deploying a solution for AWS using Palo Alto Networks VM-Series in the Gateway Load Balancer (GWLB) topology.
 
 The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panorama assumptions:
@@ -15,7 +25,7 @@ The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panor
 This guide is intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. This could be easily adapted for other environments.
 
 ```
-Manual Last Updated: 2023-06-01
+Manual Last Updated: 2023-02-01
 Lab Last Tested: 2022-11-08
 ```
 
