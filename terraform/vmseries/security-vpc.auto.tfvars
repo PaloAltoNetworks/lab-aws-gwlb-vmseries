@@ -1,5 +1,5 @@
 ### Global
-prefix_name_tag  = "gwlb-lab-"
+prefix_name_tag  = ""
 region           = "us-west-2"
 fw_instance_type = "m5.xlarge"
 fw_license_type  = "byol"
@@ -28,39 +28,39 @@ security_vpc = {
 }
 
 security_vpc_route_tables = {
-  mgmt1            = { name = "mgmt1" }
-  mgmt2            = { name = "mgmt2" }
-  data1            = { name = "data1" }
-  data2            = { name = "data2" }
-  gwlbe-eastwest-1 = { name = "gwlbe-eastwest-1" }
-  gwlbe-eastwest-2 = { name = "gwlbe-eastwest-2" }
-  gwlbe-outbound-1 = { name = "gwlbe-outbound-1" }
-  gwlbe-outbound-2 = { name = "gwlbe-outbound-2" }
-  tgw-attach1      = { name = "tgw-attach1" }
-  tgw-attach2      = { name = "tgw-attach2" }
-  natgw1           = { name = "natgw1" }
-  natgw2           = { name = "natgw2" }
+  mgmt1            = { name = "security-vpc-mgmt1" }
+  mgmt2            = { name = "security-vpc-mgmt2" }
+  data1            = { name = "security-vpc-data1" }
+  data2            = { name = "security-vpc-data2" }
+  gwlbe-eastwest-1 = { name = "security-vpc-gwlbe-eastwest-1" }
+  gwlbe-eastwest-2 = { name = "security-vpc-gwlbe-eastwest-2" }
+  gwlbe-outbound-1 = { name = "security-vpc-gwlbe-outbound-1" }
+  gwlbe-outbound-2 = { name = "security-vpc-gwlbe-outbound-2" }
+  tgw-attach1      = { name = "security-vpc-tgw-attach1" }
+  tgw-attach2      = { name = "security-vpc-tgw-attach2" }
+  natgw1           = { name = "security-vpc-natgw1" }
+  natgw2           = { name = "security-vpc-natgw2" }
 
 }
 
 security_vpc_subnets = {
-  mgmt1            = { name = "mgmt1", cidr = "10.100.0.0/28", az = "a", rt = "mgmt1" }
-  mgmt2            = { name = "mgmt2", cidr = "10.100.1.0/28", az = "c", rt = "mgmt2" }
-  data1            = { name = "data1", cidr = "10.100.0.16/28", az = "a", rt = "data1" }
-  data2            = { name = "data2", cidr = "10.100.1.16/28", az = "c", rt = "data2" }
-  gwlbe-eastwest-1 = { name = "gwlbe-eastwest-1", cidr = "10.100.0.32/28", az = "a", rt = "gwlbe-eastwest-1" }
-  gwlbe-eastwest-2 = { name = "gwlbe-eastwest-2", cidr = "10.100.1.32/28", az = "c", rt = "gwlbe-eastwest-2" }
-  gwlbe-outbound-1 = { name = "gwlbe-outbound-1", cidr = "10.100.0.48/28", az = "a", rt = "gwlbe-outbound-1" }
-  gwlbe-outbound-2 = { name = "gwlbe-outbound-2", cidr = "10.100.1.48/28", az = "c", rt = "gwlbe-outbound-2" }
-  tgw-attach1      = { name = "tgw-attach1", cidr = "10.100.0.64/28", az = "a", rt = "tgw-attach1" }
-  tgw-attach2      = { name = "tgw-attach2", cidr = "10.100.1.64/28", az = "c", rt = "tgw-attach2" }
-  natgw1           = { name = "natgw1", cidr = "10.100.0.80/28", az = "a", rt = "natgw1" }
-  natgw2           = { name = "natgw2", cidr = "10.100.1.80/28", az = "c", rt = "natgw2" }
+  mgmt1            = { name = "security-vpc-mgmt1", cidr = "10.100.0.0/28", az = "a", rt = "mgmt1" }
+  mgmt2            = { name = "security-vpc-mgmt2", cidr = "10.100.1.0/28", az = "c", rt = "mgmt2" }
+  data1            = { name = "security-vpc-data1", cidr = "10.100.0.16/28", az = "a", rt = "data1" }
+  data2            = { name = "security-vpc-data2", cidr = "10.100.1.16/28", az = "c", rt = "data2" }
+  gwlbe-eastwest-1 = { name = "security-vpc-gwlbe-eastwest-1", cidr = "10.100.0.32/28", az = "a", rt = "gwlbe-eastwest-1" }
+  gwlbe-eastwest-2 = { name = "security-vpc-gwlbe-eastwest-2", cidr = "10.100.1.32/28", az = "c", rt = "gwlbe-eastwest-2" }
+  gwlbe-outbound-1 = { name = "security-vpc-gwlbe-outbound-1", cidr = "10.100.0.48/28", az = "a", rt = "gwlbe-outbound-1" }
+  gwlbe-outbound-2 = { name = "security-vpc-gwlbe-outbound-2", cidr = "10.100.1.48/28", az = "c", rt = "gwlbe-outbound-2" }
+  tgw-attach1      = { name = "security-vpc-tgw-attach1", cidr = "10.100.0.64/28", az = "a", rt = "tgw-attach1" }
+  tgw-attach2      = { name = "security-vpc-tgw-attach2", cidr = "10.100.1.64/28", az = "c", rt = "tgw-attach2" }
+  natgw1           = { name = "security-vpc-natgw1", cidr = "10.100.0.80/28", az = "a", rt = "natgw1" }
+  natgw2           = { name = "security-vpc-natgw2", cidr = "10.100.1.80/28", az = "c", rt = "natgw2" }
 }
 
 security_nat_gateways = {
-  natgw1 = { name = "public-1-natgw", subnet = "natgw1" }
-  natgw2 = { name = "public-2-natgw", subnet = "natgw2" }
+  natgw1 = { name = "security-vpc-public-1-natgw", subnet = "natgw1" }
+  natgw2 = { name = "security-vpc-public-2-natgw", subnet = "natgw2" }
 }
 
 security_vpc_endpoints = {
@@ -369,22 +369,22 @@ gateway_load_balancers = {
 
 gateway_load_balancer_endpoints = {
   east-west1 = {
-    name                  = "east-west-gwlb-endpoint1"
+    name                  = "security-east-west-gwlb-endpoint1"
     gateway_load_balancer = "security-gwlb"
     subnet_names          = ["gwlbe-eastwest-1"]
   }
   east-west2 = {
-    name                  = "east-west-gwlb-endpoint2"
+    name                  = "security-east-west-gwlb-endpoint2"
     gateway_load_balancer = "security-gwlb"
     subnet_names          = ["gwlbe-eastwest-2"]
   }
   outbound1 = {
-    name                  = "outbound-gwlb-endpoint1"
+    name                  = "security-outbound-gwlb-endpoint1"
     gateway_load_balancer = "security-gwlb"
     subnet_names          = ["gwlbe-outbound-1"]
   }
   outbound2 = {
-    name                  = "outbound-gwlb-endpoint2"
+    name                  = "security-outbound-gwlb-endpoint2"
     gateway_load_balancer = "security-gwlb"
     subnet_names          = ["gwlbe-outbound-2"]
   }
