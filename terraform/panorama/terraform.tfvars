@@ -20,12 +20,12 @@ management_vpc = {
 }
 
 management_vpc_route_tables = {
-  management      = { name = "management" }
+  management      = { name = "panorama-vpc-mgmt" }
 }
 
 management_vpc_subnets = {
-  management1      = { name = "management-1", cidr = "192.168.10.0/25", az = "a", rt = "management" }
-  management2      = { name = "management-2", cidr = "192.168.10.128/25", az = "c", rt = "management" }
+  management1      = { name = "panorama-vpc-mgmt1", cidr = "192.168.10.0/25", az = "a", rt = "management" }
+  management2      = { name = "panorama-vpc-mgmt2", cidr = "192.168.10.128/25", az = "c", rt = "management" }
 }
 
 management_vpc_endpoints = {
@@ -45,7 +45,7 @@ management_transit_gateways = {
 
 management_transit_gateway_vpc_attachments = {
   management = {
-    name = "management-vpc"
+    name = "panorama-vpc"
     vpc  = "vpc_id"
     #appliance_mode_support                  = "enable"
     subnets                                  = ["management1", "management2"]

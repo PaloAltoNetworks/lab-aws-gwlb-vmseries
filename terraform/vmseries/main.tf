@@ -361,7 +361,7 @@ resource "aws_vpc_endpoint" "spoke1_ssm" {
   vpc_endpoint_type = "Interface"
   private_dns_enabled = true
   security_group_ids = [module.spoke1_vpc.security_group_ids["web-server-sg"]]
-  tags                = merge(var.global_tags, { "Name" = "gwlb-lab-spoke1-ssm-endpoint"})
+  tags                = merge(var.global_tags, { "Name" = "spoke1-ssm-endpoint"})
 }
 
 resource "aws_vpc_endpoint" "spoke1_kms" {
@@ -371,7 +371,7 @@ resource "aws_vpc_endpoint" "spoke1_kms" {
   vpc_endpoint_type = "Interface"
   private_dns_enabled = true
   security_group_ids = [module.spoke1_vpc.security_group_ids["web-server-sg"]]
-  tags                = merge(var.global_tags, { "Name" = "gwlb-lab-spoke1-kms-endpoint"})
+  tags                = merge(var.global_tags, { "Name" = "spoke1-kms-endpoint"})
 }
 
 resource "aws_vpc_endpoint" "spoke1_ec2messages" {
@@ -381,7 +381,7 @@ resource "aws_vpc_endpoint" "spoke1_ec2messages" {
   vpc_endpoint_type = "Interface"
   private_dns_enabled = true
   security_group_ids = [module.spoke1_vpc.security_group_ids["web-server-sg"]]
-  tags                = merge(var.global_tags, { "Name" = "gwlb-lab-spoke1-ec2messages-endpoint"})
+  tags                = merge(var.global_tags, { "Name" = "spoke1-ec2messages-endpoint"})
 }
 
 resource "aws_vpc_endpoint" "spoke1_ssmmessages" {
@@ -391,7 +391,7 @@ resource "aws_vpc_endpoint" "spoke1_ssmmessages" {
   vpc_endpoint_type = "Interface"
   private_dns_enabled = true
   security_group_ids = [module.spoke1_vpc.security_group_ids["web-server-sg"]]
-  tags                = merge(var.global_tags, { "Name" = "gwlb-lab-spoke1-ssmmessages-endpoint"})
+  tags                = merge(var.global_tags, { "Name" = "spoke1-ssmmessages-endpoint"})
 }
 
 
@@ -575,7 +575,7 @@ resource "aws_vpc_endpoint" "spoke2_ssm" {
   vpc_endpoint_type = "Interface"
   private_dns_enabled = true
   security_group_ids = [module.spoke2_vpc.security_group_ids["web-server-sg"]]
-  tags                = merge(var.global_tags, { "Name" = "gwlb-lab-spoke2-ssm-endpoint"})
+  tags                = merge(var.global_tags, { "Name" = "spoke2-ssm-endpoint"})
 }
 
 resource "aws_vpc_endpoint" "spoke2_kms" {
@@ -585,7 +585,7 @@ resource "aws_vpc_endpoint" "spoke2_kms" {
   vpc_endpoint_type = "Interface"
   private_dns_enabled = true
   security_group_ids = [module.spoke2_vpc.security_group_ids["web-server-sg"]]
-  tags                = merge(var.global_tags, { "Name" = "gwlb-lab-spoke2-kms-endpoint"})
+  tags                = merge(var.global_tags, { "Name" = "spoke2-kms-endpoint"})
 }
 
 resource "aws_vpc_endpoint" "spoke2_ec2messages" {
@@ -595,7 +595,7 @@ resource "aws_vpc_endpoint" "spoke2_ec2messages" {
   private_dns_enabled = true
   vpc_endpoint_type = "Interface"
   security_group_ids = [module.spoke2_vpc.security_group_ids["web-server-sg"]]
-  tags                = merge(var.global_tags, { "Name" = "gwlb-lab-spoke2-ec2messages-endpoint"})
+  tags                = merge(var.global_tags, { "Name" = "spoke2-ec2messages-endpoint"})
 }
 
 resource "aws_vpc_endpoint" "spoke2_ssmmessages" {
@@ -605,5 +605,5 @@ resource "aws_vpc_endpoint" "spoke2_ssmmessages" {
   vpc_endpoint_type = "Interface"
   private_dns_enabled = true
   security_group_ids = [module.spoke2_vpc.security_group_ids["web-server-sg"]]
-  tags                = merge(var.global_tags, { "Name" = "gwlb-lab-spoke2-ssmmessages-endpoint"})
+  tags                = merge(var.global_tags, { "Name" = "spoke2-ssmmessages-endpoint"})
 }
