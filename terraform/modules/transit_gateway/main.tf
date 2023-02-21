@@ -131,7 +131,7 @@ resource "aws_ec2_transit_gateway_route_table_association" "this" {
 resource "aws_ec2_transit_gateway_route_table_propagation" "example" {
   for_each                       = var.transit_gateway_vpc_attachments
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this[each.key].id
-  transit_gateway_route_table_id = local.combined_transit_gateway_route_tables["${each.value.transit_gateway}-${each.value.transit_gateway_route_table_propagation}"]
+  transit_gateway_route_table_id = local.combined_transit_gateway_route_tables["${each.value.transit_gateway}-${each.value.transit_gateway_route_table_propagations}"]
 }
 
 
