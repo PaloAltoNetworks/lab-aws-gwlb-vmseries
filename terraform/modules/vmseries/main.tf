@@ -208,7 +208,7 @@ resource "aws_instance" "pa-vm-series" {
   )
 
   iam_instance_profile = lookup(each.value, "iam_instance_profile", null) != null ? each.value.iam_instance_profile : aws_iam_instance_profile.vmseries.id
-  user_data = base64encode(join(",", compact(concat(
+  user_data = base64encode(join(";", compact(concat(
     [for k, v in each.value.bootstrap_options : "${k}=${v}"],
     [lookup(each.value, "bootstrap_bucket", null) != null ? "vmseries-bootstrap-aws-s3bucket=${var.buckets_map[each.value.bootstrap_bucket].name}" : null],
   ))))
