@@ -347,9 +347,6 @@ terraform apply
 
 - Copy the bootstrap parameters for use in the next step
 
-
-Fix HA on base image
-
 ## 3.10. Update Deployment Values in tfvars
 
 
