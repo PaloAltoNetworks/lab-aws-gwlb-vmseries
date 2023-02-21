@@ -1,7 +1,7 @@
 ### VPC ###
 spoke2_vpc = {
   spoke2_vpc = {
-    name                 = "spoke1-app-vpc"
+    name                 = "spoke2-app-vpc"
     cidr_block           = "10.250.0.0/23"
     instance_tenancy     = "default"
     enable_dns_support   = true

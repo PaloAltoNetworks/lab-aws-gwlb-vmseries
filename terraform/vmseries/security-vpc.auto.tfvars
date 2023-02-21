@@ -5,6 +5,7 @@ fw_instance_type = "m5.xlarge"
 fw_license_type  = "byol"
 fw_version       = "10.2.3" //Leave empty to be updated
 vmseries_ssh_key_name     = "qwikLABS*"
+panorama_host    = "192.168.10.10"
 
 
 
