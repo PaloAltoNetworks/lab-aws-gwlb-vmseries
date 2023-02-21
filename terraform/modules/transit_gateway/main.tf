@@ -128,8 +128,11 @@ resource "aws_ec2_transit_gateway_route_table_association" "this" {
   transit_gateway_route_table_id = local.combined_transit_gateway_route_tables["${each.value.transit_gateway}-${each.value.transit_gateway_route_table_association}"]
 }
 
-resource "aws_ec2_transit_gateway_route_table_propagation" "example" {
-  for_each                       = var.transit_gateway_vpc_attachments
+resource "aws_ec2_transit_gateway_route_table_propagation" "this" {
+  for_each = {
+    for k, v in var.transit_gateway_vpc_attachments : k => v
+    if lookup(v, "transit_gateway_route_table_propagations", null) != null ? true : false
+  }
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.this[each.key].id
   transit_gateway_route_table_id = local.combined_transit_gateway_route_tables["${each.value.transit_gateway}-${each.value.transit_gateway_route_table_propagations}"]
 }
