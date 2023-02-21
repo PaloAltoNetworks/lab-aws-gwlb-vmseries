@@ -104,7 +104,7 @@ spoke2_transit_gateway_vpc_attachments = {
     subnets                                  = ["web1", "web2"]
     transit_gateway                          = "gwlb"
     transit_gateway_route_table_association  = "spoke-in"
-    transit_gateway_route_table_propagations = "security-in"
+    transit_gateway_route_table_propagations = ""
   }
 }
 

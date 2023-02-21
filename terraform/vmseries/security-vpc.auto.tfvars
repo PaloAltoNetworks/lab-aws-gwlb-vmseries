@@ -413,6 +413,6 @@ transit_gateways = {
      subnets                                 = ["tgw-attach1", "tgw-attach2"]
      transit_gateway                         = "gwlb"
      transit_gateway_route_table_association = "security-in"
-     transit_gateway_route_table_propagations = "security-in" //TODO
+     transit_gateway_route_table_propagations = "spoke-in" //TODO
    }
  }
