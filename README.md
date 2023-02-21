@@ -63,7 +63,7 @@ Use the corresponding [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8
   - [3.7. Clone Deployment Git Repository](#37-clone-deployment-git-repository)
   - [3.8. Deploy Panorama and TGW Infrastructure with Terraform](#38-deploy-panorama-and-tgw-infrastructure-with-terraform)
   - [3.9. Prepare Panorama](#39-prepare-panorama)
-  - [3.10. Update Deployment Values in tfvars](#310-update-deployment-values-in-tfvars)
+  - [3.10. Update Deployment Values in tfvars for VM-series](#310-update-deployment-values-in-tfvars-for-vm-series)
   - [3.11. Apply Terraform](#311-apply-terraform)
   - [3.12. Inspect deployed resources](#312-inspect-deployed-resources)
     - [3.12.1. Get VM-Series instance screenshot](#3121-get-vm-series-instance-screenshot)
@@ -347,14 +347,12 @@ terraform apply
 
 - Copy the bootstrap parameters for use in the next step
 
-## 3.10. Update Deployment Values in tfvars
+## 3.10. Update Deployment Values in tfvars for VM-series
 
 
 Most of the bootstrap parameters and environment-specific variable values have already been prepped in the Terraform code for this deployment. You will only need to update the `auth-key` value for your Panorama.
 
-- From the Panorama 
-
-- **Be very careful to ensure all of the parameters are set correctly. These values will be passed in as User Data for the VM-Series launch. If values are incorrect, the bootstrap will likely fail and you will need to redeploy!**
+- **When bootstrapping, be very careful to ensure all of the parameters are set correctly. These values will be passed in as User Data for the VM-Series launch. If values are incorrect, the bootstrap will likely fail and you will need to redeploy!**
 
 - Make sure you are in the appropriate directory
 
@@ -362,7 +360,13 @@ Most of the bootstrap parameters and environment-specific variable values have a
 cd ~/lab-aws-gwlb-vmseries/terraform/vmseries
 ```
 
-- Review the 3 options to determine which you want to use to edit the values. If you are unfamiliar with editing files in linux, Option 3 will be easiest.
+- Edit the file `student.auto.tfvars` to update the value of the `auth-key` variable that you copied from the bootstrap parameters in Panorama `aws-gwlb-lab-secrets.txt`
+
+- Set the value inside of the empty quotes
+
+```
+auth-key        = "_AQ__xxxxxxxxxxxxxxxxxxx"
+```
 
 ---
 - ( Option 1 ) Use vi to update values in `student.auto.tfvars`
@@ -370,38 +374,12 @@ cd ~/lab-aws-gwlb-vmseries/terraform/vmseries
 ```
 vi student.auto.tfvars
 ```
-
-- Update the value of the `auth-key` variable that you copied from the bootstrap parameters in Panorama `aws-gwlb-lab-secrets.txt`
-  - Set the value inside of the empty quotes
-
 ---
 - ( Option 2 ) If you don't like vi, you can install nano editor:
 ```
 sudo yum install -y nano
 nano student.auto.tfvars
 ```
-
-- Update the value of the `auth-key` variable that you copied from the bootstrap parameters in Panorama `aws-gwlb-lab-secrets.txt`
-  - Set the value inside of the empty quotes
-
----
-- ( Option 3 ) Edit in local text editor and upload to CloudShell:
-  - Copy the text below to a local plain-text editor (notepad, etc)
-
-```
-auth-key        = ""
-```
-
-- Update the value of the `auth-key` variable that you copied from the bootstrap parameters in Panorama `aws-gwlb-lab-secrets.txt`
-  - Set the value inside of the empty quotes
-- Save file locally with name `student.auto.tfvars`
-- In CloudShell select `Actions` -> `Upload file` -> Select your updated file
-- Move uploaded file to appropriate location
-
-```
-mv ~/student.auto.tfvars ~/lab-aws-gwlb-vmseries/terraform/vmseries/student.auto.tfvars
-```
-
 ---
 
 - Verify the contents of file have the correct value
