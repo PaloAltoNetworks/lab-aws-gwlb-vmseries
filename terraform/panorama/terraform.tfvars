@@ -1,6 +1,6 @@
 ## General
 region                = "us-west-2"
-prefix_name_tag       = "management-"
+prefix_name_tag       = ""
 
 global_tags = {
   ManagedBy   = "terraform"
@@ -10,7 +10,7 @@ global_tags = {
 ## Network
 management_vpc = {
   management_vpc = {
-    name                 = "management-spoke-vpc"
+    name                 = "spoke-vpc"
     cidr_block           = "192.168.10.0/24"
     instance_tenancy     = "default"
     enable_dns_support   = true

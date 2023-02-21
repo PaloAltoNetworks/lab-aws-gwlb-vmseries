@@ -15,12 +15,12 @@ data "aws_key_pair" "vmseries" {
 locals {
   bootstrap_options = {
       mgmt-interface-swap = "enable"
-      plugin-op-commands  = "aws-gwlb-inspect:enable"
+      plugin-op-commands  = "aws-gwlb-inspect:enable, panorama-licensing-mode-on"
       type                = "dhcp-client"
       cgname              = "PANORAMA-LOG-COLLECTOR"
       tplname             = "stack-aws-gwlb-lab"
       dgname              = "AWS-GWLB-LAB"
-      plugin-op-commands  = "panorama-licensing-mode-on"
+      auth-key            = var.auth-key
       panorama-server     = var.panorama_host
   }
 }

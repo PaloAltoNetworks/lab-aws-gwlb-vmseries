@@ -61,7 +61,7 @@ Use the corresponding [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8
   - [3.5. Search Available VM-Series Images (AMIs)](#35-search-available-vm-series-images-amis)
   - [3.6. Download Terraform](#36-download-terraform)
   - [3.7. Clone Deployment Git Repository](#37-clone-deployment-git-repository)
-  - [3.8. Deploy Panorama and TGW Infrastructure](#38-deploy-panorama-and-tgw-infrastructure)
+  - [3.8. Deploy Panorama and TGW Infrastructure with Terraform](#38-deploy-panorama-and-tgw-infrastructure-with-terraform)
   - [3.9. Prepare Panorama](#39-prepare-panorama)
   - [3.10. Update Deployment Values in tfvars](#310-update-deployment-values-in-tfvars)
   - [3.11. Apply Terraform](#311-apply-terraform)
@@ -215,11 +215,9 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-10* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2 --query 'Images[].[ImageId,Name]'
 ```
 
-- We see that `10.0.9` AMI is available, which is what we are targeting for this deployment
+- We see that `10.2.3` AMI is available, which is what we are targeting for this deployment
 
 
-> &#10067; How many different BYOL AMIs are available for 10.1.x in the us-west-2 region?
-> 
 > &#10067; What is the BYOL Marketplace AMI ID for 10.2.0 in the us-east-1 region?
 
 > &#10067; What are some options if there is no AMI available for your targeted version?
@@ -228,7 +226,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 
 > &#8505;  This terraform deployment will look up the AMI ID to use for the deployment based on the variable `fw_version`. New AMIs are not always published for each minor release. Therefore, it is a good idea to verify what version AMI most closely matches your target version.
 
-> &#8505; product-code is a global value that correlates with Palo Alto Networks marketplace offerings This is global and the same across all regions. There will be changes to this as vm-flex offerings come live.
+> &#8505; product-code is a global value that correlates with Palo Alto Networks marketplace offerings This is global and the same across all regions. There will be changes to this as vm-flex offerings come live. ##TODO
 >```
 >   "byol"  = "6njl1pau431dv1qxipg63mvah"
 >   "payg1" = "6kxdw3bbmdeda3o6i1ggqt4km"
@@ -252,19 +250,13 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 rm -rf ~/bin && rm -rf ~/lab-aws-gwlb-vmseries/
 ```
 
-- Install PAN-OS SDK for Python
-
-```
-pip3 install pan-os-python
-```
-
 - Download Terraform in Cloudshell
 
 ```
-mkdir /home/cloudshell-user/bin/ && wget https://releases.hashicorp.com/terraform/1.1.7/terraform_1.1.7_linux_amd64.zip && unzip terraform_1.1.7_linux_amd64.zip && rm terraform_1.1.7_linux_amd64.zip && mv terraform /home/cloudshell-user/bin/terraform
+mkdir /home/cloudshell-user/bin/ && wget https://releases.hashicorp.com/terraform/1.3.9/terraform_1.3.9_linux_amd64.zip && unzip terraform_1.3.9_linux_amd64.zip && rm terraform_1.3.9_linux_amd64.zip && mv terraform /home/cloudshell-user/bin/terraform
 ```
 
-- Verify Terraform 1.1.7 is installed
+- Verify Terraform 1.3.9 is installed
 ```
 terraform version
 ```
@@ -284,21 +276,86 @@ terraform version
 - Clone the Repository with the terraform to deploy
   
 ```
-git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git && cd lab-aws-gwlb-vmseries/terraform/vmseries
+git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git && cd lab-aws-gwlb-vmseries/terraform/panorama
 ```
 
-## 3.8. Deploy Panorama and TGW Infrastructure
+## 3.8. Deploy Panorama and TGW Infrastructure with Terraform
 
-Can take 7-10 minutes
+- Make sure you are in the appropriate deployment directory
+
+```
+cd ~/lab-aws-gwlb-vmseries/terraform/panorama
+```
+- Initialize Terraform
+
+```
+terraform init
+```
+
+- Apply Terraform
+
+```
+terraform apply
+```
+
+- When Prompted for confirmation, type `yes`
+
+- It should take a few minutes minutes for terraform to finish deploying all resources
+
+- When complete, you will see an output containing the Panorama URL. **Copy these locally so you can reference them in later steps**
+
+> &#8505; You can also come back to this directory in CloudShell later and run `terraform output` to view this information 
+
+- It will be about 7 minutes from the time the Terraform finishes before you can access and authenticate to the Panorama.
 
 ## 3.9. Prepare Panorama
+
+> &#8505; The Panorama was deployed from a partially prepped image that is licensed and has some baseline template, devicegroup, and logging configured. Additional steps will be completed here to prepare the Panorama for bootstrapping.
+
+- Copy the `panorama_url` from the Terraform output and access it in a browser.
+  
+- Authenticate using the credentials from `aws-gwlb-lab-secrets.txt`
+
+- Panorama Tab -> Plugins -> Check Now
+
+- Search for `sw_fw_license-1.1.1` -> Download -> Install
+
+- Configure SW Firewall License Bootstrap Definition
+  - Name: `aws-gwlb-lab`
+  - Auth Code: Found in `aws-gwlb-lab-secrets.txt`
+
+- Configure SW Firewall License Manager
+  - Name: `aws-gwlb-lab`
+  - Device Group: `AWS-GWLB-LAB`
+  - Template Stack: `stack-aws-gwlb-lab`
+  - Auto Deactivate: `Never`
+  - Bootstrap Definition: `aws-gwlb-lab`
+
+> &#8505; Auto Deactive is handy for automating the cleanup of devices that have been terminated, for example in an autoscaling VM-Series deployment. Caution should be used as it is possibility for false positives. For example, if there is an unrelated connectivity issue, Panorama could perceive that the devices are no longer active and initiate the deactivation based on the timer. This plugin can also be used for manually deactivating devices, or creating an event-driven workflow to make API call to Panorama for deactvation. For any deactivation functions to work, the Panorama must be configured with a [Licensing API Key ](https://docs.paloaltonetworks.com/vm-series/10-1/vm-series-deployment/license-the-vm-series-firewall/install-a-license-deactivation-api-key)that is generated from the Customer Support Portal. 
+
+- Configure Template Stack to Automatically Push Content
+  - Panorama -> Templates -> `stack-aws-gwlb-lab`
+  - Check Box for `Automaically push content....`
+
+> &#8505; This feature was added in 10.2 and is very useful for automated deployments, especially autoscaling. It ensures that as devices bootstrap, the Panorama will push down the current dynamic content before committing the configuration.
+
+- Commit to Panorama and verify it completes successfully.
+
+- Return to Panorama -> SW Firewall Licenses -> License Manager
+  
+- Select `Show Bootstrap Parameters`
+
+- Copy the bootstrap parameters for use in the next step
+
 
 Fix HA on base image
 
 ## 3.10. Update Deployment Values in tfvars
 
 
-For simplicity, only the variable values that need to be modified are in a separate tfvars file.
+Most of the bootstrap parameters and environment-specific variable values have already been prepped in the Terraform code for this deployment. You will only need to update the `auth-key` value for your Panorama.
+
+- From the Panorama 
 
 - **Be very careful to ensure all of the parameters are set correctly. These values will be passed in as User Data for the VM-Series launch. If values are incorrect, the bootstrap will likely fail and you will need to redeploy!**
 
@@ -317,9 +374,8 @@ cd ~/lab-aws-gwlb-vmseries/terraform/vmseries
 vi student.auto.tfvars
 ```
 
-- Update the specifics of your deployment from the values in `aws-gwlb-lab-secrets.txt` from QL console
-  - Set all values inside of the empty quotes
-  - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
+- Update the value of the `auth-key` variable that you copied from the bootstrap parameters in Panorama `aws-gwlb-lab-secrets.txt`
+  - Set the value inside of the empty quotes
 
 ---
 - ( Option 2 ) If you don't like vi, you can install nano editor:
@@ -328,9 +384,8 @@ sudo yum install -y nano
 nano student.auto.tfvars
 ```
 
-- Update the specifics of your deployment from the values in `aws-gwlb-lab-secrets.txt` from QL console
-  - Set all values inside of the empty quotes
-  - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
+- Update the value of the `auth-key` variable that you copied from the bootstrap parameters in Panorama `aws-gwlb-lab-secrets.txt`
+  - Set the value inside of the empty quotes
 
 ---
 - ( Option 3 ) Edit in local text editor and upload to CloudShell:
@@ -346,9 +401,8 @@ vm_auth_key         = ""
 authcodes           = ""
 ```
 
-- Update the specifics of your deployment from the values in `aws-gwlb-lab-secrets.txt` from QL console
-  - Set all values inside of the empty quotes
-  - Don't forget to update `ssh_key_name` with they name of they key you copied previously from EC2 console! (Step 3.1.1)
+- Update the value of the `auth-key` variable that you copied from the bootstrap parameters in Panorama `aws-gwlb-lab-secrets.txt`
+  - Set the value inside of the empty quotes
 - Save file locally with name `student.auto.tfvars`
 - In CloudShell select `Actions` -> `Upload file` -> Select your updated file
 - Move uploaded file to appropriate location

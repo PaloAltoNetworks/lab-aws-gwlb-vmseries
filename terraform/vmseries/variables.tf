@@ -26,8 +26,12 @@ variable "panorama_password" {
   default = ""
 }
 
+# authcodes and vm_auth_key if bootstrapping without Panorama Licensing Plugin
 variable authcodes { default = "" }
 variable vm_auth_key { default = "" }
+
+# auth-key for boostrap with Panorama Licnesing Plugin
+variable auth-key { default = "" }
 
 #variable public_key_path {}
 
