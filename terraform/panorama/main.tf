@@ -9,10 +9,6 @@ data "aws_key_pair" "panorama" {
   }
 }
 
-output "name" {
-  value = data.aws_key_pair.panorama.key_name
-}
-
 ### Panorama Encrypted Volumes
 
 data "aws_ebs_default_kms_key" "current" {

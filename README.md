@@ -392,13 +392,7 @@ nano student.auto.tfvars
   - Copy the text below to a local plain-text editor (notepad, etc)
 
 ```
-region              = ""
-ssh_key_name        = ""
-panorama_host       = ""
-panorama_username   = ""
-panorama_password   = ""
-vm_auth_key         = ""
-authcodes           = ""
+auth-key        = ""
 ```
 
 - Update the value of the `auth-key` variable that you copied from the bootstrap parameters in Panorama `aws-gwlb-lab-secrets.txt`
@@ -413,7 +407,7 @@ mv ~/student.auto.tfvars ~/lab-aws-gwlb-vmseries/terraform/vmseries/student.auto
 
 ---
 
-- Verify the contents of file have the correct values
+- Verify the contents of file have the correct value
 
 ```
 cat ~/lab-aws-gwlb-vmseries/terraform/vmseries/student.auto.tfvars

@@ -1,5 +1,6 @@
 ### Global
-prefix_name_tag  = "ps-lab-"
+prefix_name_tag  = "gwlb-lab-"
+region           = "us-west-2"
 fw_instance_type = "m5.xlarge"
 fw_license_type  = "byol"
 fw_version       = "10.2.3" //Leave empty to be updated
@@ -17,7 +18,7 @@ global_tags = {
 ### VPC ###
 security_vpc = {
   vmseries-vpc = {
-    name                 = "security"
+    name                 = "security-vpc"
     cidr_block           = "10.100.0.0/23"
     instance_tenancy     = "default"
     enable_dns_support   = true
@@ -392,12 +393,12 @@ gateway_load_balancer_endpoints = {
 
 transit_gateways = {
   gwlb = {
-    name     = "management-lab-tgw"
+    name     = "gwlb-lab-tgw"
     asn      = "65200"
     existing = true
     route_tables = {
-      security-in = { name = "from-security-vpc"}
-      spoke-in = { name = "from-spoke-vpcs"}
+      security-in = { name = "from-security-vpc", existing = true}
+      spoke-in = { name = "from-spoke-vpcs", existing = true}
     }
   }
 }

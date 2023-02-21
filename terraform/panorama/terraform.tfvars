@@ -10,7 +10,7 @@ global_tags = {
 ## Network
 management_vpc = {
   management_vpc = {
-    name                 = "spoke-vpc"
+    name                 = "panorama-vpc"
     cidr_block           = "192.168.10.0/24"
     instance_tenancy     = "default"
     enable_dns_support   = true
@@ -33,7 +33,7 @@ management_vpc_endpoints = {
 
 management_transit_gateways = {
   lab = {
-    name     = "lab-tgw"
+    name     = "gwlb-lab-tgw"
     asn      = "65200"
     existing = false
     route_tables = {
