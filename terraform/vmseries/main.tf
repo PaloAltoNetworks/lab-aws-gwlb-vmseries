@@ -389,7 +389,7 @@ resource "aws_vpc_endpoint" "spoke1_ssmmessages" {
   subnet_ids        = [module.spoke1_vpc.subnet_ids["web1"], module.spoke1_vpc.subnet_ids["web2"]]
   service_name      = "com.amazonaws.${var.region}.ssmmessages"
   vpc_endpoint_type = "Interface"
-  private_dns_enabled = trueglobal_tags
+  private_dns_enabled = true
   security_group_ids = [module.spoke1_vpc.security_group_ids["web-server-sg"]]
   tags                = merge(var.global_tags, { "Name" = "gwlb-lab-spoke1-ssmmessages-endpoint"})
 }
