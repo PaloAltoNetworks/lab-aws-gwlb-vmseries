@@ -60,36 +60,36 @@ variable transit_gateways { default = {} }
 variable transit_gateway_vpc_attachments { default = {} }
 variable transit_gateway_peerings { default = {} }
 
-### APP1 Variables
+### spoke1 Variables
 
-variable app1_vpc { default = {} }
-variable app1_vpc_route_tables { default = {} }
-variable app1_vpc_subnets { default = {} }
-variable app1_vpc_security_groups { default = {} }
-variable app1_nat_gateways { default = {} }
-variable app1_vpc_endpoints { default = {} }
-variable app1_vpc_routes { default = {} }
-variable app1_vpc_routes_additional { default = {} }
-variable app1_gateway_load_balancers { default = {} }
-variable app1_gateway_load_balancer_endpoints { default = {} }
-variable app1_transit_gateways { default = {} }
-variable app1_transit_gateway_vpc_attachments { default = {} }
-variable app1_transit_gateway_peerings { default = {} }
+variable spoke1_vpc { default = {} }
+variable spoke1_vpc_route_tables { default = {} }
+variable spoke1_vpc_subnets { default = {} }
+variable spoke1_vpc_security_groups { default = {} }
+variable spoke1_nat_gateways { default = {} }
+variable spoke1_vpc_endpoints { default = {} }
+variable spoke1_vpc_routes { default = {} }
+variable spoke1_vpc_routes_additional { default = {} }
+variable spoke1_gateway_load_balancers { default = {} }
+variable spoke1_gateway_load_balancer_endpoints { default = {} }
+variable spoke1_transit_gateways { default = {} }
+variable spoke1_transit_gateway_vpc_attachments { default = {} }
+variable spoke1_transit_gateway_peerings { default = {} }
 
-### APP2 Variables
+### spoke2 Variables
 
-variable app2_vpc { default = {} }
-variable app2_vpc_route_tables { default = {} }
-variable app2_vpc_subnets { default = {} }
-variable app2_vpc_security_groups { default = {} }
-variable app2_nat_gateways { default = {} }
-variable app2_vpc_endpoints { default = {} }
-variable app2_vpc_routes { default = {} }
-variable app2_vpc_routes_additional { default = {} }
-variable app2_gateway_load_balancers { default = {} }
-variable app2_gateway_load_balancer_endpoints { default = {} }
-variable app2_transit_gateways { default = {} }
-variable app2_transit_gateway_vpc_attachments { default = {} }
-variable app2_transit_gateway_peerings { default = {} }
+variable spoke2_vpc { default = {} }
+variable spoke2_vpc_route_tables { default = {} }
+variable spoke2_vpc_subnets { default = {} }
+variable spoke2_vpc_security_groups { default = {} }
+variable spoke2_nat_gateways { default = {} }
+variable spoke2_vpc_endpoints { default = {} }
+variable spoke2_vpc_routes { default = {} }
+variable spoke2_vpc_routes_additional { default = {} }
+variable spoke2_gateway_load_balancers { default = {} }
+variable spoke2_gateway_load_balancer_endpoints { default = {} }
+variable spoke2_transit_gateways { default = {} }
+variable spoke2_transit_gateway_vpc_attachments { default = {} }
+variable spoke2_transit_gateway_peerings { default = {} }
 
 
