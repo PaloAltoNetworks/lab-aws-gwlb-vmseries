@@ -151,12 +151,12 @@ spoke2_vpc_routes = {
     route_table   = "alb1"
     prefix        = "0.0.0.0/0"
     next_hop_type = "vpc_endpoint"
-    next_hop_name = "spoke2-vpc-inbound1"
+    next_hop_name = "spoke2-inbound1"
   }
   alb2-to-endpoint2 = {
     route_table   = "alb2"
     prefix        = "0.0.0.0/0"
     next_hop_type = "vpc_endpoint"
-    next_hop_name = "spoke2-vpc-inbound2"
+    next_hop_name = "spoke2-inbound2"
   }
 }
