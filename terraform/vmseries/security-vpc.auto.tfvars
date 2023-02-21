@@ -244,6 +244,18 @@ vpc_routes = {
     next_hop_type = "internet_gateway"
     next_hop_name = "vmseries-vpc"
   }
+  mgmt1-tgw = {
+    route_table   = "mgmt1"
+    prefix        = "192.168.0.0/16"
+    next_hop_type = "transit_gateway"
+    next_hop_name = "gwlb"
+  }
+  mgmt2-tgw = {
+    route_table   = "mgmt2"
+    prefix        = "192.168.0.0/16"
+    next_hop_type = "transit_gateway"
+    next_hop_name = "gwlb"
+  }
   natgw1-igw = {
     route_table   = "natgw1"
     prefix        = "0.0.0.0/0"
