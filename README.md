@@ -25,8 +25,8 @@ The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panor
 This guide is intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. This could be easily adapted for other environments.
 
 ```
-Manual Last Updated: 2023-02-01
-Lab Last Tested: 2022-11-08
+Manual Last Updated: 2023-02-22
+Lab Last Tested: 2023-02-22
 ```
 
 ## 1.2. Lab Guide Syntax conventions
@@ -74,21 +74,21 @@ Use the corresponding [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8
   - [3.15. Check bootstrap logs](#315-check-bootstrap-logs)
   - [3.16. Fix GWLB Health Probes](#316-fix-gwlb-health-probes)
   - [3.17. Inbound Traffic Flows to App Spoke VPCs](#317-inbound-traffic-flows-to-app-spoke-vpcs)
-    - [3.17.1. Update App1 Spoke VPC networking for Inbound inspection with GWLB](#3171-update-app1-spoke-vpc-networking-for-inbound-inspection-with-gwlb)
-    - [3.17.2. Update App2 Spoke VPC networking for Inbound inspection with GWLB](#3172-update-app2-spoke-vpc-networking-for-inbound-inspection-with-gwlb)
+    - [3.17.1. Update Spoke1 App VPC networking for Inbound inspection with GWLB](#3171-update-spoke1-app-vpc-networking-for-inbound-inspection-with-gwlb)
+    - [3.17.2. Update Spoke2 App VPC networking for Inbound inspection with GWLB](#3172-update-spoke2-app-vpc-networking-for-inbound-inspection-with-gwlb)
     - [3.17.3. Test Inbound Traffic to Spoke Web Apps](#3173-test-inbound-traffic-to-spoke-web-apps)
-    - [3.17.4. Test Outbound Traffic from App1 Spoke Instance](#3174-test-outbound-traffic-from-app1-spoke-instance)
+    - [3.17.4. Test Outbound Traffic from Spoke1 Instance](#3174-test-outbound-traffic-from-spoke1-instance)
     - [3.17.5. Check Inbound Traffic Logs](#3175-check-inbound-traffic-logs)
     - [3.17.6. Check Outbound Traffic Logs](#3176-check-outbound-traffic-logs)
   - [3.18. Outbound and East / West (OBEW) Traffic Flows](#318-outbound-and-east--west-obew-traffic-flows)
-    - [3.18.1. Update App1 Spoke VPC for OB/EW routing with TGW](#3181-update-app1-spoke-vpc-for-obew-routing-with-tgw)
-    - [3.18.2. Update App2 Spoke VPC for OB/EW routing with TGW](#3182-update-app2-spoke-vpc-for-obew-routing-with-tgw)
+    - [3.18.1. Update Spoke1 VPC for OB/EW routing with TGW](#3181-update-spoke1-vpc-for-obew-routing-with-tgw)
+    - [3.18.2. Update Spoke2 VPC for OB/EW routing with TGW](#3182-update-spoke2-vpc-for-obew-routing-with-tgw)
     - [3.18.3. Update Transit Gateway (TGW) Route Tables](#3183-update-transit-gateway-tgw-route-tables)
     - [3.18.4. Update Security VPC networking for OB/EW with GWLB](#3184-update-security-vpc-networking-for-obew-with-gwlb)
   - [3.19. Test Traffic Flows](#319-test-traffic-flows)
-    - [3.19.1. Test Outbound Traffic from App1 Spoke Instances](#3191-test-outbound-traffic-from-app1-spoke-instances)
-    - [3.19.2. Test Inbound Web Traffic to App1 Spoke and App2 Spoke](#3192-test-inbound-web-traffic-to-app1-spoke-and-app2-spoke)
-    - [3.19.3. Test E/W Traffic from App1 Spoke Instance to App2 Spoke Instance](#3193-test-ew-traffic-from-app1-spoke-instance-to-app2-spoke-instance)
+    - [3.19.1. Test Outbound Traffic from Spoke1 Instances](#3191-test-outbound-traffic-from-spoke1-instances)
+    - [3.19.2. Test Inbound Web Traffic to Spoke1 and Spoke2 Apps](#3192-test-inbound-web-traffic-to-spoke1-and-spoke2-apps)
+    - [3.19.3. Test E/W Traffic from Spoke1 Instance to Spoke2 Instance](#3193-test-ew-traffic-from-spoke1-instance-to-spoke2-instance)
   - [3.20. GWLBE / Sub-Interface associations](#320-gwlbe--sub-interface-associations)
     - [3.20.1. Configure Zones in Panorama](#3201-configure-zones-in-panorama)
     - [3.20.2. Configure Sub-Interfaces in Panorama](#3202-configure-sub-interfaces-in-panorama)
@@ -491,14 +491,16 @@ In the meantime, lets go look at what you built!
 
 ## 3.13. Verify Bootstrap in Panorama
 
-> &#8505; We are using a shared Panorama for this lab that is publicly accessible. For production deployments, Panorama management should not be exposed to inbound Internet traffic. Each student has their own credentials restricted to Access Domain for only the relevant Device Group & Templates to reduce clutter.
+> &#8505; For this lab, the Panorama and VM-Series mgmgt are publicly accessible. For production deployments, management should not be exposed to inbound Internet traffic as a general practice. If public inbound management access is required, make sure to use other controls (MFA, AWS security groups, PAN-OS permitted-ip lists).
 
-- Refer to the terraform output you copied earlier for your Panorama public IP
-- Refer to `aws-gwlb-lab-secrets.txt` from QwikLabs for Panorama credentials
 - Login to Panorama web interface with student credentials
 - Check Panorama -> Managed Devices -> Summary
 - Verify your deployed VM-Series are connected and successfully bootstrapped
 - Verify that the auto-commit push succeeded for Shared Policy and Template and that devices are "In sync"
+- Check Panorama system logs to verify the content push and licensing was successful
+  - Monitor -> Device Group Dropdown = All -> System
+  - Search for the serial number of one of your VM-Series
+    - `( description contains '00795xxxxxxx' )`
 - Inspect Pre-Configured Interface, Zone, and Virtual Router configuration for your template
 - Inspect Pre-Configured Security Policies and NAT Policies for your Device Group
 
@@ -521,6 +523,7 @@ vmseries_eips = {
 
 - Establish a connection to both VM-Series Web UI via HTTPS
 - Establish a connection to both VM-Series CLI via SSH
+  - You can use Cloud Shell for the SSH session if it is blocked on your local machine
 
 > &#10067; Why don't you have to use SSH key pair to authenticate to these VM-Series?
 
@@ -556,9 +559,9 @@ debug logview component bts_details
 ## 3.16. Fix GWLB Health Probes
 
 - Check GWLB Target Group status
-  - In EC2 Console -> Target Groups -> select `ps-lab-security-gwlb`
-  - Verify health check settings first in the `Group details` tab
-  - Switch to `Targets` tab and note that the status of both VM-Series is unhealthy
+  - In EC2 Console -> Target Groups -> select `security-gwlb`
+  - In the `Targets` tab, note that the status of both VM-Series is unhealthy
+  - Switch to `Health Checks` tab to verify health check settings
 
 > &#10067; What Protocol and Port is the Target Group Health Probe configured to use?
 
@@ -572,7 +575,7 @@ debug logview component bts_details
   - In Panorama UI -> Monitor -> Traffic
   - Analyze the traffic logs for the port 80 traffic
   - Enable Columns to view `Bytes Sent` and `Bytes Received`
-  - Notice that the sessions matching allow policy for `GWLB-ANY` policy but aging out
+  - Notice that the sessions matching allow policy for `student-gwlb-any` policy but aging out
 
 > &#10067; Why are there two different source addresses in the traffic logs for these GWLB Health Probes?
 
@@ -602,9 +605,9 @@ debug logview component bts_details
     - Create new security policy
       - Name: `gwlb-health-probe`
       - Source Zone: `gwlb`
-      - Source Addresses: `10.100.0.16/28`, `10.100.1.16/28`
+      - Source Addresses: `10.100.0.16/28`, `10.100.1.16/28` (Can use predefined address objects)
       - Dest Zone: `gwlb`
-      - Dest Addresses: `10.100.0.16/28`, `10.100.1.16/28`
+      - Dest Addresses: `10.100.0.16/28`, `10.100.1.16/28` (Can use predefined address objects)
       - Application: `Any`
       - Serivce: `service-http`
     - Make sure new policy is before the existing catch-all `student-gwlb-any` policy
@@ -629,21 +632,21 @@ debug logview component bts_details
 - The deployed topology does not have all of the AWS routing in place for a working GWLB topology and you must fix it!
 - Refer to the diagram and try to resolve before looking at the specific steps.
 
-> &#8505; For GWLB model, Inbound traffic for public services comes directly into the App Spoke Internet Gateway. Ingress VPC route table directs traffic to the GWLB Endpoints in the App Spoke VPC.
+> &#8505; For GWLB Distributed model, Inbound traffic for public services comes directly into the App Spoke Internet Gateway. Ingress VPC route table directs traffic to the GWLB Endpoints in the App Spoke VPC.
 > 
 > Application owners can provision their external facing resources in their VPC (EIP, Public NLB / ALB, etc), but all traffic will be forwarded to Security VPC (via GWLB endpoint) for inspection prior to reaching the resource.
 > 
-> This inbound traffic flow does not involve the Transit Gateway at all.
+> This inbound traffic flow uses AWS Private Link technology and does not involve the Transit Gateway at all.
 
 - Tip: In the VPC Dashboard you can set a filter by VPC, which will apply to any other sections of the dashboard (subnets, route tables, etc)
 
 <img src="https://user-images.githubusercontent.com/43679669/110424278-8b7f4b80-8070-11eb-91e2-87bab5882f21.gif" width=50% height=50%> 
 
 
-### 3.17.1. Update App1 Spoke VPC networking for Inbound inspection with GWLB
+### 3.17.1. Update Spoke1 App VPC networking for Inbound inspection with GWLB
 
-- First investigate `ps-lab-app1-spoke-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
-- For inbound traffic, no changes are needed for the `web` route tables in the App Spoke VPCs
+- First investigate `spoke1-app-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- For **inbound** traffic, no changes are required for the `web` route tables in the Spoke VPCs
 - Refer to terraform output for GWLB Endpoint IDs (or identify them in VPC Dashboard)
 
 - **To verify your solution (or shortcut!), expand below for specific steps**
@@ -653,53 +656,53 @@ debug logview component bts_details
 
 Starting left to right on the diagram...
 
-  - VPC Dashboard -> Filter by VPC -> `ps-lab-app1-spoke-vpc`
-  - Route Tables -> `ps-lab-app1-igw-edge` -> Routes Tab (bottom panel)
-  - Add Route (app1-alb1 CIDR to app1-gwlbe1)
+  - VPC Dashboard -> Filter by VPC -> `spoke1-app-vpc`
+  - Route Tables -> `spoke1-vpc-igw-edge` -> Routes Tab (bottom panel)
+  - Add Route (spoke1-vpc-alb1 subnet CIDR to spoke1-gwlbe1)
      - CIDR: 10.200.0.16/28
-     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
-  - Add Route (app1-alb2 CIDR to app1-gwlbe2)
+     - Target: Gateway Load Balancer Endpoint (ID of spoke1-vpc-inbound-gwlb-endpoint1 GWLBE)
+  - Add Route (spoke1-vpc-alb2 subnet CIDR to spoke2-gwlbe2)
      - CIDR: 10.200.1.16/28
-     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound2 GWLBE)
+     - Target: Gateway Load Balancer Endpoint (ID of spoke1-vpc-inbound-gwlb-endpoint2 GWLBE)
   - Save Routes
 
 ---  
-  - Route Tables -> `ps-lab-app1-gwlbe1` -> Routes Tab (bottom panel)
-  - Add Route (default route to app1-IGW)
+  - Route Tables -> `spoke1-vpc-gwlbe1` -> Routes Tab (bottom panel)
+  - Add Route (default route to spoke1-IGW)
      - CIDR: 0.0.0.0/0
      - Target: Internet Gateway (only one per VPC)
   - Save Routes
 
 ---  
-  - Route Tables -> `ps-lab-app1-gwlbe2` -> Routes Tab (bottom panel)
-  - Add Route (default route to app1-IGW)
+  - Route Tables -> `spoke1-vpc-gwlbe2` -> Routes Tab (bottom panel)
+  - Add Route (default route to spoke1-IGW)
      - CIDR: 0.0.0.0/0
      - Target: Internet Gateway (only one per VPC)
   - Save Routes
   
 ---
-  - Route Tables -> `ps-lab-app1-alb1` -> Routes Tab (bottom panel)
-  - Add Route (default route to app1-gwlbe1)
+  - Route Tables -> `spoke1-vpc-alb1` -> Routes Tab (bottom panel)
+  - Add Route (default route to spoke1-gwlbe1)
      - CIDR: 0.0.0.0/0
-     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound1 GWLBE)
+     - Target: Gateway Load Balancer Endpoint (ID of spoke1-vpc-inbound-gwlb-endpoint1 GWLBE)
   - Save Routes
 
 ---  
 
-  - Route Tables -> `ps-lab-app1-alb2` -> Routes Tab (bottom panel)
-  - Add Route (default route to app1-gwlbe2)
+  - Route Tables -> `spoke1-vpc-alb2` -> Routes Tab (bottom panel)
+  - Add Route (default route to spoke1-gwlbe2)
      - CIDR: 0.0.0.0/0
-     - Target: Gateway Load Balancer Endpoint (ID of app1-inbound2 GWLBE)
+     - Target: Gateway Load Balancer Endpoint (ID of spoke1-vpc-inbound-gwlb-endpoint2 GWLBE)
   - Save Routes
 
 ---  
 
 </details>
 
-### 3.17.2. Update App2 Spoke VPC networking for Inbound inspection with GWLB
+### 3.17.2. Update Spoke2 App VPC networking for Inbound inspection with GWLB
 
-- First investigate `ps-lab-app2-spoke-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
-- For inbound traffic, no changes are needed for the `web` route tables in the App Spoke VPCs
+- First investigate **`spoke2-app-vpc`** Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- For **inbound** traffic, no changes are needed for the `web` route tables in the App Spoke VPCs
 - Refer to terraform output for GWLB Endpoint IDs (or identify them in VPC Dashboard)
 
 - **To verify your solution (or shortcut!), expand below for specific steps**
@@ -707,19 +710,20 @@ Starting left to right on the diagram...
 <details>
   <summary style="color:red">Expand For Specific Steps</summary>
 
-Only `ps-lab-app2-igw-edge` Route Table is missing routes for App2 Spoke
+Only `spoke2-vpc-igw-edge` Route Table is missing routes for App2 Spoke
 
 Starting left to right on the diagram...
 
-  - VPC Dashboard -> Filter by VPC -> `ps-lab-app2-spoke-vpc`
-  - Select Route Tables -> `ps-lab-app2-igw-edge` -> Routes Tab (bottom panel)
-  - Add Route (app2-alb1 CIDR to app2-gwlbe1)
+  - VPC Dashboard -> Filter by VPC -> `spoke2-app-vpc`
+  - Route Tables -> `spoke2-vpc-igw-edge` -> Routes Tab (bottom panel)
+  - Add Route (spoke2-vpc-alb1 subnet CIDR to spoke2-gwlbe1)
      - CIDR: 10.250.0.16/28
-     - Target: Gateway Load Balancer Endpoint (ID of app2-inbound1 GWLBE)
-  - Add Route (app2-alb2 CIDR to app2-gwlbe2)
+     - Target: Gateway Load Balancer Endpoint (ID of spoke2-vpc-inbound-gwlb-endpoint1 GWLBE)
+  - Add Route (spoke2-vpc-alb2 subnet CIDR to spoke2-gwlbe2)
      - CIDR: 10.250.1.16/28
-     - Target: Gateway Load Balancer Endpoint (ID of app2-inbound2 GWLBE)
- - Save Routes
+     - Target: Gateway Load Balancer Endpoint (ID of spoke2-vpc-inbound-gwlb-endpoint2 GWLBE)
+  - Save Routes
+
 
 </details>
 
@@ -728,34 +732,37 @@ Starting left to right on the diagram...
 Generate some HTTP traffic to the web apps using the DNS name of the Public NLB that is in front of the web compute instances. URL will be the FQDN of the NLBs from the terraform output
 
 - Reference terraform output for `app_nlbs_dns`
-- From your local machine browser, attempt connection to http://`app1_nlb`
-- From your local machine browser, attempt connection to http://`app2_nlb`
+- From your local machine browser, attempt connection to http://`spoke1-nlb`
+- From your local machine browser, attempt connection to http://`spoke2-nlb`
 - Refresh a few times
 
 > &#8505; The inbound routing should now be in place, but you will not get a response yet as the instances are not yet running a web server.
 
+> &#8505; The web instances are configured to update and install web server automatically with a user-data script, but they first must have a working outbound path to the Internet to retrieve packages.
 
-###  3.17.4. Test Outbound Traffic from App1 Spoke Instance
+###  3.17.4. Test Outbound Traffic from Spoke1 Instance
 
 Access the spoke web servers console using the AWS Systems Manager connect
 
 - Navigate to Instances view in the EC2 Console
-- Select `ps-lab-app1-web-1` and click Connect button in the top right
+- Select `spoke1-web-az1` and click Connect button in the top right
+- Switch to Session Manager and Connect
 - From the Shell, try to generate outbound traffic
 
 ```ping 8.8.8.8```
 
 ```curl http://ifconfig.me```
 
-> &#8505; Note that web instances are configured to update and install web server automatically, but they first must have a working outbound path to the Internet to retrieve packages.
+> &#8505; Session Manager relies on a package being installed in the OS that makes an outbound connection to the AWS SSM service. We do not have outbound internet currently, but there is a private endpoint for the SSM service configured. It is not possible to use SSM for CLI access to VM-Series, as it does not have the package installed
+
 
 ###  3.17.5. Check Inbound Traffic Logs
 
 - Panorama -> Monitor Tab -> Traffic
-- Filter for traffic *to* App Spoke 1 `( addr.dst in 10.200.0.0/16 )`
+- Filter for traffic *to* Spoke 1 `( addr.dst in 10.200.0.0/16 )`
 - Notice that there is already many connection attempts from Internet scans to the App1 Public NLB and being permitted by VM-Series!
 - Notice that VM-Series is able to see the original client source IP for connections to to App Spokes
-- Try to identify your SSH traffic in the logs
+- Try to identify your client source IP in the logs
 
 > &#10067; Why does VM-Series see the private NLB addresses as the destination instead of the public address?
 
@@ -764,8 +771,8 @@ Access the spoke web servers console using the AWS Systems Manager connect
 > &#8505; Since outbound traffic was not working earlier, let's check to see if it it making it to VM-Series.
 
 - Panorama -> Monitor Tab -> Traffic
-- Filter for traffic *from* App Spoke 1 `( addr.src in 10.200.0.0/16 )`
-- Notice that there is no outbound traffic from the App Spokes yet, so we are likely missing something in routing between App Spoke -> TGW -> GWLB.
+- Filter for traffic *from* Spoke 1 `( addr.src in 10.200.0.0/16 )`
+- Notice that there is no outbound traffic from the Spokes yet, so we are likely missing something in routing between App Spoke -> TGW -> GWLB.
 
 > &#8505; We now have visibility and control for inbound connectivity but instances do not yet have a path outbound.
 
@@ -776,17 +783,17 @@ Access the spoke web servers console using the AWS Systems Manager connect
 - Refer to the diagram and try to resolve before looking at the specific steps
 - We will work from left to right on the diagram
 
-### 3.18.1. Update App1 Spoke VPC for OB/EW routing with TGW
+### 3.18.1. Update Spoke1 VPC for OB/EW routing with TGW
 
-- First investigate `ps-lab-app1_spoke_vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- First investigate `spoke1-app-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 
 - **To verify your solution (or shortcut!), expand below for specific steps**
 
 <details>
   <summary style="color:red">Expand For Specific Steps</summary>
 
-  - VPC Dashboard -> Filter by VPC -> `ps-lab-app1_spoke_vpc`
-  - Route Tables -> `ps-lab-app1-web1` -> Routes Tab (bottom panel)
+  - VPC Dashboard -> Filter by VPC -> `spoke1-app-vpc`
+  - Route Tables -> `spoke1-vpc-web1` -> Routes Tab (bottom panel)
   - Add Route (default route to TGW)
      - CIDR: 0.0.0.0/0
      - Target: Transit Gateway (only one available)
@@ -794,7 +801,7 @@ Access the spoke web servers console using the AWS Systems Manager connect
 
 ---
 
-  - Route Tables -> `ps-lab-app1-web2` -> Routes Tab (bottom panel)
+  - Route Tables -> `spoke1-vpc-web2` -> Routes Tab (bottom panel)
   - Add Route (default route to TGW)
      - CIDR: 0.0.0.0/0
      - Target: Transit Gateway (only one available)
@@ -802,16 +809,16 @@ Access the spoke web servers console using the AWS Systems Manager connect
   
 </details>
 
-### 3.18.2. Update App2 Spoke VPC for OB/EW routing with TGW
+### 3.18.2. Update Spoke2 VPC for OB/EW routing with TGW
 
-- First investigate `ps-lab-app2_spoke_vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- First investigate `spoke2-app-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 
 - **To verify your solution (or shortcut!), expand below for specific steps**
 
 <details>
   <summary style="color:red">Expand For Specific Steps</summary>
 
-- Nothing is missing for `ps-lab-app2_spoke_vpc`! Web1 and Web2 Route Tables already have routes to TGW.
+- Nothing is missing for `spoke2-app-vpc`! Web1 and Web2 Route Tables already have routes to TGW.
 
 </details>
 
@@ -819,9 +826,9 @@ Access the spoke web servers console using the AWS Systems Manager connect
 ### 3.18.3. Update Transit Gateway (TGW) Route Tables
 
 
-> &#8505; For GWLB model, the TGW routing for Outbound and EastWest (OB/EW) traffic is the same as previous TGW models. Spoke TGW RT directs all traffic to Security VPC. Security TGW RT has routes to reach all spoke VPCs for return traffic.
+> &#8505; For GWLB Centralized Outbound, the TGW routing for Outbound and EastWest (OB/EW) traffic is the same as previous TGW models. Spokes send all traffic to TGW. Spoke TGW RT directs all traffic to Security VPC. Security TGW RT has routes to reach all spoke VPCs for return traffic.
 >
->For OB/EW flows, the GWLB doesn't come into play until traffic comes into the Security VPC from TGW
+>For OB/EW flows, the GWLB doesn't come into play until traffic comes into the Security VPC from TGW before being forwarded to a GWLB endpoint.
 
 - First investigate Transit Gateway Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 
@@ -830,20 +837,20 @@ Access the spoke web servers console using the AWS Systems Manager connect
 <details>
   <summary style="color:red">Expand For Specific Steps</summary>
 
-  - VPC Dashboard -> Transit Gateway Route Tables -> Select `ps-lab-from-spoke-vpcs`
+  - VPC Dashboard -> Transit Gateway Route Tables -> Select `from-spoke-vpcs`
   -  Check `Associations` tab and verify the two spoke App VPCs are associated
-  -  Check Routes tab and notice there are no existing routes
+  -  Check Routes tab and notice there is no default route
   -  Create Static Route (Default to security VPC)
      - CIDR: 0.0.0.0/0
-     - Attachment: Security VPC (Name Tag = ps-lab-security-vpc)
+     - Attachment: Security VPC (Name Tag = security-vpc)
 
 - VPC Dashboard -> Transit Gateway Route Tables -> Select `ps-lab-from-security-vpc`
   -  Check `Associations` tab and verify the security VPC is associated
-  -  Check `Routes` tab and notice there are no existing routes
+  -  Check `Routes` tab and notice there are no existing routes to reach the spoke VPCs
   -  Select Propagations Tab -> Create Propagation
-  -  Select attachment with Name Tag `ps-lab-app1-vpc`
-  -  Repeat for attachment with Name Tag `ps-lab-app2-vpc`
-  -  Return to `Routes` tab and verify the table now has routes to reach the App VPCs 
+  -  Select attachment with Name Tag `spoke1-vpc`
+  -  Repeat for attachment with Name Tag `spoke2-vpc`
+  -  Return to `Routes` tab and verify the table now has routes to reach the App VPCs (may need to refresh)
 
 
 <img src="https://user-images.githubusercontent.com/43679669/109261520-e8a41300-77cd-11eb-9324-3b0dd1d85f7d.gif" width=50% height=50%>
@@ -856,9 +863,9 @@ Access the spoke web servers console using the AWS Systems Manager connect
 
 ### 3.18.4. Update Security VPC networking for OB/EW with GWLB
 
-> &#8505; The routing and traffic flows can be tricky to grasp, especially when designing for multiple availability zones. For this lab, we are using separate endpoint for Outbound VS EastWest, plus separate endpoint per AZ. Take your time and understand the traffic flows as you configure the routing.
+> &#8505; The routing and traffic flows can be tricky to grasp, especially when designing for multiple availability zones. For this lab, we are using separate endpoint for Outbound VS EastWest, plus separate endpoints per AZ. Take your time and understand the traffic flows as you configure the routing.
 >
-> For multi-AZ GWLB, generally will require unique route tables per subnet in both AZs in order to direct traffic in that AZ toward the resources (GWLB endpoint, NAT GW) in the same AZ.
+> Multi-AZ GWLB generally requires unique route tables per subnet in both AZs in order to direct traffic in that AZ toward the resources (GWLB endpoint, NAT GW) in the same AZ.
 
 - First investigate the VPC Route Tables in the Security VPC and try to identify and fix what is missing. Refer to the diagram for guidance.
 - Refer to your output from terraform for the GWLB Endpoint IDs
@@ -869,7 +876,7 @@ Access the spoke web servers console using the AWS Systems Manager connect
 <details>
   <summary style="color:red">Expand For Specific Steps</summary>
 
-  - VPC Dashboard -> Filter by VPC in left menu -> Select `ps-lab-security`
+  - VPC Dashboard -> Filter by VPC in left menu -> Select `security-vpc`
     - Now when checking other sections in this dashboard (route tables, subnets, etc) will be filtered to Security VPC
   -  Select Route Tables section
   -  Look through the route tables. Most have no routes!
@@ -884,9 +891,9 @@ Access the spoke web servers console using the AWS Systems Manager connect
 >
 > For AZ resilience, we also make sure that whatever AZ traffic comes in from TGW it is forwarded to the GWLB endpoint in the same AZ
 >
-> Any traffic send to these endpoints will go directly to GWLB / VM-Series as a "bump-in-the-wire" and return to the corresponding endpoint
+> Any traffic sent to these endpoints will go directly to GWLB / VM-Series as a "bump-in-the-wire" and return to the corresponding endpoint
 
-  -  Select Route Table `ps-lab-tgw-attach1` and edit routes
+  -  Select Route Table `security-vpc-tgw-attach1` and edit routes
      -  0.0.0.0/0 -> Gateway Load Balancer Endpoint `outbound1`
      -  Select vpce Endpoint ID `outbound1` from terraform output
      -  10.0.0.0/8 -> Gateway Load Balancer Endpoint 
@@ -897,8 +904,6 @@ Access the spoke web servers console using the AWS Systems Manager connect
      -  10.0.0.0/8 -> Gateway Load Balancer Endpoint 
      -  Select vpce Endpoint ID `eastwest2` from terraform output
 
-//TODO: Add GIF
-
 ---
 
 **GWLB Endpoint East/West Route Tables**
@@ -908,11 +913,11 @@ Access the spoke web servers console using the AWS Systems Manager connect
 >
 > For East / West traffic, this means sending all internal traffic to the TGW where it will then be forwarded directly back to the spoke VPC. 
 > 
-> Note that Backhaul traffic (VPN / DirectConnect attachments to TGW) would also follow this same logic.
+> Note that Backhaul traffic (VPN / DirectConnect attachments to TGW) usually follows this same pattern.
 
-  -  Select Route Table `ps-lab-gwlbe-eastwest-1` and edit routes
+  -  Select Route Table `security-vpc-gwlbe-eastwest-1` and edit routes
      -  10.0.0.0/8 -> Transit Gateway -> Select TGW ID
-  -  Select Route Table `ps-lab-gwlbe-eastwest-2` and edit routes
+  -  Select Route Table `security-vpc-gwlbe-eastwest-2` and edit routes
      -  10.0.0.0/8 -> Transit Gateway -> Select TGW ID
 
 > For this traffic, routes are identical for both AZs, so doesn't strictly require separate route tables. We maintain the separation only for consistency and clarity.
@@ -929,12 +934,10 @@ Access the spoke web servers console using the AWS Systems Manager connect
 > 
 > We also need to consider the return traffic from the Internet / NAT GW which uses the same GWLB Endpoint. For this we define a path to reach the Spoke VPC summary directly via TGW 
 
-//TODO - Add NAT GW IDs to Terraform output
-
-  -  Select Route Table `ps-lab-gwlbe-outbound-1` and edit routes
+  -  Select Route Table `security-vpc-gwlbe-outbound-1` and edit routes
      -  0.0.0.0/0 -> NAT Gateway -> Select NAT GW ID for AZ1
      -  10.0.0.0/8 -> Transit Gateway -> Select TGW ID
-  -  Select Route Table `ps-lab-gwlbe-outbound-2` and edit routes
+  -  Select Route Table `security-vpc-gwlbe-outbound-2` and edit routes
      -  0.0.0.0/0 -> NAT Gateway -> Select NAT GW ID for AZ2
      -  10.0.0.0/8 -> Transit Gateway -> Select TGW ID
 
@@ -942,7 +945,7 @@ Access the spoke web servers console using the AWS Systems Manager connect
 **NAT Gateway Route Tables**
 
 > &#8505; Here we are defining what will happen for return traffic from the Internet for traffic that was initiated outbound.
-> From the perspective of the NAT GW routing, we direct the Spoke VPC summary back to Outbound Endpoint of the respective AZ so the return traffic will be forwarded to GWLB / VM-Series.
+> From the perspective of the NAT GW routing, we direct the Spoke VPC summary back to Outbound Endpoint of the respective AZ so the return traffic will be statefully forwarded to GWLB / VM-Series.
 > 
 > Note: The NAT GW subnet is already provisioned with default route pointed to IGW
 
@@ -959,11 +962,11 @@ Access the spoke web servers console using the AWS Systems Manager connect
 
 At this point all routing should be in place for GWLB topology. Now we will verify traffic flows and check the logs.
 
-> &#8505; Note that web instances in App Spoke VPCs are configured to update and install web server automatically, now that you have provided an outbound path, this should have completed.
+> &#8505; Note that web instances in Spoke VPCs are configured to update and install web server automatically, now that you have provided an outbound path, this should have completed.
 
-###  3.19.1. Test Outbound Traffic from App1 Spoke Instances
+###  3.19.1. Test Outbound Traffic from Spoke1 Instances
 
-- Using an Console Connect session to an App1 web instance, test outbound traffic.
+- Using an AWS Sessions Manager, connect to an App1 web instance, test outbound traffic.
   
 ```ping 8.8.8.8```
 
@@ -978,24 +981,39 @@ At this point all routing should be in place for GWLB topology. Now we will veri
 
 - Identify these sessions in Panorama traffic logs
 - Identify the sessions for outbound traffic for the automated web server install
-  - Filter `( addr.src in 10.200.0.0/16 ) and ( app eq yum )`
+  - Filter `( addr.src in 10.200.0.0/16 )`
 
-###  3.19.2. Test Inbound Web Traffic to App1 Spoke and App2 Spoke
+###  3.19.2. Test Inbound Web Traffic to Spoke1 and Spoke2 Apps
 
 - Reference terraform output for `app_nlbs_dns`
 - From your local machine browser, attempt connection to http://`app1_nlb`
 - From your local machine browser, attempt connection to http://`app2_nlb`
 - Refresh a few times
 
+- **Troubleshooting Steps if Inbound Traffic is not working**
+
+<details>
+  <summary style="color:red">Expand For Specific Steps</summary>
+
+  If your NLB is not responding and you see traffic in the Panorama logs, it is possible the script to install the web server didn't execute
+  - From the Session Manager, verify if you can connect locally
+    - curl http://localhost
+  - If not, check the user data of the instance to see the bash script that was configured and run it manually
+  - If the web service is responding locally, there is likely an issue in the spoke VPC routing
+
+</details>
+
 > &#8505; Local IP and VM Name in the response will show you which VM you are connected to behind the NLB. Session persistence may keep you pinned to a specific instances
 
-- Identify these sessions in Panorama traffic logs 
+- Identify these sessions in Panorama traffic logs
 
 
-### 3.19.3. Test E/W Traffic from App1 Spoke Instance to App2 Spoke Instance
 
-- Use EC2 Console to identify the Private IP address of `ps-lab-app2-web-1`
-- Using an Console Connection session on App1 instance, test traffic to `ps-lab-app2-web-1`
+
+### 3.19.3. Test E/W Traffic from Spoke1 Instance to Spoke2 Instance
+
+- Use EC2 Console to identify the Private IP address of `spoke1-web-az1`
+- Using an Console Connection session on `spoke1-web-az1` instance, test traffic to `spoke2-web-az1`
 
 ```ping 10.250.0.x```
 
@@ -1009,13 +1027,13 @@ At this point all routing should be in place for GWLB topology. Now we will veri
 
 Now we have verified inbound, outbound, and east / west traffic flows. We have full visibility of this traffic but as you can see in the logs, everything is wide open!
 
-Since all traffic to GWLB comes in and out of VM-Series on the same interface, it will be tricky to create and manage effective security policies specific to traffic flow directions.
+Since all traffic to GWLB comes in and out of VM-Series on the same interface and zone, it is tricky to create and manage effective security policies specific to traffic flow directions.
 
 We will now fix this using GWLB sub-interface associations.
 
 > &#8505; Since each GLWB endpoint can be associated with a specific sub-interface, each endpoint can have a separate zone.
 
-> &#8505; This does ***not*** change the overall concept that all traffic from GWLB is an encapsulated bump in the wire and will ingress and egress the same sub-interface. There is no routing between zones.
+> &#8505; This does ***not*** change the overall concept that all traffic from GWLB is an encapsulated bump in the wire and will ingress and egress the same sub-interface. In the default behavior, there is no routing between zones.
 
 
 ### 3.20.1. Configure Zones in Panorama
@@ -1024,15 +1042,15 @@ We will now fix this using GWLB sub-interface associations.
 - Add New Zones for each endpoint. Zone Type `Layer3` 
   - `gwlbe-outbound`
   - `gwlbe-eastwest`
-  - `gwlbe-inbound-app1`
-  - `gwlbe-inbound-app2`
+  - `gwlbe-inbound-spoke1`
+  - `gwlbe-inbound-spoke2`
 
 
 ### 3.20.2. Configure Sub-Interfaces in Panorama
 
-> &#8505; No IP configurations should be needed for these sub-interfaces, but we have discovered some issues with certain traffic flows if the sub-interfaces are not set to DHCP. This is being investigated by engineering.
+> &#8505; No IP configurations are actually used by these sub-interfaces, but they should be set to use DCHP to function properly
 
-> &#8505; Unique VLAN Tag must be specified but is not actually used for GWLB GENEVE traffic.
+> &#8505; Unique VLAN Tags must be specified but is not actually used for GWLB GENEVE traffic. The VLAN concept is being repurposed to identify sub-interfaces based on the endpoint IDs.
 
 - In Panorama select Network Tab -> Template `tpl-aws-gwlb-lab` -> Interfaces
 - Highlight ethernet1/1 -> Add Subinterface
@@ -1058,9 +1076,9 @@ We will now fix this using GWLB sub-interface associations.
 - Highlight ethernet1/1 -> Add Subinterface
   - Interface Name: `12`
   - Tag: `12`
-  - Comment: `gwlbe-inbound-app1`
+  - Comment: `gwlbe-inbound-spoke1`
   - Virtual Router: `vr-default`
-  - Security Zone: `gwlbe-inbound-app1`
+  - Security Zone: `gwlbe-inbound-spoke1`
   - IPv4 -> Type -> `DHCP Client`
 
 ---
@@ -1068,9 +1086,9 @@ We will now fix this using GWLB sub-interface associations.
 - Highlight ethernet1/1 -> Add Subinterface
   - Interface Name: `13`
   - Tag: `13`
-  - Comment: `gwlbe-inbound-app2`
+  - Comment: `gwlbe-inbound-spoke2`
   - Virtual Router: `vr-default`
-  - Security Zone: `gwlbe-inbound-app2`
+  - Security Zone: `gwlbe-inbound-spoke2`
   - IPv4 -> Type -> `DHCP Client`
 
 ---
@@ -1086,10 +1104,10 @@ We will now fix this using GWLB sub-interface associations.
 - Access both VM-Series CLI via SSH
 - Reference terraform output for `endpoint_ids`
  ```endpoint_ids = {
-  "app1-inbound1" = "vpce-0e51ca41845d7e46d"
-  "app1-inbound2" = "vpce-08ecd4e5d4a76984c"
-  "app2-inbound1" = "vpce-0d72d55ab54535809"
-  "app2-inbound2" = "vpce-061d284d04570c3c0"
+  "spoke1-inbound1" = "vpce-0e51ca41845d7e46d"
+  "spoke1-inbound2" = "vpce-08ecd4e5d4a76984c"
+  "spoke2-inbound1" = "vpce-0d72d55ab54535809"
+  "spoke2-inbound2" = "vpce-061d284d04570c3c0"
   "east-west1" = "vpce-0250aac691a916896"
   "east-west2" = "vpce-009f5031e90721e20"
   "outbound1" = "vpce-0e152c50daaa4c388"
@@ -1103,10 +1121,10 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.10 vpc-endpoi
 request plugins vm_series aws gwlb associate interface ethernet1/1.10 vpc-endpoint ${outbound2}
 request plugins vm_series aws gwlb associate interface ethernet1/1.11 vpc-endpoint ${east-west1}
 request plugins vm_series aws gwlb associate interface ethernet1/1.11 vpc-endpoint ${east-west2}
-request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${app1-inbound1}
-request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${app1-inbound2}
-request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoint ${app2-inbound1}
-request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoint ${app2-inbound2}
+request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${spoke1-inbound1}
+request plugins vm_series aws gwlb associate interface ethernet1/1.12 vpc-endpoint ${spoke1-inbound2}
+request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoint ${spoke2-inbound1}
+request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoint ${spoke2-inbound2}
 
 ```
 
@@ -1116,7 +1134,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 
 ```show plugins vm_series aws gwlb ```
 
-> &#8505; The GWLB endpoint associations can also be set as [bootstrap parameters](https://docs.paloaltonetworks.com/vm-series/10-0/vm-series-deployment/set-up-the-vm-series-firewall-on-aws/vm-series-integration-with-gateway-load-balancer/integrate-the-vm-series-with-an-aws-gateway-load-balancer/associate-a-vpc-endpoint-with-a-vm-series-interface.html).
+> &#8505; Typically, the GWLB endpoint associations will be set as [bootstrap parameters](https://docs.paloaltonetworks.com/vm-series/10-0/vm-series-deployment/set-up-the-vm-series-firewall-on-aws/vm-series-integration-with-gateway-load-balancer/integrate-the-vm-series-with-an-aws-gateway-load-balancer/associate-a-vpc-endpoint-with-a-vm-series-interface.html). These are plugin request commands and not stored in XML config and cannot be pushed from Panorama.
 
 
 ### 3.20.4. Create Zone-Based policies for sub-interfaces
@@ -1130,7 +1148,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 - There are address objects prepped for some sources / destinations
 
 ---
-- Name: App Spoke Web Subnets Outbound
+- Name: Spoke Web Subnets Outbound
   - Source Zone: `gwlbe-outbound`
   - Source Address: `10.200.0.48/28, 10.200.1.48/28, 10.250.0.48/28, 10.250.1.48/28`
   - Application: `ssl, web-browsing, yum, ntp`
@@ -1138,7 +1156,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
   - Destination Address: `any`
 
 ---
-- Name: App Spoke1 to App Spoke2
+- Name: Spoke1 to Spoke2
   - Source Zone: `gwlbe-eastwest`
   - Source Address: `10.200.0.48/28, 10.200.1.48/28`
   - Application: `ssh, web-browsing, ping`
@@ -1146,7 +1164,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
   - Destination Address: `10.250.0.48/28, 10.250.1.48/28`
 
 ---
-- Name: App Spoke2 to App Spoke1
+- Name: Spoke2 to App Spoke1
   - Source Zone: `gwlbe-eastwest`
   - Source Address: `10.250.0.48/28, 10.250.1.48/28`
   - Application: `ssh, web-browsing, ping`
@@ -1154,7 +1172,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
   - Destination Address: `10.200.0.48/28, 10.200.1.48/28`
 
 ---
-- Name: Inbound to App Spoke1 LBs
+- Name: Inbound to Spoke1 App LBs
   - Source Zone: `gwlbe-inbound-app1`
   - Source Address: `Your Client IP` (google 'what is my ip' from browser)
   - Application: `web-browsing, ping`
@@ -1162,7 +1180,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
   - Destination Address: `10.200.0.16/28, 10.200.1.16/28`
 
 ---
-- Name: Inbound to App Spoke2 LBs
+- Name: Inbound to Spoke2 App LBs
   - Source Zone: `gwlbe-inbound-app2`
   - Source Address: `Your Client IP` (google 'what is my ip' from browser)
   - Application: `web-browsing, ping`
@@ -1171,6 +1189,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 
 ---
 - Update the final `student-gwlb-any` catch-all policy to deny all traffic instead of allow
+- Make sure this policy is moved to the end of the list
 - Name: student-gwlb-any
   - Source Zone: `any`
   - Source Address: `any`
@@ -1179,16 +1198,18 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
   - Destination Address: `any`
   - Action: `Deny`
 
-
+- Commit to Panorama and Push to Devices
 - Generate inbound, outbound, and east/west traffic
 - Verify traffic is matching sub-interface based zones as expected
 
-
+> &#8505; If everything is configured correctly, only the Health Probes should be hitting the gwlb zone on the eth1 interface. The health probes are send from the GWLB directly to the VM-Series ENI, not through an endpoint or GENEVE.
 
 
 ## 3.21. Overlay Routing
 
-Overlay Routing enalbes the VM-Series to strip off the GENEVE encapsulation and use standard routing behavior to determine the next hop. Most commonly this is used as a method to maintain a separate Public or Internet facing zone for outbound traffic. When the return traffic is received by VM-Series, it will be re-encapsulated and sent to the same endpoint where the session originated.
+Overlay Routing enalbes the VM-Series to strip off the GENEVE encapsulation and use standard routing behavior to determine the next hop. Most commonly this is used for outbound Internet traffic. When the return traffic is received by VM-Series, it will be re-encapsulated and sent to the same endpoint where the session originated.
+
+Overlay allows the ability to use familiar inside -> outside zone based policies. With overlay enabled, you typically do not need separate endpoints (and sub-interface associations) for outbound and eastwest.
 
 We will update our existing infrastructure to use overlay routing. On the udpated diagram, you will see the changes on the right side where the NAT Gateways are replaced and instead an additional public interface and EIPs are attached to the VM-series.
 
