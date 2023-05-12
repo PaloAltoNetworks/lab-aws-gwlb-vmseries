@@ -167,8 +167,8 @@ EOF
 
 ### SSM external module for managing app servers
 module "ssm" {
-  source                    = "bridgecrewio/session-manager/aws"
-  version                   = "0.4.2"
+  source                    = "../modules/gwlb"
+  #version                   = "0.4.2"
   #vpc_id                    = module.spoke1_vpc.vpc_id.vpc_id
   bucket_name               = "my-session-logs"
   access_log_bucket_name    = "my-session-access-logs"
