@@ -25,8 +25,8 @@ The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panor
 This guide is intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. This could be easily adapted for other environments.
 
 ```
-Manual Last Updated: 2023-02-22
-Lab Last Tested: 2023-02-22
+Manual Last Updated: 2023-05-14
+Lab Last Tested: 2023-05-14
 ```
 
 ## 1.2. Lab Guide Syntax conventions
@@ -165,14 +165,14 @@ Reference these diagrams for a visual of traffic flows through this topology.
 
 - Search for `AWS Marketplace Subscriptions` in top search bar
 - Verify that there are active subscription for both of:
-  - `VM-Series Next-Generation Firewall (BYOL and ELA)`
+  - `VM-Series Next-Generation Firewall (BYOL)`
   - `Palo Alto Networks Panorama`
 
 <img src="https://user-images.githubusercontent.com/43679669/210279563-6e313499-41fb-42b3-b516-636df544c6e6.gif" width=50% height=50%>
 
 - If you have both subscriptions, continue to the next section
 - If you are missing either subscription, select `Discover Products` and search for `palo alto`
-- Select `VM-Series Next-Generation Firewall (BYOL and ELA)` or `Palo Alto Networks Panorama` as needed
+- Select `VM-Series Next-Generation Firewall (BYOL)` or `Palo Alto Networks Panorama` as needed
 - Continue to Subscribe
 - Accept Terms
 - Allow a few moments for the Subscription to be processed

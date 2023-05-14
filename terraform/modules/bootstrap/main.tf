@@ -21,8 +21,13 @@ resource "random_id" "bucket_id" {
 
 resource "aws_s3_bucket" "this" {
   bucket = "${var.prefix}-${random_id.bucket_id.hex}"
-  acl    = "private"
+  #acl    = "private"
   tags   = var.global_tags
+}
+
+resource "aws_s3_bucket_acl" "this" {
+  bucket = aws_s3_bucket.this.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket_object" "bootstrap_dirs" {

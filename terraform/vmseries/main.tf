@@ -167,7 +167,7 @@ EOF
 
 ### SSM external module for managing app servers
 module "ssm" {
-  source                    = "../modules/gwlb"
+  source                    = "../modules/ssm"
   #version                   = "0.4.2"
   #vpc_id                    = module.spoke1_vpc.vpc_id.vpc_id
   bucket_name               = "my-session-logs"
