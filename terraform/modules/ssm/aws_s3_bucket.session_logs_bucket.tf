@@ -16,10 +16,10 @@ resource "aws_s3_bucket_ownership_controls" "session_logs_bucket" {
 }
 
 resource "aws_s3_bucket_acl" "session_logs_bucket" {
-  depends_on = [aws_s3_bucket_ownership_controls.session_logs_bucket]
   bucket = aws_s3_bucket.session_logs_bucket.id
-
   acl = "private"
+
+  depends_on = [aws_s3_bucket_ownership_controls.session_logs_bucket]
 }
 
 
