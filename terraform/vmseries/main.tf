@@ -241,7 +241,7 @@ module "spoke1_gwlb" {
   gateway_load_balancers          = var.spoke1_gateway_load_balancers
   gateway_load_balancer_endpoints = var.spoke1_gateway_load_balancer_endpoints
   subnets_map                     = module.spoke1_vpc.subnet_ids
-  depends_on = [module.transit_gateways] // Depends on GWLB being created in security VPC
+  depends_on = [module.transit_gateways, module.gwlb] // Depends on GWLB being created in security VPC
 }
 
 
@@ -456,7 +456,7 @@ module "spoke2_gwlb" {
   gateway_load_balancers          = var.spoke2_gateway_load_balancers
   gateway_load_balancer_endpoints = var.spoke2_gateway_load_balancer_endpoints
   subnets_map                     = module.spoke2_vpc.subnet_ids
-  depends_on = [module.transit_gateways] // Depends on GWLB being created in security VPC
+  depends_on = [module.transit_gateways, module.gwlb] // Depends on GWLB being created in security VPC
 }
 
 
