@@ -16,7 +16,7 @@ The [Combined Design](https://pan.dev/terraform/docs/swfw/aws/vmseries/reference
 
 ```
 Manual Last Updated: 2024-07-11
-Lab Last Tested: 2023-07-11
+Lab Last Tested: 2024-07-11
 ```
 
 ## 2.1. Overview
