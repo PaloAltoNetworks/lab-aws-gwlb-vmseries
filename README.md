@@ -1,7 +1,7 @@
 # 1. Warning
 
 ----------
-This repository is a learning excercise and intended for a specific lab environment. It contains deployment code and lab guide for learning GWLB traffic flows with VM-Series. Some configuration and resources are intentionally ommitted to be left as troubleshooting excercises. 
+This repository and lab guide are intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. It contains deployment code and lab guide for learning GWLB traffic flows with VM-Series. Some configuration and resources are intentionally ommitted to be left as troubleshooting excercises. 
 
 ***Do not use this for a production deployment or an easy demo environment!***
 
@@ -11,26 +11,21 @@ The [Combined Design](https://pan.dev/terraform/docs/swfw/aws/vmseries/reference
 
 ----------
 
+
 # 2. VM-Series on AWS Gateway Load Balancer Lab
 
-<img src="https://www.paloaltonetworks.com/content/dam/pan/en_US/images/logos/brand/primary-company-logo/Parent-logo.png" width=50% height=50%>
+```
+Manual Last Updated: 2024-07-11
+Lab Last Tested: 2023-07-11
+```
 
 ## 2.1. Overview
 
 
-This lab will involve deploying a solution for AWS using Palo Alto Networks VM-Series in the Gateway Load Balancer (GWLB) topology.
+This lab will involve deploying Palo Alto Networks VM-Series in AWS with a Gateway Load Balancer (GWLB) topology. You will first deploy a Panorama and then the rest of the AWS resources and VM-Series with bootstrapping. It is a challenge lab that will require you to troubleshoot and fix some issues.
 
-The lab assumes an existing Panorama that the VM-Series will bootstrap to. Panorama assumptions:
-- Accessible with public IP on TCP 3978
-- Prepped with Template Stacks and Device Groups
-- vm-auth-key generated on Panorama
+<img src="https://www.paloaltonetworks.com/content/dam/pan/en_US/images/logos/brand/primary-company-logo/Parent-logo.png" width=50% height=50%>
 
-This guide is intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. This could be easily adapted for other environments.
-
-```
-Manual Last Updated: 2023-05-14
-Lab Last Tested: 2023-05-14
-```
 
 ## 2.2. Lab Guide Syntax conventions
 
