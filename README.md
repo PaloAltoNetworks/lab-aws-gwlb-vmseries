@@ -118,7 +118,7 @@ Reference these diagrams for a visual of traffic flows through this topology.
 # 4. Lab Steps
 ## 4.1. Initialize Lab
 
-- Download `Student Lab Details` File from Qwiklabs interface for later reference
+- Download `aws-gwlb-lab-secrets.txt` File from Qwiklabs interface for later reference
 - Click Open Console and authenticate to AWS account with credentials displayed in Qwiklabs
 - Verify your selected region in AWS console (top right) matches the aws-gwlb-lab-secrets.txt
 - Open the [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8kurjB0n7M-WvFOaqfRCuY6OemWf6okQheGO5LMQ/viewform) to answer questions as you go through the guide
@@ -203,7 +203,7 @@ Reference these diagrams for a visual of traffic flows through this topology.
 - In cloud console, enter:
 
 ```
-aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-10* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2
+aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-11* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2
 ```
 
 - Press space a few times to page down
@@ -211,13 +211,13 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 - Try using query to control what data is returned
 
 ```
-aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-10* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2 --query 'Images[].[ImageId,Name]'
+aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-11* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2 --query 'Images[].[ImageId,Name]'
 ```
 
-- We see that `10.2.3` AMI is available, which is what we are targeting for this deployment
+- We see that `11.2.0` AMI is available, which is what we are targeting for this deployment
 
 
-> &#10067; What is the BYOL Marketplace AMI ID for 10.2.0 in the us-east-1 region?
+> &#10067; What is the BYOL Marketplace AMI ID for 10.1.8 in the us-east-1 region?
 
 > &#10067; What are some options if there is no AMI available for your targeted version?
 
@@ -225,12 +225,19 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 
 > &#8505;  This terraform deployment will look up the AMI ID to use for the deployment based on the variable `fw_version`. New AMIs are not always published for each minor release. Therefore, it is a good idea to verify what version AMI most closely matches your target version.
 
-> &#8505; product-code is a global value that correlates with Palo Alto Networks marketplace offerings This is global and the same across all regions. There will be changes to this as vm-flex offerings come live. ##TODO
+> &#8505; product-code is a global value that correlates with Palo Alto Networks marketplace offerings This is global and the same across all regions.
+>
+> 
 >```
 >   "byol"  = "6njl1pau431dv1qxipg63mvah"
->   "payg1" = "6kxdw3bbmdeda3o6i1ggqt4km"
->   "payg2" = "806j2of0qy5osgjjixq9gqc6g"
+>   "payg1" = "e9yfvyj3uag5uo5j2hjikv74n"
+>   "payg2" = "hd44w1chf26uv4p52cdynb2o"
 >```
+> byol will be the most common. You will need to obtain [Software Firewall Flex Credits](https://www.paloaltonetworks.com/resources/tools/ngfw-credits-estimator) to license these after deployment.
+> They other image types are "Pay as you go" and come pre-licensed and are billed by AWS. These will generally be more costly to run over long periods than BYOL. PAYG is good for certain scenarios such as autoscaling or when you need to add capacity for a short period.
+> payg1 is `VM-Series Next-Gen Virtual Firewall w/Advanced Threat Prevention (PAYG)` in marketplace and only has advanced threat subscription.
+> payg2 is `VM-Series Next-Gen Virtual Firewall w/ Advanced Security Subs (PAYG)` in marketplace and has additional security subscriptions enabled (Adv URL, Adv Wildfire, DNS, GlobalProtect)
+> You can also use the [EC2 web console](https://us-west-2.console.aws.amazon.com/ec2/home?region=us-west-2#Images:visibility=public-images;productCode=6njl1pau431dv1qxipg63mvah;v=3;case=tags:false%5C,client:false;regex=tags:false%5C,client:false) to search for available images based on product code or AMI name.
 
 > &#8505; The name tag of the image should be standard and can be used for the filter. For example `PA-VM-AWS-10.1*`, `PA-VM-AWS-9.1.3*`, `PA-VM-AWS-10*`. This is the same logic the terraform will use to lookup the AMI based on the `fw_version` variable.
 
@@ -249,13 +256,16 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 rm -rf ~/bin && rm -rf ~/lab-aws-gwlb-vmseries/
 ```
 
-- Download Terraform in Cloudshell
+- Run below command from Cloud9 terminal. It will:
+  - Clone the repository that contains the code and resources for this lab
+  - Execute a shell script to install terraform in the CloudShell environment
+
 
 ```
-mkdir /home/cloudshell-user/bin/ && wget https://releases.hashicorp.com/terraform/1.3.9/terraform_1.3.9_linux_amd64.zip && unzip terraform_1.3.9_linux_amd64.zip && rm terraform_1.3.9_linux_amd64.zip && mv terraform /home/cloudshell-user/bin/terraform
+cd ~ && git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git && chmod +x ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh
 ```
 
-- Verify Terraform 1.3.9 is installed
+- Verify Terraform is installed
 ```
 terraform version
 ```
