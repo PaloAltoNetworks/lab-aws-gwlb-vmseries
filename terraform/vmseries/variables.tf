@@ -1,5 +1,6 @@
 ### Global
 variable region {}
+variable peer_region {}
 variable prefix_name_tag {}
 variable global_tags {}
 variable fw_instance_type {}

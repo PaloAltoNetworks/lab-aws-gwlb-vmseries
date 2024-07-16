@@ -138,6 +138,30 @@ module "transit_gateways" {
   transit_gateway_peerings        = var.transit_gateway_peerings
 }
 
+### TGW Peering to overcome Qwiklabs quota limitations on CPU
+
+data "aws_ec2_transit_gateway" "peer" {
+  provider = aws.peer
+  filter {
+    name   = "options.amazon-side-asn"
+    values = ["65200"]
+  }
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
+resource "aws_ec2_transit_gateway_peering_attachment" "panorama" {
+  peer_region             = var.peer_region
+  peer_transit_gateway_id = data.aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = module.transit_gateways.transit_gateway_ids["gwlb"]
+
+  tags = {
+    Name = "TGW Peering Requestor"
+  }
+}
+
 ### AMI and startup script for web servers in spokes
 
 data "aws_ami" "amazon-linux-2" {

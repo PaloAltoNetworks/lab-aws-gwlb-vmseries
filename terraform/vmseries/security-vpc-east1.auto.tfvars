@@ -1,6 +1,7 @@
 ### Global
 prefix_name_tag  = ""
-region           = "us-west-2"
+region           = "us-east-1"
+peer_region      = "us-west-2"
 fw_instance_type = "m5.xlarge"
 fw_license_type  = "byol"
 fw_version       = "11.1.2-h3" //Leave empty to be updated
@@ -406,24 +407,24 @@ gateway_load_balancer_endpoints = {
 
 transit_gateways = {
   gwlb = {
-    name     = "gwlb-lab-tgw"
-    asn      = "65200"
-    existing = true
+    name     = "gwlb-lab-tgw-east1"
+    asn      = "65201"
+    existing = false
     route_tables = {
-      security-in = { name = "from-security-vpc", existing = true}
-      spoke-in = { name = "from-spoke-vpcs", existing = true}
+      security-in = { name = "from-security-vpc", existing = false}
+      spoke-in = { name = "from-spoke-vpcs", existing = false}
     }
   }
 }
 
- transit_gateway_vpc_attachments = {
-   security = {
-     name                                    = "security-vpc"
-     vpc                                     = "vpc_id"
-     appliance_mode_support                  = "enable"
-     subnets                                 = ["tgw-attach1", "tgw-attach2"]
-     transit_gateway                         = "gwlb"
-     transit_gateway_route_table_association = "security-in"
-     transit_gateway_route_table_propagations = "spoke-in" //TODO
-   }
- }
+transit_gateway_vpc_attachments = {
+  security = {
+    name                                    = "security-vpc"
+    vpc                                     = "vpc_id"
+    appliance_mode_support                  = "enable"
+    subnets                                 = ["tgw-attach1", "tgw-attach2"]
+    transit_gateway                         = "gwlb"
+    transit_gateway_route_table_association = "security-in"
+    transit_gateway_route_table_propagations = "spoke-in" //TODO
+  }
+}

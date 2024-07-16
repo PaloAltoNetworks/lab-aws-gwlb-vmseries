@@ -3,7 +3,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 4.5"
+      version = "~> 5.5"
     }
     panos = {
       source = "PaloAltoNetworks/panos"
@@ -16,21 +16,7 @@ provider "aws" {
   region  = var.region
 }
 
-provider "panos" {
-  hostname           = var.panorama_host
-  verify_certificate = false
-  username           = var.panorama_username
-  password           = var.panorama_password
-  #username = data.aws_ssm_parameter.user.value  ## Update to parameter store
-  #password = data.aws_ssm_parameter.pass.value ## Update to parameter store
+provider "aws" {
+  region  = var.peer_region
+  alias   = "peer"
 }
-
-# data "aws_ssm_parameter" "user" {
-#   provider = aws.east
-#   name = var.panorama_ssm_path_user
-# }
-
-# data "aws_ssm_parameter" "pass" {
-#   provider = aws.east
-#   name = var.panorama_ssm_path_pass
-# }

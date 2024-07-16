@@ -58,8 +58,7 @@ Use the corresponding [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8
   - [4.3. Check Marketplace Subscriptions](#43-check-marketplace-subscriptions)
   - [4.4. Launch CloudShell](#44-launch-cloudshell)
   - [4.5. Search Available VM-Series Images (AMIs)](#45-search-available-vm-series-images-amis)
-  - [4.6. Download Terraform](#46-download-terraform)
-  - [4.7. Clone Deployment Git Repository](#47-clone-deployment-git-repository)
+  - [4.6. Clone Repo and Install Terraform](#46-clone-repo-and-install-terraform)
   - [4.8. Deploy Panorama and TGW Infrastructure with Terraform](#48-deploy-panorama-and-tgw-infrastructure-with-terraform)
   - [4.9. Prepare Panorama](#49-prepare-panorama)
   - [4.10. Update Deployment Values in tfvars for VM-series](#410-update-deployment-values-in-tfvars-for-vm-series)
@@ -248,7 +247,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 ---
 
 
-## 4.6. Download Terraform 
+## 4.6. Clone Repo and Install Terraform
 
 - Make sure CloudShell home directory is clean
 
@@ -270,6 +269,8 @@ cd ~ && git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git 
 terraform version
 ```
 
+![alt text](image.png)
+
 > &#8505; Terraform projects often have version constraints in the code to protect against potentially breaking syntax changes when new version is released. For this project, the [version constraint](https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries/blob/main/terraform/vmseries/versions.tf) is:
 > ```
 > terraform {
@@ -280,15 +281,9 @@ terraform version
 >Terraform is distributed as a single binary so isn't usually managed by OS package managers. It simply needs to be downloaded and put into a system `$PATH` location. For Cloudshell, we are using the `/home/cloud-shell-user/bin/` so it will be persistent if the sessions times out.
 
 
-## 4.7. Clone Deployment Git Repository 
-
-- Clone the Repository with the terraform to deploy
-  
-```
-git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git && cd lab-aws-gwlb-vmseries/terraform/panorama
-```
-
 ## 4.8. Deploy Panorama and TGW Infrastructure with Terraform
+
+> &#8505; One complications with fully automating VM-Series deployments is the need to have a Panorama already running and configured for the VM-Series to bootstrap to. There isn't a built in bootstrap method for Panorama itself. There are ways to orchestrate it, but it is complex. In addition the Panorama takes a long time to initialize. So typically you need to bring up the Panorama as a separate terraform deployment before launching the VM-Series.
 
 - Make sure you are in the appropriate deployment directory
 
@@ -317,6 +312,8 @@ terraform apply
 
 - It will be about 7 minutes from the time the Terraform finishes before you can access and authenticate to the Panorama.
 
+> &#10067; What AWS resources were created from this terraform execution?
+
 ## 4.9. Prepare Panorama
 
 > &#8505; The Panorama was deployed from a partially prepped image that is licensed and has some baseline template, devicegroup, and logging configured. Additional steps will be completed here to prepare the Panorama for bootstrapping.
@@ -327,7 +324,9 @@ terraform apply
 
 - Panorama Tab -> Plugins -> Check Now
 
-- Search for `sw_fw_license-1.1.1` -> Download -> Install
+- Search for `sw_fw_license-1.1.2` -> Download -> Install
+
+- Navigate to Panorama Tab -> SW Fireall License on left menu
 
 - Configure SW Firewall License Bootstrap Definition
   - Name: `aws-gwlb-lab`
