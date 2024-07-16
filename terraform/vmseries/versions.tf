@@ -5,9 +5,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.5"
     }
-    panos = {
-      source = "PaloAltoNetworks/panos"
-    }
   }
 }
 
