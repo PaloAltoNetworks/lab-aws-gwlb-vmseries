@@ -162,17 +162,63 @@ resource "aws_ec2_transit_gateway_peering_attachment" "panorama" {
   }
 }
 
-### AMI and startup script for web servers in spokes
+### IAM Role / SSM / AMI and startup script for web servers in spokes
 
-data "aws_ami" "amazon-linux-2" {
-  most_recent = true
+data "aws_ami" "this" {
+  most_recent = true # newest by time, not by version number
 
-  owners      = ["amazon"]
+  filter {
+    name   = "owner-alias"
+    values = ["amazon"]
+  }
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-ebs"]
+    values = ["amzn2-ami-hvm*"]
   }
+
+  owners = ["137112412989"]
+}
+
+data "aws_ebs_default_kms_key" "current" {
+}
+
+data "aws_kms_alias" "current_arn" {
+  name = data.aws_ebs_default_kms_key.current.key_arn
+}
+
+resource "aws_iam_role" "spoke_vm_ec2_iam_role" {
+  name               = "${var.prefix_name_tag}spoke_vm"
+  assume_role_policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "sts:AssumeRole",
+            "Principal": {"Service": "ec2.amazonaws.com"}
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "spoke_vm_iam_instance_policy" {
+  role       = aws_iam_role.spoke_vm_ec2_iam_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_role_policy_attachment" "spoke_vm_iam_admin_instance_policy" {
+  role       = aws_iam_role.spoke_vm_ec2_iam_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+
+resource "aws_iam_instance_profile" "spoke_vm_iam_instance_profile" {
+
+  name = "${var.prefix_name_tag}spoke_vm_instance_profile"
+  role = aws_iam_role.spoke_vm_ec2_iam_role.name
+
 }
 
 locals {
@@ -187,21 +233,6 @@ until sudo wget -O /var/www/html/index.php https://raw.githubusercontent.com/wwc
 until sudo systemctl start httpd; do echo "Retrying"; sleep 5; done
 until sudo systemctl enable httpd; do echo "Retrying"; sleep 5; done
 EOF
-}
-
-### SSM external module for managing app servers
-module "ssm" {
-  source                    = "../modules/ssm"
-  #version                   = "0.4.2"
-  #vpc_id                    = module.spoke1_vpc.vpc_id.vpc_id
-  bucket_name               = "my-session-logs"
-  access_log_bucket_name    = "my-session-access-logs"
-  tags                      = {
-                                Function = "ssm"
-                              }
-  enable_log_to_s3          = false
-  enable_log_to_cloudwatch  = false
-  vpc_endpoints_enabled     = false
 }
 
 
@@ -268,42 +299,50 @@ module "spoke1_gwlb" {
   depends_on = [module.transit_gateways, module.gwlb] // Depends on GWLB being created in security VPC
 }
 
-
-module "spoke1_ec2_az1" {
-  source                 = "terraform-aws-modules/ec2-instance/aws"
-  version                = "~> 4.3"
-
-  name                   = "${var.prefix_name_tag}spoke1-web-az1"
-  associate_public_ip_address = false
-  iam_instance_profile   = module.ssm.iam_profile_name
-
-  ami                    = data.aws_ami.amazon-linux-2.id
+resource "aws_instance" "spoke1_ec2_az1" {
+  ami                    = data.aws_ami.this.id
   instance_type          = "t2.micro"
   key_name               = data.aws_key_pair.vmseries.key_name
-  monitoring             = true
-  vpc_security_group_ids = [module.spoke1_vpc.security_group_ids["web-server-sg"]]
   subnet_id              = module.spoke1_vpc.subnet_ids["web1"]
-  user_data_base64 = base64encode(local.web_user_data)
-  tags = var.global_tags
+  vpc_security_group_ids = [module.spoke1_vpc.security_group_ids["web-server-sg"]]
+  tags                   = merge({ Name = "${var.prefix_name_tag}spoke1-web-az1" }, var.global_tags)
+  iam_instance_profile   = aws_iam_instance_profile.spoke_vm_iam_instance_profile.name
+
+  root_block_device {
+    delete_on_termination = true
+    encrypted             = true
+    kms_key_id            = data.aws_kms_alias.current_arn.target_key_arn
+  }
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  user_data = local.web_user_data
 }
 
-
-module "spoke1_ec2_az2" {
-  source                 = "terraform-aws-modules/ec2-instance/aws"
-  version                = "~> 4.3"
-
-  name                   = "${var.prefix_name_tag}spoke1-web-az2"
-  associate_public_ip_address = false
-  iam_instance_profile   = module.ssm.iam_profile_name
-
-  ami                    = data.aws_ami.amazon-linux-2.id
+resource "aws_instance" "spoke1_ec2_az2" {
+  ami                    = data.aws_ami.this.id
   instance_type          = "t2.micro"
   key_name               = data.aws_key_pair.vmseries.key_name
-  monitoring             = true
-  vpc_security_group_ids = [module.spoke1_vpc.security_group_ids["web-server-sg"]]
   subnet_id              = module.spoke1_vpc.subnet_ids["web2"]
-  user_data_base64 = base64encode(local.web_user_data)
-  tags = var.global_tags
+  vpc_security_group_ids = [module.spoke1_vpc.security_group_ids["web-server-sg"]]
+  tags                   = merge({ Name = "${var.prefix_name_tag}spoke1-web-az2" }, var.global_tags)
+  iam_instance_profile   = aws_iam_instance_profile.spoke_vm_iam_instance_profile.name
+
+  root_block_device {
+    delete_on_termination = true
+    encrypted             = true
+    kms_key_id            = data.aws_kms_alias.current_arn.target_key_arn
+  }
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  user_data = local.web_user_data
 }
 
 
@@ -355,22 +394,22 @@ module "spoke1_nlb" {
 
 resource "aws_lb_target_group_attachment" "spoke1_ssh_az1" {
   target_group_arn = module.spoke1_nlb.target_group_arns[0]
-  target_id        = module.spoke1_ec2_az1.id
+  target_id        = aws_instance.spoke1_ec2_az1.id
 }
 
 resource "aws_lb_target_group_attachment" "spoke1_http_az1" {
   target_group_arn = module.spoke1_nlb.target_group_arns[1]
-  target_id        = module.spoke1_ec2_az1.id
+  target_id        = aws_instance.spoke1_ec2_az1.id
 }
 
 resource "aws_lb_target_group_attachment" "spoke1_ssh_az2" {
   target_group_arn = module.spoke1_nlb.target_group_arns[0]
-  target_id        = module.spoke1_ec2_az2.id
+  target_id        = aws_instance.spoke1_ec2_az2.id
 }
 
 resource "aws_lb_target_group_attachment" "spoke1_http_az2" {
   target_group_arn = module.spoke1_nlb.target_group_arns[1]
-  target_id        = module.spoke1_ec2_az2.id
+  target_id        = aws_instance.spoke1_ec2_az2.id
 }
 
 ##################################################################
@@ -484,42 +523,52 @@ module "spoke2_gwlb" {
 }
 
 
-module "spoke2_ec2_az1" {
-  source                 = "terraform-aws-modules/ec2-instance/aws"
-  version                = "~> 4.3"
-
-  name                   = "${var.prefix_name_tag}spoke2-web-az1"
-  associate_public_ip_address = false
-  iam_instance_profile   = module.ssm.iam_profile_name
-
-  ami                    = data.aws_ami.amazon-linux-2.id
+resource "aws_instance" "spoke2_ec2_az1" {
+  ami                    = data.aws_ami.this.id
   instance_type          = "t2.micro"
   key_name               = data.aws_key_pair.vmseries.key_name
-  monitoring             = true
-  vpc_security_group_ids = [module.spoke2_vpc.security_group_ids["web-server-sg"]]
   subnet_id              = module.spoke2_vpc.subnet_ids["web1"]
-  user_data_base64 = base64encode(local.web_user_data)
-  tags = var.global_tags
+  vpc_security_group_ids = [module.spoke2_vpc.security_group_ids["web-server-sg"]]
+  tags                   = merge({ Name = "${var.prefix_name_tag}spoke2-web-az1" }, var.global_tags)
+  iam_instance_profile   = aws_iam_instance_profile.spoke_vm_iam_instance_profile.name
+
+  root_block_device {
+    delete_on_termination = true
+    encrypted             = true
+    kms_key_id            = data.aws_kms_alias.current_arn.target_key_arn
+  }
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  user_data = local.web_user_data
 }
 
-
-module "spoke2_ec2_az2" {
-  source                 = "terraform-aws-modules/ec2-instance/aws"
-  version                = "~> 4.3"
-
-  name                   = "${var.prefix_name_tag}spoke2-web-az2"
-  associate_public_ip_address = false
-  iam_instance_profile   = module.ssm.iam_profile_name
-
-  ami                    = data.aws_ami.amazon-linux-2.id
+resource "aws_instance" "spoke2_ec2_az2" {
+  ami                    = data.aws_ami.this.id
   instance_type          = "t2.micro"
   key_name               = data.aws_key_pair.vmseries.key_name
-  monitoring             = true
-  vpc_security_group_ids = [module.spoke2_vpc.security_group_ids["web-server-sg"]]
   subnet_id              = module.spoke2_vpc.subnet_ids["web2"]
-  user_data_base64 = base64encode(local.web_user_data)
-  tags = var.global_tags
+  vpc_security_group_ids = [module.spoke2_vpc.security_group_ids["web-server-sg"]]
+  tags                   = merge({ Name = "${var.prefix_name_tag}spoke2-web-az2" }, var.global_tags)
+  iam_instance_profile   = aws_iam_instance_profile.spoke_vm_iam_instance_profile.name
+
+  root_block_device {
+    delete_on_termination = true
+    encrypted             = true
+    kms_key_id            = data.aws_kms_alias.current_arn.target_key_arn
+  }
+
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+  }
+
+  user_data = local.web_user_data
 }
+
 
 ##################################################################
 # Network Load Balancer with Elastic IPs attached
@@ -569,22 +618,22 @@ module "spoke2_nlb" {
 
 resource "aws_lb_target_group_attachment" "spoke2_ssh_az1" {
   target_group_arn = module.spoke2_nlb.target_group_arns[0]
-  target_id        = module.spoke2_ec2_az1.id
+  target_id        = aws_instance.spoke2_ec2_az1.id
 }
 
 resource "aws_lb_target_group_attachment" "spoke2_http_az1" {
   target_group_arn = module.spoke2_nlb.target_group_arns[1]
-  target_id        = module.spoke2_ec2_az1.id
+  target_id        = aws_instance.spoke2_ec2_az1.id
 }
 
 resource "aws_lb_target_group_attachment" "spoke2_ssh_az2" {
   target_group_arn = module.spoke2_nlb.target_group_arns[0]
-  target_id        = module.spoke2_ec2_az2.id
+  target_id        = aws_instance.spoke2_ec2_az2.id
 }
 
 resource "aws_lb_target_group_attachment" "spoke2_http_az2" {
   target_group_arn = module.spoke2_nlb.target_group_arns[1]
-  target_id        = module.spoke2_ec2_az2.id
+  target_id        = aws_instance.spoke2_ec2_az2.id
 }
 
 ##################################################################
