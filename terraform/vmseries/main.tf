@@ -158,7 +158,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "panorama" {
   transit_gateway_id      = module.transit_gateways.transit_gateway_ids["gwlb"]
 
   tags = {
-    Name = "TGW Peering Requestor"
+    Name = "us-west-2-tgw-peer"
   }
 }
 
@@ -167,7 +167,7 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "panorama" {
   transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.panorama.id
 
   tags = {
-    Name = "Cross-Region TGW Peer"
+    Name = "us-east-1-tgw-peer"
   }
 }
 

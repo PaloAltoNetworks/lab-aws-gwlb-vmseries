@@ -38,7 +38,7 @@ management_transit_gateways = {
     existing = false
     route_tables = {
       #security-in = { name = "from-security-vpc", existing = false }
-      tgw-peer-in = { name = "from-tgw-peer", existing = false }
+      tgw-peer-in = { name = "from-us-east-1-tgw-peer", existing = false }
       spoke-in = { name = "from-spoke-vpcs", existing = false }
     }
   }

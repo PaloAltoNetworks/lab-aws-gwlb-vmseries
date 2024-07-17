@@ -407,12 +407,13 @@ gateway_load_balancer_endpoints = {
 
 transit_gateways = {
   gwlb = {
-    name     = "gwlb-lab-tgw-east1"
+    name     = "tgw-us-east1"
     asn      = "65201"
     existing = false
     route_tables = {
       security-in = { name = "from-security-vpc", existing = false}
       spoke-in = { name = "from-spoke-vpcs", existing = false}
+      tgw-peer-in = { name = "from-us-west-2-tgw-peer", existing = false}
     }
   }
 }
