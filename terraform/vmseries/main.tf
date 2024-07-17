@@ -163,6 +163,18 @@ data "aws_ec2_transit_gateway_route_table" "us-west-2-tgw-rt" {
     values = ["from-us-east-1-tgw-peer"]
   }
 }
+
+data "aws_ec2_transit_gateway_route_table" "us-west-2-spoke-rt" {
+  provider = aws.peer
+  filter {
+    name   = "transit-gateway-id"
+    values = [data.aws_ec2_transit_gateway.us-west-2-tgw.id]
+  }
+  filter {
+    name   = "tag:Name"
+    values = ["from-spoke-vpcs"]
+  }
+}
 data "aws_ec2_transit_gateway_attachment" "us-west-2-managment-vpc" {
   provider = aws.peer
   filter {
@@ -215,7 +227,7 @@ resource "aws_ec2_transit_gateway_route_table_association" "us-west-2-from-us-ea
   transit_gateway_route_table_id = data.aws_ec2_transit_gateway_route_table.us-west-2-tgw-rt.id
 }
 
-### TGW Peer Routes
+### Routes in Local TGW
 
 resource "aws_ec2_transit_gateway_route" "us-east-1-security-rt-to-us-west-2-peer" {
   destination_cidr_block         = "192.168.0.0/16"
@@ -229,25 +241,14 @@ resource "aws_ec2_transit_gateway_route" "us-east-1-peer-rt-to-security" {
   transit_gateway_route_table_id = module.transit_gateways.transit_gateway_route_table_ids["gwlb-tgw-peer-in"]
 }
 
-# resource "aws_ec2_transit_gateway_route" "from-west2-to-east1" {
-#   provider = aws.peer
-#   destination_cidr_block         = "10.200.0.0/23"
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.panorama.id
-#   transit_gateway_route_table_id = data.aws_ec2_transit_gateway_route_table.peer.id
-# }
+### Routes in Remote Peer TGW
+resource "aws_ec2_transit_gateway_route" "us-west-2-spoke-rt-to-us-east-1" {
+  provider = aws.peer
+  destination_cidr_block         = "10.0.0.0/8"
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.us-west-2-to-us-east1.id
+  transit_gateway_route_table_id = data.aws_ec2_transit_gateway_route_table.us-west-2-spoke-rt.id
+}
 
-# resource "aws_ec2_transit_gateway_route" "east1-rt-from-west2" {
-#   destination_cidr_block         = "10.0.0.0/8"
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.panorama.id
-#   transit_gateway_route_table_id = module.transit_gateways.transit_gateway_ids["gwlb"]
-# }
-
-# resource "aws_ec2_transit_gateway_route" "fromw-west2-to-east1" {
-#   provider = aws.peer
-#   destination_cidr_block         = "10.200.0.0/23"
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.panorama.id
-#   transit_gateway_route_table_id = data.aws_ec2_transit_gateway_route_table.peer.id
-# }
 
 ### IAM Role / SSM / AMI and startup script for web servers in spokes
 
