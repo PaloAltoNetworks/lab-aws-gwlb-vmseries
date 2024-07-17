@@ -33,11 +33,12 @@ management_vpc_endpoints = {
 
 management_transit_gateways = {
   lab = {
-    name     = "gwlb-lab-tgw"
+    name     = "tgw-us-west-2"
     asn      = "65200"
     existing = false
     route_tables = {
-      security-in = { name = "from-security-vpc", existing = false }
+      #security-in = { name = "from-security-vpc", existing = false }
+      tgw-peer-in = { name = "from-tgw-peer", existing = false }
       spoke-in = { name = "from-spoke-vpcs", existing = false }
     }
   }
@@ -51,7 +52,7 @@ management_transit_gateway_vpc_attachments = {
     subnets                                  = ["management1", "management2"]
     transit_gateway                          = "lab"
     transit_gateway_route_table_association  = "spoke-in"
-    transit_gateway_route_table_propagations = "security-in"
+    transit_gateway_route_table_propagations = "tgw-peer-in"
   }
 }
 
