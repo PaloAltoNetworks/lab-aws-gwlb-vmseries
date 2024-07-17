@@ -162,6 +162,15 @@ resource "aws_ec2_transit_gateway_peering_attachment" "panorama" {
   }
 }
 
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "panorama" {
+  provider = aws.peer
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.panorama.id
+
+  tags = {
+    Name = "Cross-Region TGW Peer"
+  }
+}
+
 ### IAM Role / SSM / AMI and startup script for web servers in spokes
 
 data "aws_ami" "this" {

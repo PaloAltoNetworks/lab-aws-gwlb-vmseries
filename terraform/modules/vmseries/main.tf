@@ -171,7 +171,6 @@ resource "aws_network_interface" "this" {
 
 resource "aws_eip" "this" {
   for_each = local.eips
-  vpc      = true
   tags = merge(
     {
       "Name" = format("%s", each.value.eip)

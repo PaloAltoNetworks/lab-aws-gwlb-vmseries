@@ -138,7 +138,6 @@ resource "aws_route_table_association" "this" {
 
 resource "aws_eip" "nat_eip" {
   for_each = var.nat_gateways
-  vpc      = true
   tags     = merge({ Name = "${var.prefix_name_tag}${each.value.name}" }, var.global_tags, lookup(each.value, "local_tags", {}))
 }
 
