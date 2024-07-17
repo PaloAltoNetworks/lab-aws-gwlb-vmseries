@@ -87,7 +87,7 @@ spoke1_gateway_load_balancer_endpoints = {
 
 spoke1_transit_gateways = {
   gwlb = {
-    name     = "tgw-us-east1"
+    name     = "gwlb-lab-tgw-east1"
     existing = true
     route_tables = {
       security-in = { name = "from-security-vpc", existing = true }
