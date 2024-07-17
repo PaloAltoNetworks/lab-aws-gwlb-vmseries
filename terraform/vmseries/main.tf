@@ -161,7 +161,7 @@ data "aws_ec2_transit_gateway_route_table" "peer" {
 
   filter {
     name   = "transit-gateway-id"
-    values = data.aws_ec2_transit_gateway.peer.id
+    values = [data.aws_ec2_transit_gateway.peer.id]
   }
 }
 

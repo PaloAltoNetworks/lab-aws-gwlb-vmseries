@@ -87,7 +87,7 @@ spoke2_gateway_load_balancer_endpoints = {
 
 spoke2_transit_gateways = {
   gwlb = {
-    name     = "gwlb-lab-tgw-east1"
+    name     = "tgw-us-east1"
     existing = true
     route_tables = {
       security-in = { name = "from-security-vpc", existing = true }
@@ -98,7 +98,7 @@ spoke2_transit_gateways = {
 
 spoke2_transit_gateway_vpc_attachments = {
   prod = {
-    name = "spoke2-vpc-vpc"
+    name = "spoke2-vpc"
     vpc  = "vpc_id"
     #appliance_mode_support                  = "enable"
     subnets                                  = ["web1", "web2"]
