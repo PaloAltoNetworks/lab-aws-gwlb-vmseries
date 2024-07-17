@@ -152,6 +152,19 @@ data "aws_ec2_transit_gateway" "peer" {
   }
 }
 
+data "aws_ec2_transit_gateway_route_table" "peer" {
+  provider = aws.peer
+  filter {
+    name   = "name"
+    values = ["from-us-east-1-tgw-peer"]
+  }
+
+  filter {
+    name   = "transit-gateway-id"
+    values = data.aws_ec2_transit_gateway.peer.id
+  }
+}
+
 resource "aws_ec2_transit_gateway_peering_attachment" "panorama" {
   peer_region             = var.peer_region
   peer_transit_gateway_id = data.aws_ec2_transit_gateway.peer.id
@@ -162,6 +175,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "panorama" {
   }
 }
 
+
 resource "aws_ec2_transit_gateway_peering_attachment_accepter" "panorama" {
   provider = aws.peer
   transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.panorama.id
@@ -169,6 +183,17 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "panorama" {
   tags = {
     Name = "us-east-1-tgw-peer"
   }
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "us-east-1-tgw" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.panorama.id
+  transit_gateway_route_table_id = module.transit_gateways.transit_gateway_ids["gwlb"]
+}
+
+resource "aws_ec2_transit_gateway_route_table_association" "us-west-2-tgw-peer" {
+  provider = aws.peer
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment_accepter.panorama.id
+  transit_gateway_route_table_id = data.aws_ec2_transit_gateway_route_table.peer.id
 }
 
 ### IAM Role / SSM / AMI and startup script for web servers in spokes
