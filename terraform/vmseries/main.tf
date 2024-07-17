@@ -156,7 +156,7 @@ data "aws_ec2_transit_gateway_route_table" "us-west-2-tgw-rt" {
   provider = aws.peer
   filter {
     name   = "transit-gateway-id"
-    values = [data.aws_ec2_transit_gateway.peer.id]
+    values = [data.aws_ec2_transit_gateway.us-west-2-tgw.id]
   }
   filter {
     name   = "tag:Name"
