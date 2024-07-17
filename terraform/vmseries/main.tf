@@ -172,7 +172,7 @@ data "aws_ec2_transit_gateway_attachment" "us-west-2-managment-vpc" {
 
   filter {
     name   = "resource-type"
-    values = ["vpc"]
+    values = ["peering"]
   }
   filter {
     name   = "tag:Name"
