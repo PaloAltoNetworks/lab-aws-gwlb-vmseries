@@ -138,9 +138,9 @@ module "transit_gateways" {
   transit_gateway_peerings        = var.transit_gateway_peerings
 }
 
-### TGW Peering to overcome Qwiklabs quota limitations on CPU
+### Lookup TGW, TGW RT, and Panorama VPC attachment ID from us-west-2
 
-data "aws_ec2_transit_gateway" "peer" {
+data "aws_ec2_transit_gateway" "us-west-2-tgw" {
   provider = aws.peer
   filter {
     name   = "options.amazon-side-asn"
@@ -152,7 +152,7 @@ data "aws_ec2_transit_gateway" "peer" {
   }
 }
 
-data "aws_ec2_transit_gateway_route_table" "peer" {
+data "aws_ec2_transit_gateway_route_table" "us-west-2-tgw-rt" {
   provider = aws.peer
   filter {
     name   = "transit-gateway-id"
@@ -163,10 +163,26 @@ data "aws_ec2_transit_gateway_route_table" "peer" {
     values = ["from-us-east-1-tgw-peer"]
   }
 }
+data "aws_ec2_transit_gateway_attachment" "us-west-2-managment-vpc" {
+  provider = aws.peer
+  filter {
+    name   = "transit-gateway-id"
+    values = [data.aws_ec2_transit_gateway.us-west-2-tgw.id]
+  }
 
-resource "aws_ec2_transit_gateway_peering_attachment" "panorama" {
+  filter {
+    name   = "resource-type"
+    values = ["vpc"]
+  }
+  filter {
+    name   = "tag:Name"
+    values = ["from-us-east-1-tgw-peer"]
+  }
+}
+
+resource "aws_ec2_transit_gateway_peering_attachment" "us-west-2-to-us-east1" {
   peer_region             = var.peer_region
-  peer_transit_gateway_id = data.aws_ec2_transit_gateway.peer.id
+  peer_transit_gateway_id = data.aws_ec2_transit_gateway.us-west-2-tgw.id
   transit_gateway_id      = module.transit_gateways.transit_gateway_ids["gwlb"]
 
   tags = {
@@ -175,25 +191,53 @@ resource "aws_ec2_transit_gateway_peering_attachment" "panorama" {
 }
 
 
-resource "aws_ec2_transit_gateway_peering_attachment_accepter" "panorama" {
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "us-east1-from-us-west-2" {
   provider = aws.peer
-  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.panorama.id
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.us-west-2-to-us-east1.id
 
   tags = {
     Name = "us-east-1-tgw-peer"
   }
 }
 
-resource "aws_ec2_transit_gateway_route_table_association" "us-east-1-tgw" {
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.panorama.id
+resource "aws_ec2_transit_gateway_route_table_association" "us-east-1-from-us-west-2-peer" {
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.us-west-2-to-us-east1.id
   transit_gateway_route_table_id = module.transit_gateways.transit_gateway_ids["gwlb"]
 }
 
-resource "aws_ec2_transit_gateway_route_table_association" "us-west-2-tgw-peer" {
+resource "aws_ec2_transit_gateway_route_table_association" "us-west-2-from-us-east-1-peer" {
   provider = aws.peer
-  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment_accepter.panorama.id
-  transit_gateway_route_table_id = data.aws_ec2_transit_gateway_route_table.peer.id
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment_accepter.us-east1-from-us-west-2.id
+  transit_gateway_route_table_id = data.aws_ec2_transit_gateway_route_table.us-west-2-tgw-rt.id
 }
+
+### TGW Peer Routes
+
+# resource "aws_ec2_transit_gateway_route" "east1-rt-from-west2" {
+#   destination_cidr_block         = "10.0.0.0/8"
+#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.panorama.id
+#   transit_gateway_route_table_id = module.transit_gateways.transit_gateway_ids["gwlb"]
+# }
+
+# resource "aws_ec2_transit_gateway_route" "from-west2-to-east1" {
+#   provider = aws.peer
+#   destination_cidr_block         = "10.200.0.0/23"
+#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.panorama.id
+#   transit_gateway_route_table_id = data.aws_ec2_transit_gateway_route_table.peer.id
+# }
+
+# resource "aws_ec2_transit_gateway_route" "east1-rt-from-west2" {
+#   destination_cidr_block         = "10.0.0.0/8"
+#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.panorama.id
+#   transit_gateway_route_table_id = module.transit_gateways.transit_gateway_ids["gwlb"]
+# }
+
+# resource "aws_ec2_transit_gateway_route" "fromw-west2-to-east1" {
+#   provider = aws.peer
+#   destination_cidr_block         = "10.200.0.0/23"
+#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.panorama.id
+#   transit_gateway_route_table_id = data.aws_ec2_transit_gateway_route_table.peer.id
+# }
 
 ### IAM Role / SSM / AMI and startup script for web servers in spokes
 
