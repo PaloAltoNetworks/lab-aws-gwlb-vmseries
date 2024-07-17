@@ -202,7 +202,7 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "us-east1-from-us
 
 resource "aws_ec2_transit_gateway_route_table_association" "us-east-1-from-us-west-2-peer" {
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.us-west-2-to-us-east1.id
-  transit_gateway_route_table_id = module.transit_gateways.transit_gateway_ids["gwlb"]
+  transit_gateway_route_table_id = module.transit_gateways.transit_gateway_route_table_ids["tgw-peer-in"]
 }
 
 resource "aws_ec2_transit_gateway_route_table_association" "us-west-2-from-us-east-1-peer" {
@@ -213,11 +213,17 @@ resource "aws_ec2_transit_gateway_route_table_association" "us-west-2-from-us-ea
 
 ### TGW Peer Routes
 
-# resource "aws_ec2_transit_gateway_route" "east1-rt-from-west2" {
-#   destination_cidr_block         = "10.0.0.0/8"
-#   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.panorama.id
-#   transit_gateway_route_table_id = module.transit_gateways.transit_gateway_ids["gwlb"]
-# }
+resource "aws_ec2_transit_gateway_route" "us-east-1-security-rt-to-us-west-2-peer" {
+  destination_cidr_block         = "192.168.0.0/16"
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment_accepter.us-east1-from-us-west-2.id
+  transit_gateway_route_table_id = module.transit_gateways.transit_gateway_route_table_ids["security-in"]
+}
+
+resource "aws_ec2_transit_gateway_route" "us-east-1-peer-rt-to-security" {
+  destination_cidr_block         = "0.0.0.0/0"
+  transit_gateway_attachment_id  = module.transit_gateways.transit_gateway_vpc_attachment_ids["security"]
+  transit_gateway_route_table_id = module.transit_gateways.transit_gateway_route_table_ids["tgw-peer-in"]
+}
 
 # resource "aws_ec2_transit_gateway_route" "from-west2-to-east1" {
 #   provider = aws.peer
