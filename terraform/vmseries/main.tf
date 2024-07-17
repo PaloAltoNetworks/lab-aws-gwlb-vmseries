@@ -176,7 +176,7 @@ data "aws_ec2_transit_gateway_attachment" "us-west-2-managment-vpc" {
   }
   filter {
     name   = "tag:Name"
-    values = ["from-us-east-1-tgw-peer"]
+    values = ["us-east-1-tgw-peer"]
   }
 }
 
