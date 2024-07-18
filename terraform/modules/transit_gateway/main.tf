@@ -27,6 +27,10 @@ data "aws_ec2_transit_gateway" "this" {
     name   = "tag:Name"
     values = [each.value.name]
   }
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
 }
 
 #### Transit Gateway Route Tables ####  
@@ -56,6 +60,10 @@ data "aws_ec2_transit_gateway_route_table" "this" {
   filter {
     name   = "tag:Name"
     values = [each.value.name]
+  }
+  filter {
+    name   = "state"
+    values = ["available"]
   }
 }
 
