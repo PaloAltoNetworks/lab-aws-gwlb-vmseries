@@ -219,6 +219,7 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "us-east1-from-us
 resource "aws_ec2_transit_gateway_route_table_association" "us-east-1-from-us-west-2-peer" {
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.us-west-2-to-us-east1.id
   transit_gateway_route_table_id = module.transit_gateways.transit_gateway_route_table_ids["gwlb-tgw-peer-in"]
+  depends_on = [aws_ec2_transit_gateway_peering_attachment_accepter.us-east1-from-us-west-2]
 }
 
 resource "aws_ec2_transit_gateway_route_table_association" "us-west-2-from-us-east-1-peer" {
@@ -247,6 +248,7 @@ resource "aws_ec2_transit_gateway_route" "us-west-2-spoke-rt-to-us-east-1" {
   destination_cidr_block         = "10.0.0.0/8"
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_peering_attachment.us-west-2-to-us-east1.id
   transit_gateway_route_table_id = data.aws_ec2_transit_gateway_route_table.us-west-2-spoke-rt.id
+  depends_on = [aws_ec2_transit_gateway_peering_attachment_accepter.us-east1-from-us-west-2]
 }
 
 

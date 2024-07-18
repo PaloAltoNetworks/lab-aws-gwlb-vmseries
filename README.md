@@ -144,7 +144,8 @@ Reference these diagrams for a visual of traffic flows through this topology.
 - Under permissions select the check box for `default_policy` and then click the button to remove it.
 - Find the Deny Action for `Cloud Shell` and click `Remove` on the right
 
-![alt text](image-1.png)
+
+<img src="docs/images/iam-hack.png" width="50%" height="50%">
 
 ---
 
