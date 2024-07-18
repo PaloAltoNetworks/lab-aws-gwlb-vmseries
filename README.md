@@ -135,23 +135,16 @@ Reference these diagrams for a visual of traffic flows through this topology.
 
 ## 4.2. Update IAM Policies
 
-
-- Search for `IAM` in top search bar (IAM is global)
-- In IAM dashboard select Users -> awsstudent
-- Expand `default_policy`, Edit Policy -> Visual Editor
-- Find the Deny Action for `Cloud Shell` and click `Remove` on the right
-- Also remove the Deny actions for all actions containing `Marketplace`
-- Select `Review policy`
-- Select `Save changes`
-
----
-
-<img src="https://user-images.githubusercontent.com/43679669/200521132-07ca60f0-2186-49cc-b6ac-4c3477de3abf.png" width=50% height=50%>
-
-
-> &#8505; Qwiklabs has an explicit Deny for CloudShell. However, we have permissions to remove this deny policy. Take a look at the other Deny statements while you are here.
+> &#8505; Qwiklabs has an explicit Deny for some actions we need to use for this lab. However, we have permissions to remove this policy. Take a look at the other Deny statements while you are here.
 
 > &#8505; It is important to be familiar with IAM concepts for VM-Series deployments. Several features (such as bootstrap, custom metrics, cloudwatch logs, HA, VM Monitoring) require IAM permissions. You also need to consider IAM permissions in order to deploy with IaC or if using lambda for custom automation.
+
+- Search for `IAM` in top search bar (IAM is global)
+- In IAM dashboard select Users -> `awsstudent`
+- Under permissions select the check box for `default_policy` and then click the button to remove it.
+- Find the Deny Action for `Cloud Shell` and click `Remove` on the right
+
+![alt text](image-1.png)
 
 ---
 
@@ -233,9 +226,13 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 >   "payg2" = "hd44w1chf26uv4p52cdynb2o"
 >```
 > byol will be the most common. You will need to obtain [Software Firewall Flex Credits](https://www.paloaltonetworks.com/resources/tools/ngfw-credits-estimator) to license these after deployment.
-> They other image types are "Pay as you go" and come pre-licensed and are billed by AWS. These will generally be more costly to run over long periods than BYOL. PAYG is good for certain scenarios such as autoscaling or when you need to add capacity for a short period.
+> 
+> The other image types are "Pay as you go" and come pre-licensed and are billed by AWS. These will generally be more costly to run over long periods than BYOL. PAYG is good for certain scenarios such as autoscaling or when you need to add capacity for a short period.
+> 
 > payg1 is `VM-Series Next-Gen Virtual Firewall w/Advanced Threat Prevention (PAYG)` in marketplace and only has advanced threat subscription.
+> 
 > payg2 is `VM-Series Next-Gen Virtual Firewall w/ Advanced Security Subs (PAYG)` in marketplace and has additional security subscriptions enabled (Adv URL, Adv Wildfire, DNS, GlobalProtect)
+> 
 > You can also use the [EC2 web console](https://us-west-2.console.aws.amazon.com/ec2/home?region=us-west-2#Images:visibility=public-images;productCode=6njl1pau431dv1qxipg63mvah;v=3;case=tags:false%5C,client:false;regex=tags:false%5C,client:false) to search for available images based on product code or AMI name.
 
 > &#8505; The name tag of the image should be standard and can be used for the filter. For example `PA-VM-AWS-10.1*`, `PA-VM-AWS-9.1.3*`, `PA-VM-AWS-10*`. This is the same logic the terraform will use to lookup the AMI based on the `fw_version` variable.
@@ -255,13 +252,13 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 rm -rf ~/bin && rm -rf ~/lab-aws-gwlb-vmseries/
 ```
 
-- Run below command from Cloud9 terminal. It will:
+- Run below command from CloudShell terminal. It will:
   - Clone the repository that contains the code and resources for this lab
   - Execute a shell script to install terraform in the CloudShell environment
 
 
 ```
-cd ~ && git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git && chmod +x ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh
+cd ~ && git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git && chmod +x ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && source ~/.bashrc
 ```
 
 - Verify Terraform is installed
@@ -361,6 +358,40 @@ terraform apply
 Most of the bootstrap parameters and environment-specific variable values have already been prepped in the Terraform code for this deployment. You will only need to update the `auth-key` value for your Panorama.
 
 - **When bootstrapping, be very careful to ensure all of the parameters are set correctly. These values will be passed in as User Data for the VM-Series launch. If values are incorrect, the bootstrap will likely fail and you will need to redeploy!**
+
+<details>
+  <summary style="color:red">Expand Me For Specific Steps</summary>
+
+> &#8505; We can see in the traffic logs that the health probes are being received. So we know they are being permitted by the AWS Security Group. They are being permitted by catch-all security policy but there is no return traffic (Notice 0 Bytes Received in the traffic logs). This indicates the VM-Series dataplane interface is not listening 
+
+  - Create and add Interface Management profile to eth1/1
+    - In Panorama select Network Tab -> Template `tpl-aws-gwlb-lab`
+    - Create Interface Management Profile
+      - Name: `gwlb-health-probe`
+      - Services: HTTP
+      - Permitted IP addresses: `10.100.0.16/28`, `10.100.1.16/28`
+    - Select Interfaces -> ethernet1/1 -> Advanced -> Management Profile `gwlb-health-probe`
+
+<img src="https://user-images.githubusercontent.com/43679669/109861732-9fb8e800-7c2d-11eb-87b7-98e794ce8131.gif" width=50% height=50%>
+
+  - Create a specific security policies for these health probes to keep logging clean
+    - In Panorama select Policies Tab -> Device Group `AWS-GWLB-LAB`
+    - Create new security policy
+      - Name: `gwlb-health-probe`
+      - Source Zone: `gwlb`
+      - Source Addresses: `10.100.0.16/28`, `10.100.1.16/28` (Can use predefined address objects)
+      - Dest Zone: `gwlb`
+      - Dest Addresses: `10.100.0.16/28`, `10.100.1.16/28` (Can use predefined address objects)
+      - Application: `Any`
+      - Serivce: `service-http`
+    - Make sure new policy is before the existing catch-all `student-gwlb-any` policy
+
+  - Commit and Push your changes
+
+<img src="https://user-images.githubusercontent.com/43679669/109866175-f674f080-7c32-11eb-8c77-4e2c3c195f9a.gif" width=50% height=50%>
+
+
+</details>
 
 - Make sure you are in the appropriate directory
 
