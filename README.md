@@ -1,11 +1,11 @@
 # 1. Warning
 
 ----------
-This repository and lab guide are intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. It contains deployment code and lab guide for learning GWLB traffic flows with VM-Series. Some configuration and resources are intentionally ommitted to be left as troubleshooting excercises. 
+This repository and lab guide are intended to be used with a specific QwikLabs scenario, and some steps are specific to Qwiklabs. It contains deployment code and a lab guide for learning GWLB traffic flows with VM-Series. Some configurations and resources are intentionally omitted to be left as troubleshooting exercises. 
 
 ***Do not use this for a production deployment or an easy demo environment!***
 
-You can find the regularly maintained terraform modules and example deployments for your production deployments at [pan.dev](https://pan.dev/terraform/docs/swfw/aws/vmseries/overview/). These module are also published on the [HashiCorp Registry](https://registry.terraform.io/modules/PaloAltoNetworks/swfw-modules/aws/latest).
+You can find the regularly maintained terraform modules and example deployments for your production deployments at [pan.dev](https://pan.dev/terraform/docs/swfw/aws/vmseries/overview/). These modules are also published on the [HashiCorp Registry](https://registry.terraform.io/modules/PaloAltoNetworks/swfw-modules/aws/latest).
 
 The [Combined Design](https://pan.dev/terraform/docs/swfw/aws/vmseries/reference-architectures/centralized_design/) example closely matches the design from this learning lab.
 
@@ -135,15 +135,13 @@ Reference these diagrams for a visual of traffic flows through this topology.
 
 ## 4.2. Update IAM Policies
 
-> &#8505; Qwiklabs has an explicit Deny for some actions we need to use for this lab. However, we have permissions to remove this policy. Take a look at the other Deny statements while you are here.
+> &#8505; Qwiklabs has an explicit Deny for some actions we need to use for this lab. However, we have permission to remove this policy. Take a look at the other Deny statements while you are here.
 
-> &#8505; It is important to be familiar with IAM concepts for VM-Series deployments. Several features (such as bootstrap, custom metrics, cloudwatch logs, HA, VM Monitoring) require IAM permissions. You also need to consider IAM permissions in order to deploy with IaC or if using lambda for custom automation.
+> &#8505; It is important to be familiar with IAM concepts for VM-Series deployments. Several features (such as bootstrap, custom metrics, cloudwatch logs, HA, and VM Monitoring) require IAM permissions. You also need to consider IAM permissions in order to deploy with IaC or if using lambda for custom automation.
 
-- Search for `IAM` in top search bar (IAM is global)
+- Search for `IAM` in the top search bar (IAM is global)
 - In IAM dashboard select Users -> `awsstudent`
-- Under permissions select the check box for `default_policy` and then click the button to remove it.
-- Find the Deny Action for `Cloud Shell` and click `Remove` on the right
-
+- Under permissions select the check box for `default_policy` and then click "Remove Policy" to remove it.
 
 <img src="docs/images/iam-hack.png" width="50%" height="50%">
 
@@ -156,7 +154,7 @@ Reference these diagrams for a visual of traffic flows through this topology.
 > &#8505; The QwikLabs accounts should already be subscribed to these offers, but we will need to verify and correct if required.
 
 - Search for `AWS Marketplace Subscriptions` in top search bar
-- Verify that there are active subscription for both of:
+- Verify that there are active subscriptions for both of:
   - `VM-Series Next-Generation Firewall (BYOL)`
   - `Palo Alto Networks Panorama`
 
@@ -177,15 +175,15 @@ Reference these diagrams for a visual of traffic flows through this topology.
 ## 4.4. Launch CloudShell
 
 - *Verify you are in the assigned region!*
-- Search for `cloudshell` in top search bar
+- Search for `cloudshell` in the top search bar
 - Close out of the Intro Screen
 - Allow a few moments for it to initialize
 
 ---
 
-> &#8505; This lab will use cloudshell for access to AWS CLI and as a runtime environment to provision your lab resources in AWS using terraform. Cloudshell will have the same IAM role as your authenticated user and has some utilities (git, aws cli, etc) pre-installed. It is only available in limited regions currently.
+> &#8505; This lab will use Cloudshell for access to AWS CLI and as a runtime environment to provision your lab resources in AWS using Terraform. Cloudshell will have the same IAM role as your authenticated user and has some utilities (git, aws cli, etc) pre-installed. It is only available in limited regions currently.
 >
-> Anything saved in home directory `/home/cloudshell-user` will remain persistent if you close and relaunch CloudShell
+> Anything saved in the home directory `/home/cloudshell-user` will remain persistent if you close and relaunch CloudShell
 
 ---
 
@@ -193,7 +191,7 @@ Reference these diagrams for a visual of traffic flows through this topology.
 
 > &#8505; We will use us-west-2 for example of using this search and answering the questions, but your actual deployment for this lab may be in a different region.
 
-- In cloud console, enter:
+- In the cloud console, enter:
 
 ```
 aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-11* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2
@@ -201,7 +199,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 
 - Press space a few times to page down
 
-- Try using query to control what data is returned
+- Try using the following query to control what data is returned
 
 ```
 aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-11* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2 --query 'Images[].[ImageId,Name]'
@@ -230,9 +228,9 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 > 
 > The other image types are "Pay as you go" and come pre-licensed and are billed by AWS. These will generally be more costly to run over long periods than BYOL. PAYG is good for certain scenarios such as autoscaling or when you need to add capacity for a short period.
 > 
-> payg1 is `VM-Series Next-Gen Virtual Firewall w/Advanced Threat Prevention (PAYG)` in marketplace and only has advanced threat subscription.
+> payg1 is `VM-Series Next-Gen Virtual Firewall w/Advanced Threat Prevention (PAYG)` in the marketplace and only has advanced threat subscription.
 > 
-> payg2 is `VM-Series Next-Gen Virtual Firewall w/ Advanced Security Subs (PAYG)` in marketplace and has additional security subscriptions enabled (Adv URL, Adv Wildfire, DNS, GlobalProtect)
+> payg2 is `VM-Series Next-Gen Virtual Firewall w/ Advanced Security Subs (PAYG)` in the marketplace and has additional security subscriptions enabled (Adv URL, Adv Wildfire, DNS, GlobalProtect)
 > 
 > You can also use the [EC2 web console](https://us-west-2.console.aws.amazon.com/ec2/home?region=us-west-2#Images:visibility=public-images;productCode=6njl1pau431dv1qxipg63mvah;v=3;case=tags:false%5C,client:false;regex=tags:false%5C,client:false) to search for available images based on product code or AMI name.
 
@@ -247,15 +245,15 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 
 ## 4.6. Clone Repo and Install Terraform
 
-- Make sure CloudShell home directory is clean
+- Make sure the CloudShell home directory is clean
 
 ```
 rm -rf ~/bin && rm -rf ~/lab-aws-gwlb-vmseries/
 ```
 
-- Run below command from CloudShell terminal. It will:
+- Run the below command from the CloudShell terminal. It will:
   - Clone the repository that contains the code and resources for this lab
-  - Execute a shell script to install terraform in the CloudShell environment
+  - Execute a shell script to install Terraform in the CloudShell environment
 
 
 ```
@@ -281,7 +279,7 @@ terraform version
 
 ## 4.7. Deploy Panorama and TGW Infrastructure with Terraform
 
-> &#8505; One complications with fully automating VM-Series deployments is the need to have a Panorama already running and configured for the VM-Series to bootstrap to. There isn't a built in bootstrap method for Panorama itself. There are ways to orchestrate it, but it is complex. In addition the Panorama takes a long time to initialize. So typically you need to bring up the Panorama as a separate terraform deployment before launching the VM-Series.
+> &#8505; One of the complications with fully automating VM-Series deployments is the need to have a Panorama already running and configured for the VM-Series to bootstrap to. There isn't a built in bootstrap method for Panorama itself. There are ways to orchestrate it, but it is complex. In addition the Panorama takes a long time to initialize. So typically you need to bring up the Panorama as a separate terraform deployment before launching the VM-Series.
 
 - Make sure you are in the appropriate deployment directory
 
@@ -302,7 +300,7 @@ terraform apply
 
 - When Prompted for confirmation, type `yes`
 
-- It should take a few minutes minutes for terraform to finish deploying all resources
+- It should take a few minutes for Terraform to finish deploying all resources
 
 - When complete, you will see an output containing the Panorama URL. **Copy these locally so you can reference them in later steps**
 
@@ -314,34 +312,57 @@ terraform apply
 
 ## 4.8. Prepare Panorama
 
-> &#8505; The Panorama was deployed from a partially prepped image that is licensed and has some baseline template, devicegroup, and logging configured. Additional steps will be completed here to prepare the Panorama for bootstrapping.
+> &#8505; The Panorama was deployed from a partially prepped image that is licensed and has a baseline Template/Device Group. However, additional steps will be completed here to prepare the Panorama for logging and bootstrapping.
 
 - Copy the `panorama_url` from the Terraform output and access it in a browser.
   
 - Authenticate using the credentials from `aws-gwlb-lab-secrets.txt`
 
-- Panorama Tab -> Plugins -> Check Now
+- Navigate to Panorama > Setup > Interfaces, and click on the Management Interface
+  - Add the Public IP address of Panorama to the "Public IP Address" field
 
-- Search for `sw_fw_license-1.1.2` -> Download -> Install
+- Navigate to Panorama > Collector Groups and delete the existing collector group
 
-- Navigate to Panorama Tab -> SW Fireall License on left menu
+- Navigate to Panorama > Managed Collectors and delete the existing log-collector, then commit to Panorama
 
-- Configure SW Firewall License Bootstrap Definition
+- From the dashboard, copy the serial number of Panorama (Found under the general information)
+
+- Configure a new log collector by navigating to Panorama > Managed Collectors > Add
+  - Paste the serial number to the collector S/N, then click Ok
+  - Commit to Panorama
+
+- Click on the newly configured log collector (Will have the S/N as its name), then navigate to the Disks Tab
+  - Click Add, then add “Disk A”, then click Ok
+  - Commit to Panorama
+
+- Navigate to Panorama > Collector Groups, then click Add
+  - Use “default” for the name of the Collector Group, then select the “GWLB-LAB-PANORAMA-01” under the Collector Group Members, then click Ok
+  - Commit to Panorama
+  - Navigate to Commit > Push to Devices > Edit Selections > Collector Groups and select the “default” collector group. Then click Ok
+  - Push to the collector group specified above
+  - Check the Managed Collectors page under Panorama > Managed Collectors. The collector group status should be “In sync”
+
+- Navigate to Panorama > Plugins > Check Now
+  - Search for `sw_fw_license-1.1.2`. Then download and install the plugin
+
+- Navigate to Panorama > SW Fireall License
+
+- Configure a SW Firewall License Bootstrap Definition
   - Name: `aws-gwlb-lab`
   - Auth Code: Found in `aws-gwlb-lab-secrets.txt`
 
-- Configure SW Firewall License Manager
+- Configure a SW Firewall License Manager
   - Name: `aws-gwlb-lab`
   - Device Group: `AWS-GWLB-LAB`
   - Template Stack: `stack-aws-gwlb-lab`
   - Auto Deactivate: `Never`
   - Bootstrap Definition: `aws-gwlb-lab`
 
-> &#8505; Auto Deactive is handy for automating the cleanup of devices that have been terminated, for example in an autoscaling VM-Series deployment. Caution should be used as it is possibility for false positives. For example, if there is an unrelated connectivity issue, Panorama could perceive that the devices are no longer active and initiate the deactivation based on the timer. This plugin can also be used for manually deactivating devices, or creating an event-driven workflow to make API call to Panorama for deactvation. For any deactivation functions to work, the Panorama must be configured with a [Licensing API Key ](https://docs.paloaltonetworks.com/vm-series/10-1/vm-series-deployment/license-the-vm-series-firewall/install-a-license-deactivation-api-key)that is generated from the Customer Support Portal. 
+> &#8505; Auto Deactive is handy for automating the cleanup of devices that have been terminated, for example in an autoscaling VM-Series deployment. Caution should be used as there is a possibility for false positives. For example, if there is an unrelated connectivity issue, Panorama could perceive that the devices are no longer active and initiate the deactivation based on the timer. This plugin can also be used for manually deactivating devices, or creating an event-driven workflow to make an API call to Panorama for deactivation. For any deactivation functions to work, the Panorama must be configured with a [Licensing API Key ](https://docs.paloaltonetworks.com/vm-series/10-1/vm-series-deployment/license-the-vm-series-firewall/install-a-license-deactivation-api-key)that is generated from the Customer Support Portal. 
 
 - Configure Template Stack to Automatically Push Content
   - Panorama -> Templates -> `stack-aws-gwlb-lab`
-  - Check Box for `Automaically push content....`
+  - Check Box for `Automatically push content....`
 
 > &#8505; This feature was added in 10.2 and is very useful for automated deployments, especially autoscaling. It ensures that as devices bootstrap, the Panorama will push down the current dynamic content before committing the configuration.
 
@@ -432,11 +453,11 @@ terraform apply
 <img src="https://user-images.githubusercontent.com/43679669/108799781-36671400-755f-11eb-9724-d18c7ea147bb.gif" width=50% height=50%>
 
 
-- It should take 5-10 minutes for terraform to finish deploying all resources
+- It should take 5-10 minutes for Terraform to finish deploying all resources
 
 - When complete, you will see a list of outputs. **Copy these locally so you can reference them in later steps**
 
-- If you do get an error, first try to run `terraform apply` again to finish update of any pending resources. Notify lab instructor if there are still issues.
+- If you do get an error, first try to run `terraform apply` again to finish the update of any pending resources. Notify the lab instructor if there are still issues.
 
 > &#8505; You can also come back to this directory in CloudShell later and run `terraform output` to view this information 
 
@@ -446,14 +467,14 @@ terraform apply
 
 All resources are now created in AWS, but it will be around 10 minutes until VM-Series are fully initialized and bootstrapped.
 
-In the meantime, lets go look at what you built!
+In the meantime, let's go look at what you built!
 
 
 - EC2 Dashboard -> Instances -> Select `vmseries01` -> Actions -> Instance settings -> Edit user data
 
-- Verify the values matches what was provided in your Lab Details
+- Verify the values match what was provided in your Lab Details
 
-> &#10067; What are some tradeoffs of using user-data method for bootstrap vs S3 bucket?
+> &#10067; What are some tradeoffs of using the user-data method for bootstrap vs S3 bucket?
 
 > &#10067; What needs to happen if you have a typo or missed a value for bootstrap when you deployed?
 
@@ -462,7 +483,7 @@ In the meantime, lets go look at what you built!
 
 - EC2 Dashboard -> Instances -> Select `vmseries01` -> Actions -> Monitor and troubleshoot -> Get instance screenshot
 
-> &#8505; This can be useful to get a view of the console during launch. It is not interactive and must be manually refreshed, but you can at least see some output related to bootstrap process or to troubleshoot if the VM-Series isn't booting properly or is in maintenance mode.
+> &#8505; This can be useful to get a view of the console during launch. It is not interactive and must be manually refreshed, but you can at least see some output related to the bootstrap process or to troubleshoot if the VM-Series isn't booting properly or is in maintenance mode.
 
 ---
 
@@ -491,20 +512,20 @@ In the meantime, lets go look at what you built!
 
 - Search for `cloudwatch` in the top search bar
 - Logs -> Log groups -> PaloAltoNetworksFirewalls
-- Assuming enough time has passed since launch, verify that the bootstrap operations completed successfully.
+- Assuming enough time has passed since launch, verify that the bootstrap operations have completed successfully.
 
 > &#8505; It is normal for the VMs to briefly lose connectivity to Panorama after first joining.
 
 > &#8505; This feature is only implemented for AWS currently.
 
-> &#10067; What is required to enable these logs during boot process?
+> &#10067; What is required to enable these logs during the boot process?
 
 ---
 
 
 ## 4.12. Verify Bootstrap in Panorama
 
-> &#8505; For this lab, the Panorama and VM-Series mgmgt are publicly accessible. For production deployments, management should not be exposed to inbound Internet traffic as a general practice. If public inbound management access is required, make sure to use other controls (MFA, AWS security groups, PAN-OS permitted-ip lists).
+> &#8505; For this lab, the Panorama and VM-Series mgmt are publicly accessible. For production deployments, management should not be exposed to inbound Internet traffic as a general practice. If public inbound management access is required, make sure to use other controls (MFA, AWS security groups, PAN-OS permitted-ip lists).
 
 - Login to Panorama web interface with student credentials
 - Check Panorama -> Managed Devices -> Summary
@@ -532,29 +553,29 @@ vmseries_eips = {
   "vmseries02-mgmt" = "44.237.145.237"
 }
 ```
-- Refer to `aws-gwlb-lab-secrets.txt` from QwikLabs for local credentials for the VM-Series instances. This will be the same credentials you used for Panorama.
+- Refer to `aws-gwlb-lab-secrets.txt` from QwikLabs for local credentials for the VM-Series instances. These will be the same credentials you used for Panorama.
 
 - Establish a connection to both VM-Series Web UI via HTTPS
 - Establish a connection to both VM-Series CLI via SSH
   - You can use Cloud Shell for the SSH session if it is blocked on your local machine
 
-> &#10067; Why don't you have to use SSH key pair to authenticate to these VM-Series?
+> &#10067; Why don't you have to use an SSH key pair to authenticate to these VM-Series?
 
 ## 4.14. Check bootstrap logs
 
-> &#8505; It is common to have issues when initially setting up an environment for bootstrapping. Thus it is a good to know how to troubleshoot. When using the new basic bootstrapping with user-data, there is less potential for problems.
+> &#8505; It is common to have issues when initially setting up an environment for bootstrapping. Thus it is good to know how to troubleshoot. When using the new basic bootstrapping with user-data, there is less potential for problems.
 >
 > Some things to keep in mind:
 >- Default AWS ENI needs access to reach S3 bucket as well as path to Internet for licensing
->   - S3 access can be via Internet or with VPC endpoint
+>   - S3 access can be via internet or with a VPC endpoint
 >   - IAM Instance Profile will need permissions to access S3 bucket
-> - When using interface swap, the subnet for the second ENI will also need path to S3 and Internet
+> - When using interface swap, the subnet for the second ENI will also need a path to S3 and Internet
 >   - Interface swap can be done with user-data or in init-cfg parameters. 
 >   - Generally better to do via user-data
 > - Template Stack and Device Group names must match exactly or they will never join Panorama (no indication of this in Panorama logs)
 > - If there are any issues with licensing, VM-Series will not join Panorama (no indication of this in Panorama logs)
 
-- From SSH session on either VM-Series, check the bootstrap summary
+- Via SSH session to either VM-Series, check the bootstrap summary
   
 ```
 show system bootstrap status
@@ -605,7 +626,7 @@ debug logview component bts_details
 
   - Create and add Interface Management profile to eth1/1
     - In Panorama select Network Tab -> Template `tpl-aws-gwlb-lab`
-    - Create Interface Management Profile
+    - Create an Interface Management Profile
       - Name: `gwlb-health-probe`
       - Services: HTTP
       - Permitted IP addresses: `10.100.0.16/28`, `10.100.1.16/28`
@@ -613,9 +634,9 @@ debug logview component bts_details
 
 <img src="https://user-images.githubusercontent.com/43679669/109861732-9fb8e800-7c2d-11eb-87b7-98e794ce8131.gif" width=50% height=50%>
 
-  - Create a specific security policies for these health probes to keep logging clean
+  - Create a specific security policy for these health probes to keep logging clean
     - In Panorama select Policies Tab -> Device Group `AWS-GWLB-LAB`
-    - Create new security policy
+    - Create a new security policy
       - Name: `gwlb-health-probe`
       - Source Zone: `gwlb`
       - Source Addresses: `10.100.0.16/28`, `10.100.1.16/28` (Can use predefined address objects)
@@ -623,7 +644,7 @@ debug logview component bts_details
       - Dest Addresses: `10.100.0.16/28`, `10.100.1.16/28` (Can use predefined address objects)
       - Application: `Any`
       - Serivce: `service-http`
-    - Make sure new policy is before the existing catch-all `student-gwlb-any` policy
+    - Make sure the new policy is before the existing catch-all `student-gwlb-any` policy
 
   - Commit and Push your changes
 
@@ -633,7 +654,7 @@ debug logview component bts_details
 </details>
 
 - Verify Traffic Logs have Bytes Received and are matching the appropriate security policy
-- Return to AWS console to verify the Targets are now showing as healthy
+- Return to the AWS console to verify the Targets are now showing as healthy
 
 <img src="https://user-images.githubusercontent.com/43679669/109867219-3b4d5700-7c34-11eb-8121-5ce90f2e1004.gif" width=50% height=50%>
 
@@ -645,7 +666,7 @@ debug logview component bts_details
 - The deployed topology does not have all of the AWS routing in place for a working GWLB topology and you must fix it!
 - Refer to the diagram and try to resolve before looking at the specific steps.
 
-> &#8505; For GWLB Distributed model, Inbound traffic for public services comes directly into the App Spoke Internet Gateway. Ingress VPC route table directs traffic to the GWLB Endpoints in the App Spoke VPC.
+> &#8505; For the GWLB Distributed model, Inbound traffic for public services comes directly into the App Spoke Internet Gateway. The Ingress VPC route table directs traffic to the GWLB Endpoints in the App Spoke VPC.
 > 
 > Application owners can provision their external facing resources in their VPC (EIP, Public NLB / ALB, etc), but all traffic will be forwarded to Security VPC (via GWLB endpoint) for inspection prior to reaching the resource.
 > 
@@ -658,7 +679,7 @@ debug logview component bts_details
 
 ### 4.16.1. Update Spoke1 App VPC networking for Inbound inspection with GWLB
 
-- First investigate `spoke1-app-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- First, investigate `spoke1-app-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 - For **inbound** traffic, no changes are required for the `web` route tables in the Spoke VPCs
 - Refer to terraform output for GWLB Endpoint IDs (or identify them in VPC Dashboard)
 
@@ -751,7 +772,7 @@ Generate some HTTP traffic to the web apps using the DNS name of the Public NLB 
 
 > &#8505; The inbound routing should now be in place, but you will not get a response yet as the instances are not yet running a web server.
 
-> &#8505; The web instances are configured to update and install web server automatically with a user-data script, but they first must have a working outbound path to the Internet to retrieve packages.
+> &#8505; The web instances are configured to update and install the web server automatically with a user-data script, but they first must have a working outbound path to the Internet to retrieve packages.
 
 ###  4.16.4. Test Outbound Traffic from Spoke1 Instance
 
@@ -773,15 +794,15 @@ Access the spoke web servers console using the AWS Systems Manager connect
 
 - Panorama -> Monitor Tab -> Traffic
 - Filter for traffic *to* Spoke 1 `( addr.dst in 10.200.0.0/16 )`
-- Notice that there is already many connection attempts from Internet scans to the App1 Public NLB and being permitted by VM-Series!
-- Notice that VM-Series is able to see the original client source IP for connections to to App Spokes
+- Notice that there are already many connection attempts from Internet scans to the App1 Public NLB and being permitted by VM-Series!
+- Notice that VM-Series is able to see the original client source IP for connections to App Spokes
 - Try to identify your client source IP in the logs
 
 > &#10067; Why does VM-Series see the private NLB addresses as the destination instead of the public address?
 
 ###  4.16.6. Check Outbound Traffic Logs
 
-> &#8505; Since outbound traffic was not working earlier, let's check to see if it it making it to VM-Series.
+> &#8505; Since outbound traffic was not working earlier, let's check to see if it is making it to VM-Series.
 
 - Panorama -> Monitor Tab -> Traffic
 - Filter for traffic *from* Spoke 1 `( addr.src in 10.200.0.0/16 )`
@@ -798,7 +819,7 @@ Access the spoke web servers console using the AWS Systems Manager connect
 
 ### 4.17.1. Update Spoke1 VPC for OB/EW routing with TGW
 
-- First investigate `spoke1-app-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- First, investigate `spoke1-app-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 
 - **To verify your solution (or shortcut!), expand below for specific steps**
 
@@ -824,7 +845,7 @@ Access the spoke web servers console using the AWS Systems Manager connect
 
 ### 4.17.2. Update Spoke2 VPC for OB/EW routing with TGW
 
-- First investigate `spoke2-app-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- First, investigate `spoke2-app-vpc` Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 
 - **To verify your solution (or shortcut!), expand below for specific steps**
 
@@ -843,7 +864,7 @@ Access the spoke web servers console using the AWS Systems Manager connect
 >
 >For OB/EW flows, the GWLB doesn't come into play until traffic comes into the Security VPC from TGW before being forwarded to a GWLB endpoint.
 
-- First investigate Transit Gateway Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
+- First, investigate Transit Gateway Route Tables in the VPC Dashboard and try to identify and fix what is missing. Refer to the diagram for guidance.
 
 - **To verify your solution (or shortcut!), expand below for specific steps**
 
@@ -857,7 +878,7 @@ Access the spoke web servers console using the AWS Systems Manager connect
      - CIDR: 0.0.0.0/0
      - Attachment: Security VPC (Name Tag = security-vpc)
 
-- VPC Dashboard -> Transit Gateway Route Tables -> Select `ps-lab-from-security-vpc`
+- VPC Dashboard -> Transit Gateway Route Tables -> Select `from-security-vpc`
   -  Check `Associations` tab and verify the security VPC is associated
   -  Check `Routes` tab and notice there are no existing routes to reach the spoke VPCs
   -  Select Propagations Tab -> Create Propagation
@@ -876,12 +897,12 @@ Access the spoke web servers console using the AWS Systems Manager connect
 
 ### 4.17.4. Update Security VPC networking for OB/EW with GWLB
 
-> &#8505; The routing and traffic flows can be tricky to grasp, especially when designing for multiple availability zones. For this lab, we are using separate endpoint for Outbound VS EastWest, plus separate endpoints per AZ. Take your time and understand the traffic flows as you configure the routing.
+> &#8505; The routing and traffic flows can be tricky to grasp, especially when designing for multiple availability zones. For this lab, we are using separate endpoints for Outbound VS EastWest, plus separate endpoints per AZ. Take your time and understand the traffic flows as you configure the routing.
 >
 > Multi-AZ GWLB generally requires unique route tables per subnet in both AZs in order to direct traffic in that AZ toward the resources (GWLB endpoint, NAT GW) in the same AZ.
 
-- First investigate the VPC Route Tables in the Security VPC and try to identify and fix what is missing. Refer to the diagram for guidance.
-- Refer to your output from terraform for the GWLB Endpoint IDs
+- First, investigate the VPC Route Tables in the Security VPC and try to identify and fix what is missing. Refer to the diagram for guidance.
+- Refer to your output from Terraform for the GWLB Endpoint IDs
 - You can also view the deployed endpoints VPC Dashboard -> Endpoints
 
 - **To verify your solution (or shortcut!), expand below for specific steps**
@@ -922,7 +943,7 @@ Access the spoke web servers console using the AWS Systems Manager connect
 **GWLB Endpoint East/West Route Tables**
 
 > &#8505; Here we are defining what will happen for East / West traffic returning from the GWLB / VM-Series.
-> This means traffic has already passed policy / inspection and we now define the direct path to reach the destination.
+> This means traffic has already passed policy/inspection and we now define the direct path to reach the destination.
 >
 > For East / West traffic, this means sending all internal traffic to the TGW where it will then be forwarded directly back to the spoke VPC. 
 > 
@@ -941,11 +962,11 @@ Access the spoke web servers console using the AWS Systems Manager connect
 **GWLB Endpoint Outbound Route Tables**
 
 > &#8505; Here we are defining what will happen for Outbound traffic returning from the GWLB / VM-Series.
-> This means traffic has already passed policy / inspection and we now define the direct path to reach the destination.
+> This means traffic has already passed policy/inspection and we now define the direct path to reach the destination.
 >
 > For Outbound traffic, this means sending all traffic toward the NAT GW in the corresponding AZ. 
 > 
-> We also need to consider the return traffic from the Internet / NAT GW which uses the same GWLB Endpoint. For this we define a path to reach the Spoke VPC summary directly via TGW 
+> We also need to consider the return traffic from the Internet / NAT GW which uses the same GWLB Endpoint. For this, we define a path to reach the Spoke VPC summary directly via TGW 
 
   -  Select Route Table `security-vpc-gwlbe-outbound-1` and edit routes
      -  0.0.0.0/0 -> NAT Gateway -> Select NAT GW ID for AZ1
@@ -958,14 +979,14 @@ Access the spoke web servers console using the AWS Systems Manager connect
 **NAT Gateway Route Tables**
 
 > &#8505; Here we are defining what will happen for return traffic from the Internet for traffic that was initiated outbound.
-> From the perspective of the NAT GW routing, we direct the Spoke VPC summary back to Outbound Endpoint of the respective AZ so the return traffic will be statefully forwarded to GWLB / VM-Series.
+> From the perspective of the NAT GW routing, we direct the Spoke VPC summary back to the Outbound Endpoint of the respective AZ so the return traffic will be statefully forwarded to GWLB / VM-Series.
 > 
-> Note: The NAT GW subnet is already provisioned with default route pointed to IGW
+> Note: The NAT GW subnet is already provisioned with a default route pointed to IGW
 
-  -  Select Route Table `ps-lab-natgw1` and edit routes
+  -  Select Route Table `security-vpc-natgw1` and edit routes
      -  10.0.0.0/8 -> Gateway Load Balancer Endpoint `outbound1`
      -  Select vpce Endpoint ID `outbound1` from terraform output
-  -  Select Route Table `ps-lab-natgw2` and edit routes
+  -  Select Route Table `security-vpc-natgw2` and edit routes
      -  10.0.0.0/8 -> Gateway Load Balancer Endpoint `outbound2`
      -  Select vpce Endpoint ID `outbound2` from terraform output
 
@@ -973,13 +994,13 @@ Access the spoke web servers console using the AWS Systems Manager connect
 
 ## 4.18. Test Traffic Flows
 
-At this point all routing should be in place for GWLB topology. Now we will verify traffic flows and check the logs.
+At this point, all routing should be in place for GWLB topology. Now we will verify traffic flows and check the logs.
 
-> &#8505; Note that web instances in Spoke VPCs are configured to update and install web server automatically, now that you have provided an outbound path, this should have completed.
+> &#8505; Note that web instances in Spoke VPCs are configured to update and install the web server automatically, now that you have provided an outbound path, this should have been completed.
 
 ###  4.18.1. Test Outbound Traffic from Spoke1 Instances
 
-- Using an AWS Sessions Manager, connect to an App1 web instance, test outbound traffic.
+- Using an AWS Sessions Manager, connect to an App1 web instance, and test outbound traffic.
   
 ```ping 8.8.8.8```
 
@@ -988,7 +1009,7 @@ At this point all routing should be in place for GWLB topology. Now we will veri
 
 > &#8505; ifconfig.me is a service that just returns your client's public IP (like google "what is my ip" or ipmonkey.com)
 
-- Try the curl to ifconfig.me several times to see if you egress address changes.
+- Try the curl to ifconfig.me several times to see if your egress address changes.
 
 > &#10067; What AWS resources have the public IPs you are egressing from?
 
@@ -1016,7 +1037,7 @@ At this point all routing should be in place for GWLB topology. Now we will veri
 
 </details>
 
-> &#8505; Local IP and VM Name in the response will show you which VM you are connected to behind the NLB. Session persistence may keep you pinned to a specific instances
+> &#8505; Local IP and VM Name in the response will show you which VM you are connected to behind the NLB. Session persistence may keep you pinned to specific instances
 
 - Identify these sessions in Panorama traffic logs
 
@@ -1026,7 +1047,7 @@ At this point all routing should be in place for GWLB topology. Now we will veri
 ### 4.18.3. Test E/W Traffic from Spoke1 Instance to Spoke2 Instance
 
 - Use EC2 Console to identify the Private IP address of `spoke1-web-az1`
-- Using an Console Connection session on `spoke1-web-az1` instance, test traffic to `spoke2-web-az1`
+- Using a Console Connection session on `spoke1-web-az1` instance, test traffic to `spoke2-web-az1`
 
 ```ping 10.250.0.x```
 
@@ -1038,7 +1059,7 @@ At this point all routing should be in place for GWLB topology. Now we will veri
 
 ## 4.19. GWLBE / Sub-Interface associations
 
-Now we have verified inbound, outbound, and east / west traffic flows. We have full visibility of this traffic but as you can see in the logs, everything is wide open!
+Now we have verified inbound, outbound, and east/west traffic flows. We have full visibility of this traffic but as you can see in the logs, everything is wide open!
 
 Since all traffic to GWLB comes in and out of VM-Series on the same interface and zone, it is tricky to create and manage effective security policies specific to traffic flow directions.
 
@@ -1063,7 +1084,7 @@ We will now fix this using GWLB sub-interface associations.
 
 > &#8505; No IP configurations are actually used by these sub-interfaces, but they should be set to use DCHP to function properly
 
-> &#8505; Unique VLAN Tags must be specified but is not actually used for GWLB GENEVE traffic. The VLAN concept is being repurposed to identify sub-interfaces based on the endpoint IDs.
+> &#8505; Unique VLAN Tags must be specified but are not actually used for GWLB GENEVE traffic. The VLAN concept is being repurposed to identify sub-interfaces based on the endpoint IDs.
 
 - In Panorama select Network Tab -> Template `tpl-aws-gwlb-lab` -> Interfaces
 - Highlight ethernet1/1 -> Add Subinterface
@@ -1110,7 +1131,7 @@ We will now fix this using GWLB sub-interface associations.
 
 ### 4.19.3. Create associations from GWLB Endpoints
 
-> &#8505; Now we have sub-interfaces and zones, we can associate specific endpoints to sub-interfaces.
+> &#8505; Now since we have sub-interfaces and zones, we can associate specific endpoints to sub-interfaces.
 
 > &#8505; For dual-az deployments, there will be two endpoints for each traffic flow. Both will be associated to the same sub-interface.
 
@@ -1127,7 +1148,7 @@ We will now fix this using GWLB sub-interface associations.
   "outbound2" = "vpce-03a1ab84543184ae8"
 }
 ```
-- Use template below to prep CLI commands in a local text editor, replacing ${x} with appropriate Endpoint ID
+- Use the template below to prep CLI commands in a local text editor, replacing ${x} with the appropriate Endpoint ID
 
 ```
 request plugins vm_series aws gwlb associate interface ethernet1/1.10 vpc-endpoint ${outbound1}
@@ -1177,7 +1198,7 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
   - Destination Address: `10.250.0.48/28, 10.250.1.48/28`
 
 ---
-- Name: Spoke2 to App Spoke1
+- Name: Spoke2 to Spoke1
   - Source Zone: `gwlbe-eastwest`
   - Source Address: `10.250.0.48/28, 10.250.1.48/28`
   - Application: `ssh, web-browsing, ping`
@@ -1186,18 +1207,18 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 
 ---
 - Name: Inbound to Spoke1 App LBs
-  - Source Zone: `gwlbe-inbound-app1`
-  - Source Address: `Your Client IP` (google 'what is my ip' from browser)
+  - Source Zone: `gwlbe-inbound-spoke1`
+  - Source Address: `Your Client IP` (google 'what is my ip' from your browser)
   - Application: `web-browsing, ping`
-  - Destination Zone: `gwlbe-inbound-app1`
+  - Destination Zone: `gwlbe-inbound-spoke1`
   - Destination Address: `10.200.0.16/28, 10.200.1.16/28`
 
 ---
 - Name: Inbound to Spoke2 App LBs
-  - Source Zone: `gwlbe-inbound-app2`
-  - Source Address: `Your Client IP` (google 'what is my ip' from browser)
+  - Source Zone: `gwlbe-inbound-spoke2`
+  - Source Address: `Your Client IP` (google 'what is my ip' from your browser)
   - Application: `web-browsing, ping`
-  - Destination Zone: `gwlbe-inbound-app2`
+  - Destination Zone: `gwlbe-inbound-spoke2`
   - Destination Address: `10.250.0.16/28, 10.250.1.16/28`
 
 ---
@@ -1215,16 +1236,16 @@ request plugins vm_series aws gwlb associate interface ethernet1/1.13 vpc-endpoi
 - Generate inbound, outbound, and east/west traffic
 - Verify traffic is matching sub-interface based zones as expected
 
-> &#8505; If everything is configured correctly, only the Health Probes should be hitting the gwlb zone on the eth1 interface. The health probes are send from the GWLB directly to the VM-Series ENI, not through an endpoint or GENEVE.
+> &#8505; If everything is configured correctly, only the Health Probes should be hitting the gwlb zone on the eth1 interface. The health probes are sent from the GWLB directly to the VM-Series ENI, not through an endpoint or GENEVE.
 
 
 ## 4.20. Overlay Routing
 
-Overlay Routing enalbes the VM-Series to strip off the GENEVE encapsulation and use standard routing behavior to determine the next hop. Most commonly this is used for outbound Internet traffic. When the return traffic is received by VM-Series, it will be re-encapsulated and sent to the same endpoint where the session originated.
+Overlay Routing enables the VM-Series to strip off the GENEVE encapsulation and use standard routing behavior to determine the next hop. Most commonly this is used for outbound Internet traffic. When the return traffic is received by VM-Series, it will be re-encapsulated and sent to the same endpoint where the session originated.
 
-Overlay allows the ability to use familiar inside -> outside zone based policies. With overlay enabled, you typically do not need separate endpoints (and sub-interface associations) for outbound and eastwest.
+Overlay allows the ability to use familiar inside -> outside zone-based policies. With overlay enabled, you typically do not need separate endpoints (and sub-interface associations) for outbound and eastwest.
 
-We will update our existing infrastructure to use overlay routing. On the udpated diagram, you will see the changes on the right side where the NAT Gateways are replaced and instead an additional public interface and EIPs are attached to the VM-series.
+We will update our existing infrastructure to use overlay routing. On the updated diagram, you will see the changes on the right side where the NAT Gateways are replaced and instead, an additional public interface and EIPs are attached to the VM-series.
 
 ![GWLB Topology](docs/images/overlay-topology.png)
 
@@ -1236,24 +1257,24 @@ We will update our existing infrastructure to use overlay routing. On the udpate
 
 <img src="https://user-images.githubusercontent.com/43679669/159411034-da0bffbf-ed04-4f21-bfe6-214aeb928e66.png" width=80% height=50%>
 
-- Create New Pulbic ENIs
+- Create New Public ENIs
   - Navigate to EC2 Console -> Network Interface
   - Create Network Interface
     - Description: `vmseries01-public`
-    - Subnet: `ps-lab-natgw1`
-    - Security Group: `ps-lab-vmseries-data`
+    - Subnet: `security-vpc-natgw1`
+    - Security Group: `vmseries-data`
     - Tags: `Name` = `vmseries01-public`
 
 <img src="https://user-images.githubusercontent.com/43679669/159412907-f3c32816-a91d-4c3a-b913-a83457b4c2bf.png" width=50% height=50%>
 
-- After interface is created:
+- After the interface is created:
   - Select it on the list
   - Go to Actions -> Change Source/Dest Check
   - UNCHECK the box and save
   - Go to Actions -> Attach
   - Attach to the `vmseries01` instance
 
-- *Repeat all steps above to create and attach interface for `vmseries02`!*
+- *Repeat all steps above to create and attach the interface for `vmseries02`!*
 
 ### 4.20.2. Associate the EIPs to the Public Interfaces
 - In VPC Console, Navigate to Elastic IP Addresses
@@ -1290,7 +1311,7 @@ We will update our existing infrastructure to use overlay routing. On the udpate
 
 - Edit ethernet1/1 Interface and UNCHECK the box to "Automatically create default route pointing to default gateway provided by server"
 
-- Create static route for internal summary using a Panorama template variable for the next-hop
+- Create a static route for internal summary using a Panorama template variable for the next-hop
   - Name: `Spoke VPC Summary`
   - Destination: `10.0.0.0/8`
   - Interface: `ethernet1/1`
@@ -1299,7 +1320,7 @@ We will update our existing infrastructure to use overlay routing. On the udpate
     - Name: $inside-next-hop
     - Type: `IP Netmask` -> None
     - Description: `AWS Inside Data subnet gateway per AZ`
-  - Click OK to finish creation of the static route
+  - Click OK to finish the creation of the static route
 
 
 ![variable-next-hop](https://user-images.githubusercontent.com/43679669/159412946-f3ec0a09-3ac9-4dc7-9d5c-db721b75a971.png)
@@ -1309,17 +1330,17 @@ We will update our existing infrastructure to use overlay routing. On the udpate
   - For vmseries01, select Create under the Variable column
   - Select No for the prompt to clone
   - Highlight the `$inside-next-hop` variable and select override
-  - Set the value to `10.100.0.17` which is the gateway of the ps-lab-data1 inside subnet for first AZ
-  - Repeate for vmseries02 using value of `10.100.1.17`
+  - Set the value to `10.100.0.17` which is the gateway of the ps-lab-data1 inside the subnet for the first AZ
+  - Repeat for vmseries02 using value of `10.100.1.17`
 
 
 - Navigate to Policies and update the zone of the outbound policy to use the new zone
-  - Policy Name: `App Spoke Web Subnets Outbound`
+  - Policy Name: `Spoke Web Subnets Outbound`
   - Desitnation Zone: Change from `gwlbe-outbound` to `public`
 
-- Create NAT Policy for the outbound overlay traffic
+- Create a NAT Policy for the outbound overlay traffic
   - Policy Name: `outbound-overlay`
-  - Source Zone: `gwlbe-outboune`
+  - Source Zone: `gwlbe-outbound`
   - Destination Zone: `public`
   - Translated Packet:
     - Type: `Dynamic IP and Port`
@@ -1337,7 +1358,7 @@ We will update our existing infrastructure to use overlay routing. On the udpate
 
 ```request plugins vm_series aws gwlb overlay-routing enable yes```
 
-- Reboot the VM so the new interface that was attached will come up. Reboot should take around 5 minutes.
+- Reboot the VM so the new interface that was attached will come up. The reboot should take around 5 minutes.
 
 ```request restart system```
 
@@ -1345,14 +1366,14 @@ We will update our existing infrastructure to use overlay routing. On the udpate
 
 ### 4.20.5. Test Outbound Traffic
 
-- Using an Console Connect session to an App1 web instance, test outbound traffic.
+- Using a Console Connect session to an App1 web instance, test outbound traffic.
   
 ```yum update```
 
 ```curl http://ifconfig.me```
 
 
-- Try the curl to ifconfig.me several times to see if you egress address changes.
+- Try the curl to ifconfig.me several times to see if your egress address changes.
 
 > &#10067; What AWS resources now have the public IPs you are egressing from?
 
