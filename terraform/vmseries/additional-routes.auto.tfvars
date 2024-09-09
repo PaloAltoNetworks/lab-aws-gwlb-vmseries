@@ -114,30 +114,6 @@ vpc_routes_additional = {
     next_hop_type = "transit_gateway"
     next_hop_name = "gwlb"
   }
-  gwlbe-outbound1-to-tgw-test-spoke = {
-    route_table   = "gwlbe-outbound-1"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  gwlbe-outbound2-to-tgw-test-spoke = {
-    route_table   = "gwlbe-outbound-2"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  gwlbe-east-west-1-to-tgw-test-spoke = {
-    route_table   = "gwlbe-eastwest-1"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
-  gwlbe-east-west-2-to-tgw-test-spoke = {
-    route_table   = "gwlbe-eastwest-2"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "transit_gateway"
-    next_hop_name = "gwlb"
-  }
   tgw-attach-1-to-outbound-gwlbe-1 = {
     route_table   = "tgw-attach1"
     prefix        = "0.0.0.0/0"

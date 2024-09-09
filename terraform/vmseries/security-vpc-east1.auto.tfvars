@@ -1,7 +1,6 @@
 ### Global
 prefix_name_tag  = ""
-region           = "us-east-1"
-peer_region      = "us-west-2"
+region           = "us-west-2"
 fw_instance_type = "m5.xlarge"
 fw_license_type  = "byol"
 fw_version       = "11.1.2-h3" //Leave empty to be updated
@@ -208,6 +207,14 @@ interfaces = [
     private_ip_address_allocation = "dynamic"
     eip                           = "vmseries01-mgmt"
   },
+  {
+    name                          = "vmseries01-public"
+    source_dest_check             = false
+    subnet_name                   = "public1"
+    security_group                = "vmseries-public"
+    private_ip_address_allocation = "dynamic"
+    eip                           = "vmseries01-public"
+  },
 
   # second firewall
   {
@@ -226,6 +233,14 @@ interfaces = [
     private_ip_address_allocation = "dynamic"
     eip                           = "vmseries02-mgmt"
   },
+  {
+    name                          = "vmseries02-public"
+    source_dest_check             = false
+    subnet_name                   = "public2"
+    security_group                = "vmseries-public"
+    private_ip_address_allocation = "dynamic"
+    eip                           = "vmseries02-public"
+  }
 ]
 
 # addtional_interfaces = {}
