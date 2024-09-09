@@ -66,30 +66,30 @@ spoke2_vpc_routes_additional = {
 
 
 vpc_routes_additional = {
- natgw1-to-gwlbe-outbound1 = {
-    route_table   = "natgw1"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "outbound1"
-  }
-  natgw2-to-gwlbe-outbound2 = {
-    route_table   = "natgw2"
-    prefix        = "10.0.0.0/8"
-    next_hop_type = "vpc_endpoint"
-    next_hop_name = "outbound2"
-  }
-  gwlbe-outbound1-to-natgw1 = {
-    route_table   = "gwlbe-outbound-1"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "nat_gateway"
-    next_hop_name = "natgw1"
-  }
-  gwlbe-outbound2-to-natgw2 = {
-    route_table   = "gwlbe-outbound-2"
-    prefix        = "0.0.0.0/0"
-    next_hop_type = "nat_gateway"
-    next_hop_name = "natgw2"
-  }
+#  natgw1-to-gwlbe-outbound1 = {
+#     route_table   = "natgw1"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "outbound1"
+#   }
+#   natgw2-to-gwlbe-outbound2 = {
+#     route_table   = "natgw2"
+#     prefix        = "10.0.0.0/8"
+#     next_hop_type = "vpc_endpoint"
+#     next_hop_name = "outbound2"
+#   }
+#   gwlbe-outbound1-to-natgw1 = {
+#     route_table   = "gwlbe-outbound-1"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "nat_gateway"
+#     next_hop_name = "natgw1"
+#   }
+#   gwlbe-outbound2-to-natgw2 = {
+#     route_table   = "gwlbe-outbound-2"
+#     prefix        = "0.0.0.0/0"
+#     next_hop_type = "nat_gateway"
+#     next_hop_name = "natgw2"
+#   }
   gwlbe-outbound1-to-tgw = {
     route_table   = "gwlbe-outbound-1"
     prefix        = "10.0.0.0/8"
