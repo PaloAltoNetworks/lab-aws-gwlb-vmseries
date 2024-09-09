@@ -63,6 +63,7 @@ module "vmseries" {
     interfaces = [
       { name = "vmseries01-data", index = "0" },
       { name = "vmseries01-mgmt", index = "1" },
+      { name = "vmseries01-public", index = "2" }
     ]
   },
   {
@@ -73,6 +74,7 @@ module "vmseries" {
     interfaces = [
       { name = "vmseries02-data", index = "0" },
       { name = "vmseries02-mgmt", index = "1" },
+      { name = "vmseries02-public", index = "2" }
     ]
   }
 ]
