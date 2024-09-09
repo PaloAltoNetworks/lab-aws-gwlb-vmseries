@@ -1,15 +1,15 @@
-app1_vpc_routes_additional = {
+spoke1_vpc_routes_additional = {
   igw-edge-alb1-to-endpoint1 = {
     route_table   = "igw-edge"
     prefix        = "10.200.0.16/28"
     next_hop_type = "vpc_endpoint"
-    next_hop_name = "app1-inbound1"
+    next_hop_name = "spoke1-inbound1"
   }
   igw-edge-alb2-to-endpoint2 = {
     route_table   = "igw-edge"
     prefix        = "10.200.1.16/28"
     next_hop_type = "vpc_endpoint"
-    next_hop_name = "app1-inbound2"
+    next_hop_name = "spoke1-inbound2"
   }
   web1-default-to-tgw = {
     route_table   = "web1"
@@ -27,40 +27,40 @@ app1_vpc_routes_additional = {
     route_table   = "gwlbe1"
     prefix        = "0.0.0.0/0"
     next_hop_type = "internet_gateway"
-    next_hop_name = "app1_vpc"
+    next_hop_name = "spoke1_vpc"
   }
   gwlbe2-default-to-igw = {
     route_table   = "gwlbe2"
     prefix        = "0.0.0.0/0"
     next_hop_type = "internet_gateway"
-    next_hop_name = "app1_vpc"
+    next_hop_name = "spoke1_vpc"
   }
   alb1-to-endpoint1 = {
     route_table   = "alb1"
     prefix        = "0.0.0.0/0"
     next_hop_type = "vpc_endpoint"
-    next_hop_name = "app1-inbound1"
+    next_hop_name = "spoke1-inbound1"
   }
   alb2-to-endpoint2 = {
     route_table   = "alb2"
     prefix        = "0.0.0.0/0"
     next_hop_type = "vpc_endpoint"
-    next_hop_name = "app1-inbound2"
+    next_hop_name = "spoke1-inbound2"
   }
 }
 
-app2_vpc_routes_additional = {
+spoke2_vpc_routes_additional = {
  igw-edge-alb1-to-endpoint1 = {
    route_table   = "igw-edge"
    prefix        = "10.250.0.16/28"
    next_hop_type = "vpc_endpoint"
-   next_hop_name = "app2-inbound1"
+   next_hop_name = "spoke2-inbound1"
  }
  igw-edge-alb2-to-endpoint2 = {
    route_table   = "igw-edge"
    prefix        = "10.250.1.16/28"
    next_hop_type = "vpc_endpoint"
-   next_hop_name = "app2-inbound2"
+   next_hop_name = "spoke2-inbound2"
  }
 }
 
