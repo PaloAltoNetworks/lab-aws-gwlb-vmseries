@@ -1,18 +1,18 @@
 ### Global
-prefix_name_tag  = ""
-region           = "us-west-2"
-fw_instance_type = "m5.xlarge"
-fw_license_type  = "byol"
-fw_version       = "11.1.2-h3" //Leave empty to be updated
-vmseries_ssh_key_name     = "qwikLABS*"
-panorama_host    = "192.168.10.10"
+prefix_name_tag       = ""
+region                = "us-west-2"
+fw_instance_type      = "m5.xlarge"
+fw_license_type       = "byol"
+fw_version            = "11.1.2-h3" //Leave empty to be updated
+vmseries_ssh_key_name = "qwikLABS*"
+panorama_host         = "192.168.10.10"
 
 
 
 global_tags = {
-  managedBy  = "terraform"
+  managedBy   = "terraform"
   application = "Palo Alto Networks VM-Series GWLB"
-  owner = "Professional Services Lab"
+  owner       = "Professional Services Lab"
 }
 
 
@@ -55,8 +55,8 @@ security_vpc_subnets = {
   gwlbe-outbound-2 = { name = "security-vpc-gwlbe-outbound-2", cidr = "10.100.1.48/28", az = "c", rt = "gwlbe-outbound-2" }
   tgw-attach1      = { name = "security-vpc-tgw-attach1", cidr = "10.100.0.64/28", az = "a", rt = "tgw-attach1" }
   tgw-attach2      = { name = "security-vpc-tgw-attach2", cidr = "10.100.1.64/28", az = "c", rt = "tgw-attach2" }
-  public1           = { name = "security-vpc-public1", cidr = "10.100.0.80/28", az = "a", rt = "public1" }
-  public2           = { name = "security-vpc-public2", cidr = "10.100.1.80/28", az = "c", rt = "public2" }
+  public1          = { name = "security-vpc-public1", cidr = "10.100.0.80/28", az = "a", rt = "public1" }
+  public2          = { name = "security-vpc-public2", cidr = "10.100.1.80/28", az = "c", rt = "public2" }
 }
 
 security_nat_gateways = {}
@@ -119,7 +119,7 @@ security_vpc_security_groups = {
       https-from-inet = {
         description = "Permit HTTPS"
         type        = "ingress", from_port = "443", to_port = "443", protocol = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]  // TODO: update here
+        cidr_blocks = ["0.0.0.0/0"] // TODO: update here
       }
       panorama-mgmt = {
         description = "Permit Panorama Management"
@@ -338,21 +338,21 @@ transit_gateways = {
     asn      = "65201"
     existing = false
     route_tables = {
-      security-in = { name = "from-security-vpc", existing = false}
-      spoke-in = { name = "from-spoke-vpcs", existing = false}
-      tgw-peer-in = { name = "from-us-west-2-tgw-peer", existing = false}
+      security-in = { name = "from-security-vpc", existing = false }
+      spoke-in    = { name = "from-spoke-vpcs", existing = false }
+      tgw-peer-in = { name = "from-us-west-2-tgw-peer", existing = false }
     }
   }
 }
 
 transit_gateway_vpc_attachments = {
   security = {
-    name                                    = "security-vpc"
-    vpc                                     = "vpc_id"
-    appliance_mode_support                  = "enable"
-    subnets                                 = ["tgw-attach1", "tgw-attach2"]
-    transit_gateway                         = "gwlb"
-    transit_gateway_route_table_association = "security-in"
+    name                                     = "security-vpc"
+    vpc                                      = "vpc_id"
+    appliance_mode_support                   = "enable"
+    subnets                                  = ["tgw-attach1", "tgw-attach2"]
+    transit_gateway                          = "gwlb"
+    transit_gateway_route_table_association  = "security-in"
     transit_gateway_route_table_propagations = "spoke-in" //TODO
   }
 }

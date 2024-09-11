@@ -50,46 +50,46 @@ spoke1_vpc_routes_additional = {
 }
 
 spoke2_vpc_routes_additional = {
- igw-edge-alb1-to-endpoint1 = {
-   route_table   = "igw-edge"
-   prefix        = "10.250.0.16/28"
-   next_hop_type = "vpc_endpoint"
-   next_hop_name = "spoke2-inbound1"
- }
- igw-edge-alb2-to-endpoint2 = {
-   route_table   = "igw-edge"
-   prefix        = "10.250.1.16/28"
-   next_hop_type = "vpc_endpoint"
-   next_hop_name = "spoke2-inbound2"
- }
+  igw-edge-alb1-to-endpoint1 = {
+    route_table   = "igw-edge"
+    prefix        = "10.250.0.16/28"
+    next_hop_type = "vpc_endpoint"
+    next_hop_name = "spoke2-inbound1"
+  }
+  igw-edge-alb2-to-endpoint2 = {
+    route_table   = "igw-edge"
+    prefix        = "10.250.1.16/28"
+    next_hop_type = "vpc_endpoint"
+    next_hop_name = "spoke2-inbound2"
+  }
 }
 
 
 vpc_routes_additional = {
-#  natgw1-to-gwlbe-outbound1 = {
-#     route_table   = "natgw1"
-#     prefix        = "10.0.0.0/8"
-#     next_hop_type = "vpc_endpoint"
-#     next_hop_name = "outbound1"
-#   }
-#   natgw2-to-gwlbe-outbound2 = {
-#     route_table   = "natgw2"
-#     prefix        = "10.0.0.0/8"
-#     next_hop_type = "vpc_endpoint"
-#     next_hop_name = "outbound2"
-#   }
-#   gwlbe-outbound1-to-natgw1 = {
-#     route_table   = "gwlbe-outbound-1"
-#     prefix        = "0.0.0.0/0"
-#     next_hop_type = "nat_gateway"
-#     next_hop_name = "natgw1"
-#   }
-#   gwlbe-outbound2-to-natgw2 = {
-#     route_table   = "gwlbe-outbound-2"
-#     prefix        = "0.0.0.0/0"
-#     next_hop_type = "nat_gateway"
-#     next_hop_name = "natgw2"
-#   }
+  #  natgw1-to-gwlbe-outbound1 = {
+  #     route_table   = "natgw1"
+  #     prefix        = "10.0.0.0/8"
+  #     next_hop_type = "vpc_endpoint"
+  #     next_hop_name = "outbound1"
+  #   }
+  #   natgw2-to-gwlbe-outbound2 = {
+  #     route_table   = "natgw2"
+  #     prefix        = "10.0.0.0/8"
+  #     next_hop_type = "vpc_endpoint"
+  #     next_hop_name = "outbound2"
+  #   }
+  #   gwlbe-outbound1-to-natgw1 = {
+  #     route_table   = "gwlbe-outbound-1"
+  #     prefix        = "0.0.0.0/0"
+  #     next_hop_type = "nat_gateway"
+  #     next_hop_name = "natgw1"
+  #   }
+  #   gwlbe-outbound2-to-natgw2 = {
+  #     route_table   = "gwlbe-outbound-2"
+  #     prefix        = "0.0.0.0/0"
+  #     next_hop_type = "nat_gateway"
+  #     next_hop_name = "natgw2"
+  #   }
   gwlbe-outbound1-to-tgw = {
     route_table   = "gwlbe-outbound-1"
     prefix        = "10.0.0.0/8"

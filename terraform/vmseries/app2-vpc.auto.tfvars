@@ -12,21 +12,21 @@ spoke2_vpc = {
 
 spoke2_vpc_route_tables = {
   igw-edge = { name = "spoke2-vpc-igw-edge", igw_association = "spoke2_vpc" }
-  alb1      = { name = "spoke2-vpc-alb1" }
-  alb2      = { name = "spoke2-vpc-alb2" }
-  gwlbe1    = { name = "spoke2-vpc-gwlbe1" }
-  gwlbe2    = { name = "spoke2-vpc-gwlbe2" }
-  web1      = { name = "spoke2-vpc-web1" }
-  web2      = { name = "spoke2-vpc-web2" }
+  alb1     = { name = "spoke2-vpc-alb1" }
+  alb2     = { name = "spoke2-vpc-alb2" }
+  gwlbe1   = { name = "spoke2-vpc-gwlbe1" }
+  gwlbe2   = { name = "spoke2-vpc-gwlbe2" }
+  web1     = { name = "spoke2-vpc-web1" }
+  web2     = { name = "spoke2-vpc-web2" }
 }
 
 spoke2_vpc_subnets = {
-  alb1      = { name = "spoke2-vpc-alb1", cidr = "10.250.0.16/28", az = "a", rt = "alb1" }
-  alb2      = { name = "spoke2-vpc-alb2", cidr = "10.250.1.16/28", az = "c", rt = "alb2" }
-  gwlbe1    = { name = "spoke2-vpc-gwlbe1", cidr = "10.250.0.32/28", az = "a", rt = "gwlbe1" }
-  gwlbe2    = { name = "spoke2-vpc-gwlbe2", cidr = "10.250.1.32/28", az = "c", rt = "gwlbe2" }
-  web1      = { name = "spoke2-vpc-web1", cidr = "10.250.0.48/28", az = "a", rt = "web1" }
-  web2      = { name = "spoke2-vpc-web2", cidr = "10.250.1.48/28", az = "c", rt = "web2" }
+  alb1   = { name = "spoke2-vpc-alb1", cidr = "10.250.0.16/28", az = "a", rt = "alb1" }
+  alb2   = { name = "spoke2-vpc-alb2", cidr = "10.250.1.16/28", az = "c", rt = "alb2" }
+  gwlbe1 = { name = "spoke2-vpc-gwlbe1", cidr = "10.250.0.32/28", az = "a", rt = "gwlbe1" }
+  gwlbe2 = { name = "spoke2-vpc-gwlbe2", cidr = "10.250.1.32/28", az = "c", rt = "gwlbe2" }
+  web1   = { name = "spoke2-vpc-web1", cidr = "10.250.0.48/28", az = "a", rt = "web1" }
+  web2   = { name = "spoke2-vpc-web2", cidr = "10.250.1.48/28", az = "c", rt = "web2" }
 }
 
 spoke2_vpc_endpoints = {
@@ -66,7 +66,7 @@ spoke2_vpc_security_groups = {
 
 spoke2_gateway_load_balancers = { // Pull back info from existing GWLB endpoint service in security VPC
   security-gwlb = {
-    name           = "security-gwlb"
+    name     = "security-gwlb"
     existing = true
   }
 }
@@ -91,7 +91,7 @@ spoke2_transit_gateways = {
     existing = true
     route_tables = {
       security-in = { name = "from-security-vpc", existing = true }
-      spoke-in = { name = "from-spoke-vpcs", existing = true }
+      spoke-in    = { name = "from-spoke-vpcs", existing = true }
     }
   }
 }
@@ -101,9 +101,9 @@ spoke2_transit_gateway_vpc_attachments = {
     name = "spoke2-vpc"
     vpc  = "vpc_id"
     #appliance_mode_support                  = "enable"
-    subnets                                  = ["web1", "web2"]
-    transit_gateway                          = "gwlb"
-    transit_gateway_route_table_association  = "spoke-in"
+    subnets                                 = ["web1", "web2"]
+    transit_gateway                         = "gwlb"
+    transit_gateway_route_table_association = "spoke-in"
     #transit_gateway_route_table_propagations = ""
   }
 }
@@ -111,18 +111,18 @@ spoke2_transit_gateway_vpc_attachments = {
 
 ### VPC_ROUTES
 spoke2_vpc_routes = {
-#  igw-edge-alb1-to-endpoint1 = {
-#    route_table   = "igw-edge"
-#    prefix        = "10.250.0.16/28"
-#    next_hop_type = "vpc_endpoint"
-#    next_hop_name = "spoke2-inbound1"
-#  }
-#  igw-edge-alb2-to-endpoint2 = {
-#    route_table   = "igw-edge"
-#    prefix        = "10.250.1.16/28"
-#    next_hop_type = "vpc_endpoint"
-#    next_hop_name = "spoke2-inbound2"
-#  }
+  #  igw-edge-alb1-to-endpoint1 = {
+  #    route_table   = "igw-edge"
+  #    prefix        = "10.250.0.16/28"
+  #    next_hop_type = "vpc_endpoint"
+  #    next_hop_name = "spoke2-inbound1"
+  #  }
+  #  igw-edge-alb2-to-endpoint2 = {
+  #    route_table   = "igw-edge"
+  #    prefix        = "10.250.1.16/28"
+  #    next_hop_type = "vpc_endpoint"
+  #    next_hop_name = "spoke2-inbound2"
+  #  }
   web1-default-to-tgw = {
     route_table   = "web1"
     prefix        = "0.0.0.0/0"
