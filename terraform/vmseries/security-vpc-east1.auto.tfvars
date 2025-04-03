@@ -4,7 +4,7 @@ region           = "us-east-1"
 peer_region      = "us-west-2"
 fw_instance_type = "m5.xlarge"
 fw_license_type  = "byol"
-fw_version       = "11.1.2-h3" //Leave empty to be updated
+fw_version       = "11.1.4-h7" //Make sure the version here matches a marketplace AMI
 vmseries_ssh_key_name     = "qwikLABS*"
 panorama_host    = "192.168.10.10"
 
