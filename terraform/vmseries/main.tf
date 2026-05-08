@@ -258,6 +258,11 @@ data "aws_ami" "this" {
   most_recent = true # newest by time, not by version number
 
   filter {
+    name = "architecture"
+    values = ["x86_64"]
+  }
+
+  filter {
     name   = "owner-alias"
     values = ["amazon"]
   }
