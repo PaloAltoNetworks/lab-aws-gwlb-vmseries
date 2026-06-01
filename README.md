@@ -253,10 +253,15 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
   - Clone the repository that contains the code and resources for this lab
   - Execute a shell script to install Terraform in the CloudShell environment
 
+On CloudShell in AWS:
 
 ```
 cd ~ && chmod +x ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && source ~/.bashrc
 ```
+
+Or on local machine, follow instructions from HashiCorp:
+
+https://developer.hashicorp.com/terraform/install
 
 - Verify Terraform is installed
 ```
