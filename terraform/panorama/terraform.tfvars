@@ -1,6 +1,6 @@
 ## General
 region                = "us-west-2"
-prefix_name_tag       = ""
+prefix_name_tag       = "monlab-"
 
 global_tags = {
   ManagedBy   = "terraform"
@@ -120,7 +120,14 @@ panorama_create_iam_role             = true
 #panorama_existing_iam_role_name = "PanoramaROCuratedRole" <-- use this variable to attach existing IAM Role.
 
 ## Panorama
-panorama_ssh_key_name     = "qwikLABS*"
+# >>> Set this to YOUR key pair name. The key pair must exist in us-west-2 (EC2 Console -> Key Pairs).
+# >>> Leave as "" ONLY if running on QwikLabs (auto-detects the qwikLABS* key).
+panorama_ssh_key_name     = ""
+# Pre-baked lab Panorama image (panorama-aws-advanced-lab-11.1.2-h3, owner 367521625516),
+# shared to account 961341553712 in us-west-2. Carries license + baseline Template/Device Group
+# that the §4.8 prep and VM-Series bootstrap depend on.
+# NOTE: image is PAN-OS 11.1.2-h3 while VM-Series target is 11.1.4-h7 (Panorama slightly older
+# than managed FWs — original lab pairing; watch for content/commit-push quirks).
 panorama_ami_id           = "ami-0927942a5ff1290e9"
 panorama_az               = "us-west-2a"
 private_ip_address        = "192.168.10.10"

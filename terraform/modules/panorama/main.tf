@@ -32,7 +32,17 @@ resource "aws_instance" "this" {
   monitoring                           = false
   iam_instance_profile                 = var.panorama_iam_role
 
+  # gp3 required everywhere: account SCP "DenyLaunchInstancesWithGP2RootOrData"
+  # denies RunInstances if ANY volume (root or AMI-baked data volume) is gp2.
   root_block_device {
+    delete_on_termination = true
+    volume_type           = "gp3"
+  }
+
+  # The Panorama AMI ships a ~2 TB log volume at /dev/sdb as gp2 — override it to gp3.
+  ebs_block_device {
+    device_name           = "/dev/sdb"
+    volume_type           = "gp3"
     delete_on_termination = true
   }
 
@@ -53,6 +63,7 @@ resource "aws_ebs_volume" "this" {
 
   availability_zone = var.availability_zone
   size              = try(each.value.ebs_size, "2000")
+  type              = try(each.value.ebs_type, "gp3") # gp3: avoid SCP gp2 deny
   encrypted         = try(each.value.ebs_encrypted, false)
   kms_key_id        = try(var.ebs_kms_key_alias, null)
 

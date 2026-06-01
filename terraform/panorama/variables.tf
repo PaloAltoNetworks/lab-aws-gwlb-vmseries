@@ -52,8 +52,13 @@ variable "panorama_az" {
 }
 
 variable "panorama_ssh_key_name" {
-  description = "SSH key used to login into Panorama EC2 server."
+  description = <<-EOF
+  SSH key pair name for Panorama. The key pair must already exist in the deployment region (us-west-2).
+  Set this to your own key pair name when running on a shared/standard AWS account.
+  Leave null or "" to auto-detect a QwikLabs-generated key (matches `qwikLABS*`).
+  EOF
   type        = string
+  default     = null
 }
 
 variable "panorama_create_public_ip" {
