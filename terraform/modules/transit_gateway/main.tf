@@ -25,7 +25,7 @@ data "aws_ec2_transit_gateway" "this" {
   }
   filter {
     name   = "tag:Name"
-    values = [each.value.name]
+    values = ["${var.prefix_name_tag}${each.value.name}"]
   }
   filter {
     name   = "state"
@@ -33,7 +33,7 @@ data "aws_ec2_transit_gateway" "this" {
   }
 }
 
-#### Transit Gateway Route Tables ####  
+#### Transit Gateway Route Tables ####
 locals {
   existing_transit_gateway_route_tables = {
     for k, rt in data.aws_ec2_transit_gateway_route_table.this :
@@ -59,7 +59,7 @@ data "aws_ec2_transit_gateway_route_table" "this" {
   }
   filter {
     name   = "tag:Name"
-    values = [each.value.name]
+    values = ["${var.prefix_name_tag}${each.value.name}"]
   }
   filter {
     name   = "state"
