@@ -249,19 +249,13 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 
 ## 4.6. Clone Repo and Install Terraform
 
-- Make sure the CloudShell home directory is clean
-
-```
-rm -rf ~/bin && rm -rf ~/lab-aws-gwlb-vmseries/
-```
-
 - Run the below command from the CloudShell terminal. It will:
   - Clone the repository that contains the code and resources for this lab
   - Execute a shell script to install Terraform in the CloudShell environment
 
 
 ```
-cd ~ && git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git && chmod +x ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && source ~/.bashrc
+cd ~ && chmod +x ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && source ~/.bashrc
 ```
 
 - Verify Terraform is installed
