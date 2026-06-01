@@ -140,7 +140,7 @@ Reference these diagrams for a visual of traffic flows through this topology.
 > &#8505; It is important to be familiar with IAM concepts for VM-Series deployments. Several features (such as bootstrap, custom metrics, cloudwatch logs, HA, and VM Monitoring) require IAM permissions. You also need to consider IAM permissions in order to deploy with IaC or if using lambda for custom automation.
 
 - Search for `IAM` in the top search bar (IAM is global)
-- In IAM dashboard select Users -> `awsstudent`
+- In IAM dashboard select IAM Users -> `awsstudent`
 - Under permissions select the check box for `default_policy` and then click "Remove Policy" to remove it.
 
 <img src="docs/images/iam-hack.png" width="50%" height="50%">
@@ -153,7 +153,10 @@ Reference these diagrams for a visual of traffic flows through this topology.
 
 > &#8505; The QwikLabs accounts should already be subscribed to these offers, but we will need to verify and correct if required.
 
+
 - Search for `AWS Marketplace Subscriptions` in top search bar
+- Select Discover Products from left menu -> Filter for Publisher "Palo Alto Networks". Explore the various offerings available
+- Select Manage Subscriptions from the left menu
 - Verify that there are active subscriptions for both of:
   - `VM-Series Next-Generation Firewall (BYOL)`
   - `Palo Alto Networks Panorama`
@@ -163,12 +166,13 @@ Reference these diagrams for a visual of traffic flows through this topology.
 - If you have both subscriptions, continue to the next section
 - If you are missing either subscription, select `Discover Products` and search for `palo alto`
 - Select `VM-Series Next-Generation Firewall (BYOL)` or `Palo Alto Networks Panorama` as needed
-- Continue to Subscribe
-- Accept Terms
+- Select Purchase Options
+- Select Subscribe to confirm
 - Allow a few moments for the Subscription to be processed
 - Repeat for the other Subscription if needed
-- Exit out of the Marketplace
 - Notify lab instructor if you have any issues
+
+> &#10067; Add Question here about the various VM-Series subscription types (BYOL, PAYG, AI Runtime Security)
 
 ---
 
