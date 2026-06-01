@@ -1,6 +1,8 @@
 ## General
 region                = "us-west-2"
-prefix_name_tag       = "monlab-"
+# REQUIRED on a shared account: set a SHORT prefix UNIQUE TO YOU (e.g. your initials + "-",
+# like "ad-") so your resources don't collide with other students. Each student must differ.
+prefix_name_tag       = "CHANGEME-"
 
 global_tags = {
   ManagedBy   = "terraform"
