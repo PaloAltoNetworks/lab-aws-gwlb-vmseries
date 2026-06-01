@@ -1,11 +1,16 @@
 ### Global
-prefix_name_tag  = ""
+# REQUIRED on a shared account: set the SAME short unique prefix you used for the Panorama
+# deploy (e.g. your initials + "-", like "ad-"). Each student must differ. This is how the
+# VM-Series stack finds YOUR Panorama (it looks up the peer TGW by "<prefix>tgw-us-west-2").
+prefix_name_tag  = "CHANGEME-"
 region           = "us-east-1"
 peer_region      = "us-west-2"
 fw_instance_type = "m5.xlarge"
 fw_license_type  = "byol"
 fw_version       = "11.1.4-h7" //Make sure the version here matches a marketplace AMI
-vmseries_ssh_key_name     = "qwikLABS*"
+# >>> Set this to YOUR key pair name. The key pair must exist in us-east-1 (EC2 Console -> Key Pairs).
+# >>> Leave as "" ONLY if running on QwikLabs (auto-detects the qwikLABS* key).
+vmseries_ssh_key_name     = ""
 panorama_host    = "192.168.10.10"
 
 

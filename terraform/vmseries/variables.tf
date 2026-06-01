@@ -7,8 +7,13 @@ variable fw_instance_type {}
 variable fw_license_type {}
 variable fw_version {}
 variable "vmseries_ssh_key_name" {
-  description = "SSH key used to login into VM-Series EC2 server."
+  description = <<-EOF
+  SSH key pair name for the VM-Series and spoke instances. The key pair must already exist
+  in the deployment region (us-east-1). Set this to your own key pair name on a shared/standard
+  account. Leave null or "" to auto-detect a QwikLabs-generated key (matches `qwikLABS*`).
+  EOF
   type        = string
+  default     = null
 }
 
 ### Panorama API Connection

@@ -214,6 +214,8 @@ resource "aws_instance" "pa-vm-series" {
 
   root_block_device {
     delete_on_termination = true
+    # gp3 required: account SCP "DenyLaunchInstancesWithGP2RootOrData" denies RunInstances with gp2 volumes
+    volume_type = "gp3"
   }
 
   key_name   = var.ssh_key_name
