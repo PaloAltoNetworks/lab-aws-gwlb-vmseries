@@ -1,27 +1,37 @@
 # Cloud NGFW for AWS + Strata Cloud Manager — Lab Addendum (Part 2)
 
-> &#8505; This is an **addendum** to the VM-Series on AWS Gateway Load Balancer lab ([README.md](README.md)). Complete that lab first — you need its deployed Security VPC, Transit Gateway, and the two App Spoke VPCs (`spoke1-app-vpc`, `spoke2-app-vpc`) with working **inbound** traffic through the VM-Series before starting here.
+> &#8505; This is an **addendum** to the VM-Series on AWS Gateway Load Balancer lab ([README.md](README.md)). Complete that lab first — you need its deployed Security VPC, Transit Gateway, and the two App Spoke VPCs (`spoke1-app-vpc`, `spoke2-app-vpc`) with **inbound traffic working through the VM-Series** before you start here.
 
 ```
 Manual Last Updated: 2026-06-03
 ```
 
+## Lab Guide Syntax conventions
+
+- Items with a bullet indicate actions to take to complete the lab.
+- Code blocks follow an action for copy / paste or reference.
+
+> &#8505;  Items with the info icon are additional context or details around the actions.
+
+> &#10067; Items with the question mark icon are good check-your-understanding questions.
+
 ## 1. Overview
 
-In Part 1 you deployed **one** firewall engine — VM-Series behind a Gateway Load Balancer — and used it for **all** traffic flows. Inbound to the app spokes used **distributed** GWLB endpoints (one in each spoke VPC); outbound and east/west used **centralized** GWLB endpoints in the Security VPC, reached over the Transit Gateway.
+In Part 1 you deployed **one** firewall engine — VM-Series behind a Gateway Load Balancer (GWLB) — and used it for **every** traffic flow. In this part you introduce a **second, very different engine: Palo Alto Cloud NGFW for AWS**, a Palo Alto-operated *managed* firewall service, and use it to inspect **inbound** traffic to your application spokes. You will **manage its policy from Strata Cloud Manager (SCM)** and **migrate** the inbound inspection path off the VM-Series and onto Cloud NGFW — while outbound and east/west traffic keep flowing through the VM-Series.
 
-In this part you add a **second, different firewall engine — Palo Alto Cloud NGFW for AWS** — and use it to inspect **inbound** traffic to the app spokes, managed by **Strata Cloud Manager (SCM)**. Outbound and east/west stay on the VM-Series. You will **migrate** the inbound inspection path from the VM-Series endpoints to new Cloud NGFW endpoints.
+> &#8505; **Why two engines?** VM-Series is software *you* run and patch (EC2 instances, GWLB, capacity planning). Cloud NGFW is a SaaS firewall — there are **no instances to manage**; you consume it as a set of Gateway Load Balancer *endpoints* and pay per-usage. Real environments frequently mix them: VM-Series where you need full PAN-OS feature depth and control, Cloud NGFW where you want a low-touch, elastic inspection point close to a workload. This lab lets you operate both side-by-side in the same topology.
 
-This teaches two independent design axes you can mix **per traffic flow**:
+It helps to think about firewall insertion as **three independent choices**, which you can make **differently for each traffic flow**:
 
-| Axis | Part 1 (VM-Series) | This addendum |
+| Choice | Part 1 (VM-Series) | This addendum (Cloud NGFW) |
 | --- | --- | --- |
-| **Firewall resource** | Single VM-Series (GWLB) | A *second* engine: Cloud NGFW (AWS-native managed) |
-| **Endpoint placement** | Centralized (OB/EW) + distributed inbound | Distributed inbound, in the spoke VPCs |
-| **Management plane** | Panorama | **Strata Cloud Manager (SCM)** |
-| **Provisioning** | Terraform | **SCM-initiated** (deploy from the SCM console) |
+| **1. Firewall resource** | A single VM-Series (GWLB) handling all flows | A *separate* engine — Cloud NGFW — handling inbound |
+| **2. Endpoint placement** | Centralized (Security VPC) for OB/EW; distributed for inbound | Distributed — an endpoint in each app spoke VPC |
+| **3. Management plane** | Panorama | **Strata Cloud Manager (SCM)** |
 
-> &#10067; Why might you run two different firewall engines in the same environment, split by traffic direction?
+> &#8505; After this lab, your environment uses **distributed Cloud NGFW endpoints** for inbound and the **existing centralized VM-Series** for outbound/east-west — a genuinely hybrid design that is hard to appreciate until you have built it.
+
+> &#10067; For a given application, what are the trade-offs of inspecting *inbound* traffic with a firewall **in the app's own VPC** (distributed) versus **hair-pinning it to a central security VPC** (centralized)?
 
 ## 2. Architecture — before & after
 
@@ -34,149 +44,182 @@ Internet ─▶ Spoke IGW ─▶ [igw-edge route] ─▶ VM-Series inbound GWLB 
 **After (this addendum) — inbound through Cloud NGFW:**
 
 ```
-Internet ─▶ Spoke IGW ─▶ [igw-edge route] ─▶ Cloud NGFW endpoint (in spoke) ─▶ Cloud NGFW (managed) ─▶ App ALB/NLB ─▶ web instances
+Internet ─▶ Spoke IGW ─▶ [igw-edge route] ─▶ Cloud NGFW endpoint (in spoke) ─▶ Cloud NGFW (managed service) ─▶ App ALB/NLB ─▶ web instances
 
-Outbound + East/West: UNCHANGED  ── spoke web subnets ─▶ TGW ─▶ VM-Series (Security VPC)
+Outbound + East/West: UNCHANGED ── spoke web subnets ─▶ TGW ─▶ VM-Series (Security VPC)
 ```
 
-You are re-pointing only the **inbound** path. The Cloud NGFW endpoints live in the same spoke `gwlbe` subnets (which already route to the IGW), so the migration is a small set of route-table edits.
+> &#8505; This is the **Distributed Inbound** model from the *Cloud NGFW for AWS Deployment Guide*: `Internet → IGW → NGFW endpoint → NGFW → ALB → app`. Both VM-Series GWLB and Cloud NGFW use the same underlying AWS primitive — a **Gateway Load Balancer endpoint** — so the migration is mostly a matter of pointing the spoke ingress routes at a *different* endpoint. The Cloud NGFW endpoints live in the same spoke `gwlbe` subnets you already created (which already route to the IGW), so no new subnets are needed.
 
-> &#8505; This is the **Distributed Inbound** model from the Cloud NGFW for AWS *Deployment Guide*: `Internet → IGW → NGFW endpoint → NGFW → ALB → app`.
+## 3. Provisioning & management model used here
 
-## 3. Prerequisites
+There are several ways to provision and manage Cloud NGFW for AWS. This lab deliberately uses the **newest, simplest** combination:
+
+- **Provisioning: SCM-initiated.** You create the firewall *from inside the SCM console*. SCM automatically creates and hides the underlying Cloud NGFW tenant, links it to SCM, and starts a **30-day free trial** — with **no AWS Marketplace subscription and no cross-account IAM onboarding required to start**.
+- **Management: SCM-native policy.** You author security rules in SCM (folders + security rules), not in Cloud NGFW "rulestacks."
+
+> &#8505; The other provisioning paths (AWS-Marketplace-initiated, AWS Firewall Manager) and the billing models (free trial, Marketplace PAYG, Cloud NGFW credits) are covered in the companion deck *“Cloud NGFW for AWS — Provisioning & Billing.”* Ask your instructor for it.
+
+## 4. Prerequisites
 
 - **Completed Part 1**, with inbound traffic to the spokes working through the VM-Series.
-- **AWS access** to the same account/region as Part 1 (App Spokes are in **us-east-1**). Your SSO/CLI profile from Part 1.
-- **Strata Cloud Manager access** — one of:
-  - **Workshop:** your instructor provides a **CSP account and SCM tenant (TSG)** to use. *(Skip the BYO activation below.)*
-  - **Bring-your-own:** provision a **new SCM tenant (TSG)** under your CSP and **activate Strata Cloud Manager Essentials** (there is an activation link in the *Cloud NGFW for AWS — Getting Started* guide; it is **not** automatic). Use the **same CSP** for SCM and for the Cloud NGFW you will create.
-  - SCM role with write access: **Superuser** or **Network Administrator**.
+- **AWS access** to the same account and region as Part 1 — your App Spokes are in **us-east-1**. Use the same SSO/CLI profile you used in Part 1.
+- **Strata Cloud Manager access**, one of:
+  - **Workshop:** your instructor provides a **CSP account and an SCM tenant (TSG)** to use — skip the BYO activation.
+  - **Bring-your-own:** provision a **new SCM tenant (TSG)** under your CSP and **activate Strata Cloud Manager Essentials** (there is an activation link in the *Cloud NGFW for AWS — Getting Started* guide; it is **not** automatic). Use the **same CSP** for SCM and for the Cloud NGFW you create.
+  - An SCM role with write access: **Superuser** or **Network Administrator**.
 
-> &#8505; **Tenant version:** any SCM/Cloud NGFW tenant created after ~July 2025 is a **"V2"** tenant and supports the simplified, SCM-initiated flow used here. A brand-new TSG is V2.
+> &#8505; **Tenant version matters.** Any SCM/Cloud NGFW tenant created after ~July 2025 is a **“V2”** tenant and supports the SCM-initiated flow used here (a brand-new TSG is V2). On V2 you *allowlist* AWS accounts for endpoints rather than fully onboarding them up front.
 
-> &#8505; **Free trial sizing:** the Cloud NGFW free trial covers **up to 2 firewalls / 100 GB / 30 days** *per tenant*. Because each participant uses their own TSG, one Cloud NGFW per person fits comfortably. No Marketplace subscription or credits are required to complete the core flows.
+> &#8505; **Free-trial sizing:** the Cloud NGFW free trial covers **up to 2 firewalls / 100 GB / 30 days, per tenant**. Because each participant uses their own TSG, one Cloud NGFW per person fits comfortably — no Marketplace subscription or credits needed for the core lab.
 
-## 4. Step 1 — Access SCM & enable the environment
+## 5. Step 1 — Access SCM
 
-- Log in to **Strata Cloud Manager** for your assigned/created tenant.
-- (BYO only) If this is a fresh tenant, **activate SCM Essentials** per the Getting Started guide link.
+- Log in to **Strata Cloud Manager** for your assigned (or newly created) tenant.
+- **(BYO only)** If this is a fresh tenant, **activate SCM Essentials** using the link in the Getting Started guide.
 
-> &#8505; The **first** Cloud NGFW resource you create automatically enables **SCM Pro features** for Cloud NGFW (this can take ~45–50 minutes the first time). You can continue with the next steps while it finishes.
+> &#8505; The **first** Cloud NGFW resource you create automatically upgrades the tenant to **SCM Pro features** for Cloud NGFW. This can take **~45–50 minutes** the first time — it runs in the background, so start the next step and continue; you do not need to wait for it.
 
-## 5. Step 2 — Deploy a Cloud NGFW resource from SCM (SCM-initiated)
+## 6. Step 2 — Deploy a Cloud NGFW resource from SCM
 
-> &#8505; In the **SCM-initiated** model you never touch the Cloud NGFW console or create a Cloud NGFW "tenant" yourself — SCM **auto-creates and manages** it and starts your free trial on first deploy.
+> &#8505; In the **SCM-initiated** model you never open a separate Cloud NGFW console and never create a Cloud NGFW “tenant” by hand. SCM provisions and manages it for you, and an SCM-managed firewall **cannot** be administered from the standalone Cloud NGFW console — SCM is the single pane of glass.
 
-- In SCM: **Configurations → Cloud NGFWs → Get Started → Create Cloud NGFW**.
-- Select **Amazon Web Services**.
-- Enter:
-  - **Name:** a unique name with **your prefix** (e.g. `ad-cngfw-inbound`) so it doesn't collide with other participants in a shared tenant.
-  - **Region:** **us-east-1** (must match your App Spoke VPCs from Part 1).
-  - **Availability Zones:** the AZs your spokes use (Part 1 uses AZ **a** and **c** → `use1-az*` IDs).
-- **Create and Deploy.**
+- In SCM, go to **Configurations → Cloud NGFWs → Get Started → Create Cloud NGFW**.
+- **Step 1 of the wizard — Select Cloud Provider:** choose **Amazon Web Services**, then Next.
 
-> &#8505; On the first firewall, the platform creates a hidden Cloud NGFW tenant, links it to SCM, and starts the **30-day free trial**. The resource will show **CREATING** for several minutes, then register automatically as a device in SCM.
+> &#8505; The first time, you will see a green banner: *“The environment setup has completed successfully.”* That one-time step initializes the AWS environment for your tenant.
 
-> &#10067; Where did the Cloud NGFW "tenant" come from, and why don't you log into a separate Cloud NGFW console in this model?
+- **Step 2 of the wizard — Create & Deploy Firewall.** Fill in **General Info**:
+  - **Firewall Name** — use a name with **your prefix** (e.g. `ad-cloudngfw-lab`) so it doesn't collide with other participants if you share a tenant.
+  - **Region** — **`us-east-1`**. *This must be the region where your Part 1 compute lives* (the App Spoke VPCs and their workloads).
+  - **Availability Zone IDs** — select the AZ **IDs** that correspond to the AZs your spoke subnets are in. For the Part 1 build that is **`us-east-1a` and `us-east-1c`** — but you must select them **by AZ ID**, which you have to look up (see the box below). In this lab account those IDs are **`use1-az6` (us-east-1a)** and **`use1-az2` (us-east-1c)**.
+- Under **Endpoint Management → Allowlisted AWS Accounts**, enter your **AWS Account ID** (the account where the spokes live). This allowlists the account so you can create Cloud NGFW endpoints in it in Step 4.
+- Click **Create and Deploy.** The firewall shows **CREATING** for several minutes, then registers automatically as a device in SCM. On the first firewall, SCM also creates the hidden Cloud NGFW tenant and starts your 30-day trial.
 
-## 6. Step 3 — Onboard the AWS account & permissions (endpoints, logging, decryption)
+---
 
-Cloud NGFW needs permission in your AWS account to create endpoints, write logs, and (later) decrypt.
+> &#8505; **Teaching moment — Availability Zone *IDs* vs Availability Zone *names*, and why GWLB cares.**
+>
+> An AZ **name** like `us-east-1a` is **not a fixed physical location — it is a per-account alias.** AWS randomly maps each account's AZ names to the underlying physical datacenters to spread load. So `us-east-1a` in *your* account may be a different physical AZ than `us-east-1a` in someone else's account.
+>
+> An AZ **ID** like `use1-az2` **is** the stable, physical identifier — `use1-az2` is the *same* datacenter for every AWS account. Services that span accounts use AZ IDs to talk about the same physical AZ unambiguously.
+>
+> Cloud NGFW is a **managed service running in Palo Alto's own AWS account.** For it to place its firewall and Gateway Load Balancer endpoints in the **same physical AZ as your workloads**, it asks you for **AZ IDs**, not names — your account's private name aliases would be meaningless to it.
+>
+> This matters for **any GWLB-based design (VM-Series GWLB *and* Cloud NGFW):** a Gateway Load Balancer endpoint is **AZ-bound**, and traffic should be inspected by an endpoint **in the same AZ as the source/destination subnet.** Mismatched AZs mean cross-AZ hairpinning — added latency, inter-AZ data-transfer charges, and (if the AZ has no endpoint) traffic that black-holes. So you must deploy Cloud NGFW into the **same physical AZs (by ID)** as the spoke subnets that will hold its endpoints.
+>
+> **Find your AZ IDs.** The name→ID mapping is specific to *your* account, so look it up — never assume `us-east-1a == use1-az1`:
+> ```
+> aws ec2 describe-availability-zones --region us-east-1 \
+>   --query 'AvailabilityZones[].{Name:ZoneName,Id:ZoneId}' --output table
+> ```
+> To see exactly which AZ ID each of your spoke endpoint subnets lives in:
+> ```
+> aws ec2 describe-subnets --region us-east-1 \
+>   --filters "Name=tag:Name,Values=*spoke*-vpc-gwlbe*" \
+>   --query 'Subnets[].{Name:Tags[?Key==`Name`]|[0].Value,AZ:AvailabilityZone,AZ_ID:AvailabilityZoneId}' --output table
+> ```
+> (In the AWS console, the **VPC → Subnets** list also shows an **“Availability Zone ID”** column.)
 
-- **Allowlist your AWS account for endpoints:** in the firewall's **Endpoint Management** page → **Manage Allowlist AWS Accounts** → add your AWS account ID. *(On V2 tenants, allowlisting — not full onboarding — is enough to create endpoints.)*
-- **Onboard the account for logging/decryption (cross-account roles):** SCM → **Cloud NGFW → Onboard AWS Account** → enter your **AWS Account ID** → **Download/Launch the CloudFormation template** → deploy it. The stack creates four cross-account roles (**Logging**, **Endpoint**, **Network Monitoring**, **Decryption**). Copy the four **Role ARNs** back into SCM → **Onboard**.
+> &#10067; In this lab account, `us-east-1a` maps to `use1-az6` and `us-east-1c` maps to `use1-az2` — *not* `use1-az1`/`use1-az3`. Why would picking AZ IDs by guessing the “a/b/c → az1/az2/az3” order break your endpoints?
 
-> &#9888; **Workshop / shared-account note:** the cross-account onboarding roles are **account-global IAM roles**. On a shared AWS account they are typically **pre-provisioned once by the instructor** (so everyone reuses them) — **do not** run the onboarding CFT yourself unless told to, or you may collide with existing `cloudngfw-cross-account-roles-*` roles. Confirm with your instructor whether onboarding is already done. (Allowlisting for endpoints in Step 6 is per-firewall and is still yours to do.)
+> &#10067; What happens to inbound traffic for a spoke subnet in an AZ where you did **not** create a Cloud NGFW endpoint?
 
-## 7. Step 4 — Create Cloud NGFW endpoints in your App Spoke VPCs
+## 7. Step 3 — Onboard the AWS account for logging & decryption
 
-Create one Cloud NGFW endpoint per AZ in each spoke, in the existing `gwlbe` subnets (they already route to the IGW).
+Allowlisting (Step 2) is enough to **create endpoints**. To let Cloud NGFW **write logs** and (later) **decrypt**, the account also needs a set of cross-account IAM roles.
 
-- In the firewall's **Endpoint Management**, use **service-managed** endpoints (recommended): set service-managed = **Yes**, then for each endpoint select:
-  - **VPC:** `spoke1-app-vpc` (then repeat for `spoke2-app-vpc`)
-  - **Subnet:** `spoke1-vpc-gwlbe1` (AZ a), then `spoke1-vpc-gwlbe2` (AZ c)
+- In SCM: **Cloud NGFW → Onboard AWS Account** → enter your **AWS Account ID** → **Download/Launch the CloudFormation template** → deploy it. The stack creates four cross-account roles — **Logging, Endpoint, Network Monitoring, Decryption** — then copy the four **Role ARNs** back into SCM → **Onboard**.
+
+> &#9888; **Workshop / shared-account note.** These onboarding roles are **account-global IAM roles**. On a shared AWS account they are normally **pre-provisioned once by the instructor** so everyone reuses them. **Do not run the onboarding CFT yourself** unless told to — you can collide with the existing `cloudngfw-cross-account-roles-*` roles. The **allowlisting** in Step 2 is per-firewall and is still yours to do. Confirm with your instructor whether account onboarding is already complete.
+
+> &#8505; Distinction worth internalizing: the **billing account** (what pays — Marketplace subscription or credits, not needed during the trial) is a *separate* concept from the **onboarded/allowlisted accounts** (the workload accounts the firewall is allowed to operate in). One billing account can cover many onboarded accounts.
+
+## 8. Step 4 — Create Cloud NGFW endpoints in your App Spoke VPCs
+
+Now place the actual Gateway Load Balancer endpoints — one per AZ in each spoke, in the existing `gwlbe` subnets (which already route to the IGW).
+
+- Open your firewall in SCM → **Endpoint Management**.
+- Create **service-managed** endpoints (recommended — Cloud NGFW creates and owns the VPC endpoint for you). For each, select:
+  - **VPC:** `spoke1-app-vpc`, then repeat for `spoke2-app-vpc`
+  - **Subnet:** `spoke1-vpc-gwlbe1` (AZ `us-east-1a` / `use1-az6`), then `spoke1-vpc-gwlbe2` (AZ `us-east-1c` / `use1-az2`)
   - *(Names carry your Part 1 `prefix_name_tag`, e.g. `ad-spoke1-vpc-gwlbe1`.)*
-- *(Alternative — customer-managed: AWS **VPC → Endpoints → Create endpoint → Find service by name** using the Cloud NGFW endpoint service name, select the spoke VPC + `gwlbe` subnet, Create.)*
+- **Record the resulting endpoint (`vpce-…`) IDs** for each spoke and AZ — you need them to fix routing in Step 5.
 
-> &#8505; One endpoint per subnet — you need a separate subnet per endpoint. You have `gwlbe1`/`gwlbe2` per spoke (one per AZ), so you get one Cloud NGFW endpoint per AZ.
+> &#8505; **One endpoint per subnet** — you cannot put two Cloud NGFW endpoints in the same subnet. You have one `gwlbe` subnet per AZ per spoke, which is exactly what you want: one endpoint per AZ. The AZ IDs you chose in Step 2 must include the AZ IDs of these subnets, or the endpoint cannot be created there.
 
-- **Record the new endpoint (`vpce-…`) IDs** for each spoke/AZ — you need them in the next step.
+> &#9888; **Service-managed vs customer-managed:** customer-managed endpoints (ones you create yourself in the AWS VPC console) **cannot be deleted** afterward. Prefer **service-managed** for the lab so cleanup is simple.
 
-> &#9888; Customer-managed endpoints **cannot be deleted** once created — prefer service-managed for the lab.
+## 9. Step 5 — Migrate inbound traffic to Cloud NGFW
 
-## 8. Step 5 — Migrate inbound traffic to Cloud NGFW (console)
+This is the heart of the lab: re-point the spoke **inbound** routes from the VM-Series GWLB endpoints (Part 1) to the new Cloud NGFW endpoints. You'll do it **in the AWS console** — the same way you built the inbound routing in Part 1 §4.16 — so it doesn't disturb your Part 1 Terraform state, and so you can *watch* the inspection path move from one engine to the other.
 
-You will re-point the spoke **inbound** routes from the VM-Series GWLB endpoints (Part 1) to the new Cloud NGFW endpoints. We do this **in the console** (as in Part 1 §4.16) so it doesn't disturb your Part 1 Terraform state — and so you can *see* the inspection path move from one engine to the other.
-
-> &#8505; Filter the VPC Dashboard by your spoke VPC. All route-table names below carry your `prefix_name_tag`.
+> &#8505; Filter the VPC Dashboard by your spoke VPC. All route-table names carry your `prefix_name_tag`. You are only changing **targets** on existing routes — swapping the VM-Series endpoint for the matching Cloud NGFW endpoint **in the same AZ**.
 
 **Spoke1 (`spoke1-app-vpc`, 10.200.0.0/23):**
 
 - Route table `spoke1-vpc-igw-edge`:
-  - `10.200.0.16/28` → **change target** to the Cloud NGFW endpoint in **AZ a** (was the VM-Series `spoke1-inbound1` GWLBE)
-  - `10.200.1.16/28` → Cloud NGFW endpoint in **AZ c**
-- Route table `spoke1-vpc-alb1`: `0.0.0.0/0` → Cloud NGFW endpoint **AZ a**
-- Route table `spoke1-vpc-alb2`: `0.0.0.0/0` → Cloud NGFW endpoint **AZ c**
-- Route tables `spoke1-vpc-gwlbe1/2`: **leave as-is** (`0.0.0.0/0` → IGW).
+  - `10.200.0.16/28` → Cloud NGFW endpoint in **AZ `us-east-1a` (`use1-az6`)** *(was the VM-Series `spoke1-inbound1` endpoint)*
+  - `10.200.1.16/28` → Cloud NGFW endpoint in **AZ `us-east-1c` (`use1-az2`)**
+- Route table `spoke1-vpc-alb1`: `0.0.0.0/0` → Cloud NGFW endpoint **AZ `us-east-1a`**
+- Route table `spoke1-vpc-alb2`: `0.0.0.0/0` → Cloud NGFW endpoint **AZ `us-east-1c`**
+- Route tables `spoke1-vpc-gwlbe1/2`: **leave unchanged** (`0.0.0.0/0` → IGW — the Cloud NGFW endpoint lives here and needs the IGW path).
 
-**Spoke2 (`spoke2-app-vpc`, 10.250.0.0/23):** repeat with `10.250.0.16/28` / `10.250.1.16/28` and the spoke2 Cloud NGFW endpoints.
+**Spoke2 (`spoke2-app-vpc`, 10.250.0.0/23):** repeat with `10.250.0.16/28` / `10.250.1.16/28` and the spoke2 Cloud NGFW endpoints (matched by AZ).
 
-**Do not touch** the `web1`/`web2` route tables or the Security/TGW routing — outbound and east/west stay on the VM-Series.
+**Do not touch** the `web1`/`web2` route tables or any Security-VPC / Transit Gateway routing — outbound and east/west stay on the VM-Series.
 
-> &#9888; After re-pointing, inbound traffic is now sent to Cloud NGFW, which **denies by default** — your apps will be unreachable until you add an allow policy in the next step. That's expected.
+> &#9888; Match endpoints to AZs carefully. The AZ-1 route must point at the AZ-1 (`use1-az6`) endpoint and the AZ-2 route at the AZ-2 (`use1-az2`) endpoint. Crossing them sends traffic across AZs and can break the return path.
 
-> &#10067; What is still being inspected by VM-Series at this point, and what moved to Cloud NGFW?
+> &#9888; After re-pointing, inbound is now sent to Cloud NGFW, which **denies by default** — your apps will be unreachable until you add an allow rule in Step 6. That is expected.
 
-## 9. Step 6 — Author SCM policy & test inbound
+> &#10067; At this exact moment (routes flipped, no policy yet), which traffic is still being inspected by VM-Series, and which by Cloud NGFW?
 
-Cloud NGFW policy in the SCM-managed model is authored in **SCM-native** security rules (in a **folder**), not rulestacks.
+## 10. Step 6 — Author SCM policy & test inbound
 
-- **Create a folder:** SCM → **Workflows → NGFW Setup → Folder Management → Add Folder** (e.g. `ad-cngfw-lab`).
-- **Place your firewall in the folder:** **Workflows → NGFW Setup → Device Management → Cloud NGFWs**, move your firewall into the folder.
-- **Author the rule:** **Manage → Configuration → NGFW and Prisma Access → Configuration Scope =** your folder → **Security Services → Security Policy → Add Rule**:
-  - **Source Zone:** `any` &nbsp; **(required)**
-  - **Source Address:** `any` (or your client public IP)
+Cloud NGFW policy in the SCM-managed model lives in **SCM-native security rules**, organized in a **folder** — not in Cloud NGFW rulestacks.
+
+- **Create a folder:** SCM → **Workflows → NGFW Setup → Folder Management → Add Folder** (e.g. `ad-cloudngfw-lab`).
+- **Place your firewall in the folder:** **Workflows → NGFW Setup → Device Management → Cloud NGFWs**, and move your firewall into the folder.
+- **Author the rule:** **Manage → Configuration → NGFW and Prisma Access → Configuration Scope =** your folder → **Security Services → Security Policy → Add Rule:**
+  - **Source Zone:** `any` &nbsp; **(required — see warning)**
+  - **Source Address:** `any` (or your client's public IP)
   - **Destination Zone:** `any` &nbsp; **(required)**
   - **Destination Address:** your app subnets (`10.200.0.16/28`, `10.200.1.16/28`, `10.250.0.16/28`, `10.250.1.16/28`)
   - **Application:** `web-browsing`, `ssl`
   - **Action:** `Allow`, **Log** at session end
 - **Push** the configuration.
 
-> &#9888; **Zone gotcha:** SCM-managed Cloud NGFW rules **must use `any` for source/destination zone**. If you set a real zone, traffic is **silently dropped**.
+> &#9888; **Zone gotcha:** SCM-managed Cloud NGFW rules **must use `any` for source and destination zone.** If you set a real zone, traffic is **silently dropped** with no obvious error.
 
 **Test:**
-- From your browser, hit the spoke app load-balancer FQDNs (the `app_nlbs_dns` outputs from Part 1).
-- You should get a response — now inspected by **Cloud NGFW**.
+
+- From your browser, hit the spoke application load-balancer FQDNs (the `app_nlbs_dns` outputs from Part 1).
+- You should get a response — now inspected by **Cloud NGFW** instead of the VM-Series.
 - **View logs:** SCM → **Configurations → Cloud NGFWs →** your firewall → **View Logs** (opens the **Log Viewer**, filtered to your firewall).
 
-> &#10067; Compare the inbound logs here to the VM-Series traffic logs in Panorama from Part 1. What's the same, what's different?
+> &#10067; Compare the inbound session logs here with the VM-Series traffic logs in Panorama from Part 1. What is the same, and what is different about how each engine is managed and logged?
 
-## 10. Step 7 — Decryption & advanced features (later)
+## 11. Step 7 — Decryption & advanced features (later)
 
-Once basic inbound flows work, layer on advanced controls in SCM:
+Once the basic inbound flow works, layer on advanced controls in SCM — threat prevention / URL filtering / WildFire profiles attached to your rule, and **decryption** policy + profile.
 
-- **Threat prevention / URL filtering / WildFire** profiles attached to your security rule.
-- **Decryption** policy + profile for inbound/forward-proxy inspection.
+> &#9888; Under SCM-managed Cloud NGFW, some capabilities differ from native rulestacks at the time of writing — e.g. **Cloud certificate, DLP, and tag-based (DAG) policy are not supported** via SCM management. Verify current support in the *Cloud NGFW for AWS — Administration* guide before building the decryption exercise; certificate handling for decryption may require the native/rulestack path.
 
-> &#9888; Under SCM-managed Cloud NGFW, some features differ from native rulestacks at time of writing — e.g. **Cloud certificate, DLP, and tag-based (DAG) policy are not supported** via SCM management. Verify current support in the *Cloud NGFW for AWS — Administration* guide before building the decryption exercise; certificate handling for decryption may require the native/rulestack path.
+*(Detailed decryption steps will be added once the basic-flow lab is validated end-to-end.)*
 
-*(Detailed decryption steps to be added once the basic-flow lab is validated.)*
+## 12. Cleanup
 
-## 11. Cleanup
+- Re-point the spoke inbound routes back to the VM-Series endpoints (reverse of Step 5), **or** plan to `terraform destroy` the Part 1 stack afterward.
+- In SCM, delete the Cloud NGFW **endpoints** (disassociate the subnets) and the **firewall resource**. *(Service-managed endpoints can be removed this way; customer-managed endpoints cannot be deleted.)*
 
-- Re-point the spoke inbound routes back to the VM-Series endpoints (reverse of Step 5) **or** plan to `terraform destroy` Part 1 afterward.
-- Delete the Cloud NGFW **endpoints** and **resource** in SCM. *(Service-managed endpoints can be removed by disassociating the subnet; customer-managed endpoints cannot be deleted.)*
-
-> &#9888; If you ever associate Marketplace PAYG billing and then **unsubscribe with no credits**, the platform **deletes your Cloud NGFW resources**. During the free trial this isn't a concern.
-
-## Appendix — provisioning, integration & billing models
-
-There are several ways to provision and manage Cloud NGFW for AWS (SCM-initiated, AWS-Marketplace-initiated, AWS Firewall Manager) and several billing models (free trial, Marketplace PAYG, credits). See the companion slide deck **“Cloud NGFW for AWS — Provisioning & Billing”** for the full picture. This lab uses **SCM-initiated provisioning + free-trial billing + SCM-native policy**.
+> &#9888; If you ever associate Marketplace PAYG billing and then **unsubscribe with no credits**, the platform **deletes your Cloud NGFW resources**. During the free trial this is not a concern.
 
 ## References
 
-- *Cloud NGFW for AWS — Getting Started* (SCM-initiated onboarding, tenant V2, free trial)
+- *Cloud NGFW for AWS — Getting Started* (SCM-initiated onboarding, tenant V2, free trial, AZ IDs)
 - *Cloud NGFW for AWS — Administration* (SCM policy management, account onboarding, endpoints, logging)
 - *Cloud NGFW for AWS — Deployment* (Distributed Inbound architecture)
+- AWS — *Availability Zone IDs for your resources* (AZ name vs AZ ID)
 
-> &#8505; SCM console navigation evolves — if a menu path differs, consult the current *Administration* guide. This addendum was written against the docs current as of the date above.
+> &#8505; SCM console navigation evolves — if a menu path differs from what you see, consult the current *Administration* guide. This addendum was written and screenshot-verified against the console as of the date above.
