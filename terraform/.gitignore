@@ -27,14 +27,9 @@ override.tf.json
 
 # Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
 # example: *tfplan*
-=======
-.history
-**/.terraform/*
-*.DS_Store
 
-# .tfstate files
-*.tfstate
-*.tfstate.*
+.history
+*.DS_Store
 
 my-todo.md
 
@@ -42,3 +37,10 @@ sy-vmseries/*
 
 #ignore vscode generated workspace files
 .vscode
+
+# Provider lock files (not committed per project convention)
+.terraform.lock.hcl
+
+# Local scratch (plan output, backups)
+*.plan
+*.bak
