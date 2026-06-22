@@ -250,7 +250,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" Name
 aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" Name=product-code,Values=b261y39exndwe1ltro1tqpeog --region us-east-1 --query 'reverse(sort_by(Images,&CreationDate))[].[ImageId,Name]' --output text
 ```
 
-- We see that the `11.2.11` AMI is available (named `PA-VM-AWS-11.2.11-prod-v7k5pwjb72ea2`), which is what this lab targets. Note newer AI Runtime Security images use the `PA-AI-Runtime-Security-AWS-<version>-prod-v7k5pwjb72ea2` naming.
+- This returns the available AI Runtime Security images. The lab selects the **latest** one automatically (currently `AI-Runtime-Security-AWS-12.1.4-h5-prod-v7k5pwjb72ea2`). Note the AMI name varies between the legacy `PA-VM-AWS-<version>-prod-...` and the newer `PA-AI-Runtime-Security-AWS-<version>-prod-...` forms.
 
 
 > &#10067; What is the BYOL Marketplace AMI ID for 10.1.8 in the us-east-1 region?
@@ -273,7 +273,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" Name
 >
 > `byol` is the classic VM-Series image (also flex-licensed). The `payg*` images come pre-licensed and are billed hourly by AWS, which is good for short-lived or autoscaling capacity but generally costlier over time.
 
-> &#8505; The Terraform looks up the AMI by `product-code` plus the name filter `PA-VM-AWS-${fw_version}*`. The AI Runtime Security `11.2.11` image is named `PA-VM-AWS-11.2.11-prod-v7k5pwjb72ea2`, so this filter matches it directly. Other AIRS versions use the `PA-AI-Runtime-Security-AWS-<version>-prod-...` naming and would require adjusting the name filter, so leave `fw_version = "11.2.11"` unless you also update that filter.
+> &#8505; For `airs`, the Terraform filters by `product-code` only and uses `most_recent` to select the **latest** AI Runtime Security image automatically (the AMI name varies between `PA-VM-AWS-*` and `PA-AI-Runtime-Security-AWS-*`, so `fw_version` is not used for AIRS). For `byol`/`payg`, the lookup still pins the version via the `PA-VM-AWS-${fw_version}*` name filter.
 
 > &#8505; Not needed for this lab, but when deploying VM-Series from EC2 console, it will default to the latest version. You can instead go to the AWS Marketplace to subscribe to the offering and select previous versions to deploy the desired AMI
 > 
