@@ -187,21 +187,21 @@ The `awsstudent` user and its `default_policy` Deny are QwikLabs-only. Your SSO 
 
 > &#8505; The QwikLabs accounts should already be subscribed to these offers, but we will need to verify and correct if required.
 
+> &#8505; This lab deploys the **AI Runtime Security** VM-Series image (Palo Alto Networks, Product ID `prod-v7k5pwjb72ea2`). It is a flex-credit / BYOL-style listing: the AWS Marketplace contract total is **$0.00** and you license the firewalls with Software NGFW (flex) credits via the deployment profile in [4.7.1](#471-provision-panorama-licensing-with-software-ngfw-credits). (The classic `VM-Series Next-Generation Firewall (BYOL)` listing still exists, but this lab uses AI Runtime Security.)
 
 - Search for `AWS Marketplace Subscriptions` in top search bar
 - Select Discover Products from left menu -> Filter for Publisher "Palo Alto Networks". Explore the various offerings available
 - Select Manage Subscriptions from the left menu
 - Verify that there are active subscriptions for both of:
-  - `VM-Series Next-Generation Firewall (BYOL)`
+  - `AI Runtime Security` (Palo Alto Networks) - the VM-Series image this lab deploys
   - `Palo Alto Networks Panorama`
 
 <img src="https://user-images.githubusercontent.com/43679669/210279563-6e313499-41fb-42b3-b516-636df544c6e6.gif" width=50% height=50%>
 
 - If you have both subscriptions, continue to the next section
-- If you are missing either subscription, select `Discover Products` and search for `palo alto`
-- Select `VM-Series Next-Generation Firewall (BYOL)` or `Palo Alto Networks Panorama` as needed
-- Select Purchase Options
-- Select Subscribe to confirm
+- If you are missing either subscription, select `Discover Products` and search for `AI Runtime Security` (or `palo alto`)
+- Select `AI Runtime Security` or `Palo Alto Networks Panorama` as needed
+- Select `Continue to Subscribe` / `Purchase Options`, review the pricing terms, and click **Accept Terms** to subscribe (the AI Runtime Security contract total is **$0.00**; flex credits cover the license)
 - Allow a few moments for the Subscription to be processed
 - Repeat for the other Subscription if needed
 - Notify lab instructor if you have any issues
@@ -236,10 +236,10 @@ You can skip CloudShell and run everything from your **local machine** (VS Code 
 
 > &#8505; We will use us-west-2 for example of using this search and answering the questions, but your actual deployment for this lab may be in a different region.
 
-- In the cloud console, enter:
+- In the cloud console, enter (this filters on the **AI Runtime Security** product code; the VM-Series deploy region for this lab is `us-east-1`):
 
 ```
-aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-11* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2
+aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" Name=product-code,Values=b261y39exndwe1ltro1tqpeog --region us-east-1
 ```
 
 - Press space a few times to page down
@@ -247,10 +247,10 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 - Try using the following query to control what data is returned
 
 ```
-aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --filters Name=name,Values=PA-VM-AWS-11* Name=product-code,Values=6njl1pau431dv1qxipg63mvah --region us-west-2 --query 'Images[].[ImageId,Name]'
+aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" Name=product-code,Values=b261y39exndwe1ltro1tqpeog --region us-east-1 --query 'reverse(sort_by(Images,&CreationDate))[].[ImageId,Name]' --output text
 ```
 
-- We see that `11.2.0` AMI is available, which is what we are targeting for this deployment
+- We see that the `11.2.11` AMI is available (named `PA-VM-AWS-11.2.11-prod-v7k5pwjb72ea2`), which is what this lab targets. Note newer AI Runtime Security images use the `PA-AI-Runtime-Security-AWS-<version>-prod-v7k5pwjb72ea2` naming.
 
 
 > &#10067; What is the BYOL Marketplace AMI ID for 10.1.8 in the us-east-1 region?
@@ -261,25 +261,19 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" --fi
 
 > &#8505;  This terraform deployment will look up the AMI ID to use for the deployment based on the variable `fw_version`. New AMIs are not always published for each minor release. Therefore, it is a good idea to verify what version AMI most closely matches your target version.
 
-> &#8505; product-code is a global value that correlates with Palo Alto Networks marketplace offerings This is global and the same across all regions.
+> &#8505; product-code is a global value that correlates with Palo Alto Networks marketplace offerings. It is the same across all regions. The Terraform selects the AMI from `fw_license_type` using this map (`terraform/modules/vmseries/variables.tf`):
 >
-> 
 >```
->   "byol"  = "6njl1pau431dv1qxipg63mvah"
->   "payg1" = "e9yfvyj3uag5uo5j2hjikv74n"
->   "payg2" = "hd44w1chf26uv4p52cdynb2o"
+>   "byol"  = "6njl1pau431dv1qxipg63mvah"   # VM-Series Next-Generation Firewall (BYOL)
+>   "payg1" = "6kxdw3bbmdeda3o6i1ggqt4km"   # PAYG, Advanced Threat Prevention
+>   "payg2" = "806j2of0qy5osgjjixq9gqc6g"   # PAYG, Advanced Security subscriptions
+>   "airs"  = "b261y39exndwe1ltro1tqpeog"   # AI Runtime Security (prod-v7k5pwjb72ea2)  <-- this lab
 >```
-> byol will be the most common. You will need to obtain [Software Firewall Flex Credits](https://www.paloaltonetworks.com/resources/tools/ngfw-credits-estimator) to license these after deployment.
-> 
-> The other image types are "Pay as you go" and come pre-licensed and are billed by AWS. These will generally be more costly to run over long periods than BYOL. PAYG is good for certain scenarios such as autoscaling or when you need to add capacity for a short period.
-> 
-> payg1 is `VM-Series Next-Gen Virtual Firewall w/Advanced Threat Prevention (PAYG)` in the marketplace and only has advanced threat subscription.
-> 
-> payg2 is `VM-Series Next-Gen Virtual Firewall w/ Advanced Security Subs (PAYG)` in the marketplace and has additional security subscriptions enabled (Adv URL, Adv Wildfire, DNS, GlobalProtect)
-> 
-> You can also use the [EC2 web console](https://us-west-2.console.aws.amazon.com/ec2/home?region=us-west-2#Images:visibility=public-images;productCode=6njl1pau431dv1qxipg63mvah;v=3;case=tags:false%5C,client:false;regex=tags:false%5C,client:false) to search for available images based on product code or AMI name.
+> This lab sets `fw_license_type = "airs"` (in `security-vpc-east1.auto.tfvars`), so it deploys the **AI Runtime Security** image and licenses it with flex credits via the deployment profile in 4.7.1. You will need [Software NGFW Flex Credits](https://www.paloaltonetworks.com/resources/tools/ngfw-credits-estimator) to license the firewalls after deployment.
+>
+> `byol` is the classic VM-Series image (also flex-licensed). The `payg*` images come pre-licensed and are billed hourly by AWS, which is good for short-lived or autoscaling capacity but generally costlier over time.
 
-> &#8505; The name tag of the image should be standard and can be used for the filter. For example `PA-VM-AWS-10.1*`, `PA-VM-AWS-9.1.3*`, `PA-VM-AWS-10*`. This is the same logic the terraform will use to lookup the AMI based on the `fw_version` variable.
+> &#8505; The Terraform looks up the AMI by `product-code` plus the name filter `PA-VM-AWS-${fw_version}*`. The AI Runtime Security `11.2.11` image is named `PA-VM-AWS-11.2.11-prod-v7k5pwjb72ea2`, so this filter matches it directly. Other AIRS versions use the `PA-AI-Runtime-Security-AWS-<version>-prod-...` naming and would require adjusting the name filter, so leave `fw_version = "11.2.11"` unless you also update that filter.
 
 > &#8505; Not needed for this lab, but when deploying VM-Series from EC2 console, it will default to the latest version. You can instead go to the AWS Marketplace to subscribe to the offering and select previous versions to deploy the desired AMI
 > 

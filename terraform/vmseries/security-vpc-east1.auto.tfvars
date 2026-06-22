@@ -6,8 +6,8 @@ prefix_name_tag  = "CHANGEME-"
 region           = "us-east-1"
 peer_region      = "us-west-2"
 fw_instance_type = "m5.xlarge"
-fw_license_type  = "byol"
-fw_version       = "11.1.4-h7" //Make sure the version here matches a marketplace AMI
+fw_license_type  = "airs" // AI Runtime Security image (prod-v7k5pwjb72ea2); subscribe in 4.3, license via flex-credit deployment profile (4.7.1)
+fw_version       = "11.2.11" //Make sure the version here matches a marketplace AMI (AIRS min is 11.2.5; 11.2.11 is the published AIRS image)
 # >>> Set this to YOUR key pair name. The key pair must exist in us-east-1 (EC2 Console -> Key Pairs).
 # >>> Leave as "" ONLY if running on QwikLabs (auto-detects the qwikLABS* key).
 vmseries_ssh_key_name     = ""

@@ -137,6 +137,7 @@ variable "fw_license_type_map" {
     "byol"  = "6njl1pau431dv1qxipg63mvah"
     "payg1" = "6kxdw3bbmdeda3o6i1ggqt4km"
     "payg2" = "806j2of0qy5osgjjixq9gqc6g"
+    "airs"  = "b261y39exndwe1ltro1tqpeog" # AI Runtime Security (prod-v7k5pwjb72ea2); licensed via flex-credit deployment profile
   }
 }
 
