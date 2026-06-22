@@ -187,21 +187,21 @@ The `awsstudent` user and its `default_policy` Deny are QwikLabs-only. Your SSO 
 
 > &#8505; The QwikLabs accounts should already be subscribed to these offers, but we will need to verify and correct if required.
 
-> &#8505; This lab deploys the **AI Runtime Security** VM-Series image (Palo Alto Networks, Product ID `prod-v7k5pwjb72ea2`). It is a flex-credit / BYOL-style listing: the AWS Marketplace contract total is **$0.00** and you license the firewalls with Software NGFW (flex) credits via the deployment profile in [4.7.1](#471-provision-panorama-licensing-with-software-ngfw-credits). (The classic `VM-Series Next-Generation Firewall (BYOL)` listing still exists, but this lab uses AI Runtime Security.)
+> &#8505; By default this lab deploys the **VM-Series Next-Generation Firewall (BYOL)** image and licenses it with Software NGFW (flex) credits via the deployment profile in [4.7.1](#471-provision-panorama-licensing-with-software-ngfw-credits). If you set `fw_license_type = "airs"` in the tfvars (see [4.5](#45-search-available-vm-series-images-amis)), you instead deploy the **AI Runtime Security** image (Product ID `prod-v7k5pwjb72ea2`, also flex-licensed). Subscribe to whichever one you will deploy.
 
 - Search for `AWS Marketplace Subscriptions` in top search bar
 - Select Discover Products from left menu -> Filter for Publisher "Palo Alto Networks". Explore the various offerings available
 - Select Manage Subscriptions from the left menu
-- Verify that there are active subscriptions for both of:
-  - `AI Runtime Security` (Palo Alto Networks) - the VM-Series image this lab deploys
+- Verify that there are active subscriptions for:
+  - `VM-Series Next-Generation Firewall (BYOL)` (default), **or** `AI Runtime Security` if you chose `fw_license_type = "airs"`
   - `Palo Alto Networks Panorama`
 
 <img src="https://user-images.githubusercontent.com/43679669/210279563-6e313499-41fb-42b3-b516-636df544c6e6.gif" width=50% height=50%>
 
 - If you have both subscriptions, continue to the next section
-- If you are missing either subscription, select `Discover Products` and search for `AI Runtime Security` (or `palo alto`)
-- Select `AI Runtime Security` or `Palo Alto Networks Panorama` as needed
-- Select `Continue to Subscribe` / `Purchase Options`, review the pricing terms, and click **Accept Terms** to subscribe (the AI Runtime Security contract total is **$0.00**; flex credits cover the license)
+- If you are missing a subscription, select `Discover Products` and search for `palo alto`
+- Select `VM-Series Next-Generation Firewall (BYOL)` (or `AI Runtime Security`), or `Palo Alto Networks Panorama` as needed
+- Select `Continue to Subscribe` / `Purchase Options`, review the pricing terms, and click **Accept Terms** to subscribe (BYOL and AI Runtime Security are both **$0.00** contracts; flex credits cover the license)
 - Allow a few moments for the Subscription to be processed
 - Repeat for the other Subscription if needed
 - Notify lab instructor if you have any issues
@@ -236,21 +236,13 @@ You can skip CloudShell and run everything from your **local machine** (VS Code 
 
 > &#8505; We will use us-west-2 for example of using this search and answering the questions, but your actual deployment for this lab may be in a different region.
 
-- In the cloud console, enter (this filters on the **AI Runtime Security** product code; the VM-Series deploy region for this lab is `us-east-1`):
+- In the cloud console, enter (this lists the **BYOL** 11.2.x images, the lab default; the VM-Series deploy region for this lab is `us-east-1`):
 
 ```
-aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" Name=product-code,Values=b261y39exndwe1ltro1tqpeog --region us-east-1
+aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" Name=product-code,Values=6njl1pau431dv1qxipg63mvah Name=name,Values=PA-VM-AWS-11.2* --region us-east-1 --query 'reverse(sort_by(Images,&CreationDate))[].[ImageId,Name]' --output text
 ```
 
-- Press space a few times to page down
-
-- Try using the following query to control what data is returned
-
-```
-aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" Name=product-code,Values=b261y39exndwe1ltro1tqpeog --region us-east-1 --query 'reverse(sort_by(Images,&CreationDate))[].[ImageId,Name]' --output text
-```
-
-- This returns the available AI Runtime Security images. The lab selects the **latest** one automatically (currently `AI-Runtime-Security-AWS-12.1.4-h5-prod-v7k5pwjb72ea2`). Note the AMI name varies between the legacy `PA-VM-AWS-<version>-prod-...` and the newer `PA-AI-Runtime-Security-AWS-<version>-prod-...` forms.
+- The lab defaults to `fw_version = "11.2.12"` (the latest 11.2 BYOL image). To list **AI Runtime Security** images instead, swap the product code to `b261y39exndwe1ltro1tqpeog`; their names vary between `PA-VM-AWS-<ver>-prod-...` and `PA-AI-Runtime-Security-AWS-<ver>-prod-...`, and a good 11.2 choice is `11.2.11`.
 
 
 > &#10067; What is the BYOL Marketplace AMI ID for 10.1.8 in the us-east-1 region?
@@ -267,13 +259,13 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" Name
 >   "byol"  = "6njl1pau431dv1qxipg63mvah"   # VM-Series Next-Generation Firewall (BYOL)
 >   "payg1" = "6kxdw3bbmdeda3o6i1ggqt4km"   # PAYG, Advanced Threat Prevention
 >   "payg2" = "806j2of0qy5osgjjixq9gqc6g"   # PAYG, Advanced Security subscriptions
->   "airs"  = "b261y39exndwe1ltro1tqpeog"   # AI Runtime Security (prod-v7k5pwjb72ea2)  <-- this lab
+>   "airs"  = "b261y39exndwe1ltro1tqpeog"   # AI Runtime Security (prod-v7k5pwjb72ea2)
 >```
-> This lab sets `fw_license_type = "airs"` (in `security-vpc-east1.auto.tfvars`), so it deploys the **AI Runtime Security** image and licenses it with flex credits via the deployment profile in 4.7.1. You will need [Software NGFW Flex Credits](https://www.paloaltonetworks.com/resources/tools/ngfw-credits-estimator) to license the firewalls after deployment.
+> This lab **defaults to `fw_license_type = "byol"` and `fw_version = "11.2.12"`** (set in `security-vpc-east1.auto.tfvars`). To deploy AI Runtime Security instead, set `fw_license_type = "airs"` and an AIRS `fw_version` such as `11.2.11`. Either way you license the firewalls with [Software NGFW Flex Credits](https://www.paloaltonetworks.com/resources/tools/ngfw-credits-estimator) via the deployment profile in 4.7.1.
 >
-> `byol` is the classic VM-Series image (also flex-licensed). The `payg*` images come pre-licensed and are billed hourly by AWS, which is good for short-lived or autoscaling capacity but generally costlier over time.
+> The `payg*` images come pre-licensed and are billed hourly by AWS, which is good for short-lived or autoscaling capacity but generally costlier over time.
 
-> &#8505; For `airs`, the Terraform filters by `product-code` only and uses `most_recent` to select the **latest** AI Runtime Security image automatically (the AMI name varies between `PA-VM-AWS-*` and `PA-AI-Runtime-Security-AWS-*`, so `fw_version` is not used for AIRS). For `byol`/`payg`, the lookup still pins the version via the `PA-VM-AWS-${fw_version}*` name filter.
+> &#9888; **`fw_version` must be `<=` your Panorama version.** This lab's Panorama runs **11.2.x**, so keep the firewalls on 11.2.x (byol `11.2.12`, airs `11.2.11`). The Terraform pins the version by AMI name: `PA-VM-AWS-${fw_version}*` for byol/payg, and a version-segment match for `airs` (whose images use either the `PA-VM-AWS-*` or `PA-AI-Runtime-Security-AWS-*` naming).
 
 > &#8505; Not needed for this lab, but when deploying VM-Series from EC2 console, it will default to the latest version. You can instead go to the AWS Marketplace to subscribe to the offering and select previous versions to deploy the desired AMI
 > 
@@ -414,17 +406,19 @@ terraform apply
 
 ### 4.8.1. Apply Your New Serial Number (Prepped Image)
 
-> &#9888; **Do this if you provisioned a new Panorama serial/license in [4.7.1](#471-provision-panorama-licensing-with-software-ngfw-credits).** Panorama and the managed firewalls cannot obtain device certificates until the serial number is set, so this is required for licensing and for the VM-Series to connect. The pre-baked image ships with an existing serial and a log collector bound to it, and you cannot change the serial while that collector config is in place. Order matters: clear the collector (including a reboot) **before** you set the new serial.
+> &#9888; **Do this if you provisioned a new Panorama serial/license in [4.7.1](#471-provision-panorama-licensing-with-software-ngfw-credits).** Panorama and the managed firewalls cannot obtain device certificates until the serial number is set, so this is required for licensing and for the VM-Series to connect. The pre-baked image manages **itself** as a log collector keyed by its *current* serial, and you cannot change the serial while that managed-collector config is in place, so remove it first.
 
-1. **Remove the log collector config.** Panorama > Collector Groups, delete the existing collector group. Then Panorama > Managed Collectors, delete the existing managed collector. **Commit to Panorama.**
-2. **Reboot Panorama to clear the collector.** Panorama > Setup > Operations > **Reboot Panorama**. Wait for it to come back up before continuing.
-3. **Set the new serial number.** Panorama > Setup > Management, set the **Serial Number** to the one you provisioned in 4.7.1. (No reboot is needed after setting it.)
-4. **Upgrade Panorama to the latest 12.1.x.** Panorama > Software, Check Now, download, and install the latest **12.1.x** release (this reboots Panorama).
+1. **Remove the log collector config.** Panorama > Collector Groups -> delete the existing collector group. Then Panorama > Managed Collectors -> delete the existing managed collector (it is named with the Panorama's *current* serial). **Commit to Panorama.**
+2. **Set the new serial number.** Panorama > Setup > Management -> set the **Serial Number** to the one you provisioned in 4.7.1. This restarts the management server (~1-2 min); a full reboot is **not** required once the collector above is removed and committed.
+3. **License + device certificate.** Run a license fetch (Panorama > Licenses, or CLI `request license fetch`) so the new serial pulls its entitlements and checks in. In the CSP, confirm the serial registered and generate a **device-certificate one-time password (OTP)**, then fetch the cert on Panorama (Panorama > Setup > Management > **Device Certificate** -> Get Certificate, using the OTP). Status should read *"Successfully fetched Device Certificate."*
+4. **Upgrade Panorama to the latest 11.2.x.** Panorama > Software -> Check Now, download, and install the latest **11.2.x** release, then reboot. Keep Panorama on the same train as your firewalls (see the version rule in [4.5](#45-search-available-vm-series-images-amis)).
 5. **Rebuild the log collector.** Re-add the managed collector (paste the new S/N, add **Disk A**), then re-create the collector group **named `default`** (the name matters) with this Panorama as a member. Do a **targeted push** to the `default` collector group and confirm it shows **In sync** (Panorama > Managed Collectors).
 
 > &#8505; The collector group must be named **`default`** because the VM-Series bootstrap intentionally does **not** set `cgname`, so the firewalls fall back to the `default` collector group. (Setting a collector-group name in bootstrap has historically been buggy with the licensing plugin, so we omit it.)
 
-> &#8505; Steps 1 and 5 overlap with the detailed collector setup in 4.8.2 below; the difference here is doing it around the serial-number change, reboot, and upgrade. (Basics for now; we will flesh this out after testing.)
+> &#9888; **Do not try to take this pre-baked Panorama to 12.1.x.** Its `/opt/panrepo` partition is too small to ingest the 12.1 base image once the running 11.2 image and its base are on disk (neither can be purged), so the 12.1 download fails post-processing. Keep this Panorama on **11.2.x**. If you specifically need a 12.1 Panorama, use the optional standalone path: [docs/optional-12.1-panorama.md](docs/optional-12.1-panorama.md).
+
+> &#8505; Steps 1 and 5 overlap with the detailed collector setup in 4.8.2 below; the difference here is doing it around the serial-number change and upgrade.
 
 ### 4.8.2. Prepare Panorama for Logging and Bootstrapping
 
