@@ -62,6 +62,8 @@ Use the corresponding [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8
   - [4.7. Deploy Panorama and TGW Infrastructure with Terraform](#47-deploy-panorama-and-tgw-infrastructure-with-terraform)
     - [4.7.1. Provision Panorama Licensing with Software NGFW Credits](#471-provision-panorama-licensing-with-software-ngfw-credits)
   - [4.8. Prepare Panorama](#48-prepare-panorama)
+    - [4.8.1. Apply Your New Serial Number — Prepped Image](#481-apply-your-new-serial-number--prepped-image)
+    - [4.8.2. Prepare Panorama for Logging and Bootstrapping](#482-prepare-panorama-for-logging-and-bootstrapping)
   - [4.9. Update Deployment Values in tfvars for VM-series](#49-update-deployment-values-in-tfvars-for-vm-series)
   - [4.10. Apply Terraform](#410-apply-terraform)
   - [4.11. Inspect deployed resources](#411-inspect-deployed-resources)
@@ -415,6 +417,21 @@ terraform apply
 - Copy the `panorama_url` from the Terraform output and access it in a browser.
   
 - Authenticate using the credentials from `aws-gwlb-lab-secrets.txt` *(shared / standard account: use the Panorama admin credentials provided by your instructor — the pre-baked lab image ships with set credentials)*
+
+### 4.8.1. Apply Your New Serial Number — Prepped Image
+
+> &#9888; **Only needed if you provisioned a new Panorama serial/license in [4.7.1](#471-provision-panorama-licensing-with-software-ngfw-credits).** The pre-baked lab image ships with an existing serial number and a log collector bound to it. You **cannot** simply change the serial number while that collector config is in place — you have to tear it down, set the new serial, then rebuild. *(Known quirk of the pre-baked image; if you keep the image's built-in license you can skip this.)*
+
+1. **Remove the log collector config.** Panorama > Collector Groups — delete the existing collector group. Then Panorama > Managed Collectors — delete the existing managed collector. **Commit to Panorama.**
+2. **Set the new serial number, then reboot.** Panorama > Setup > Management — set the **Serial Number** to the one you provisioned in 4.7.1. Then reboot (Panorama > Setup > Operations > **Reboot Panorama**). The serial change takes effect on reboot.
+3. **Upgrade Panorama to the latest 12.1.x.** Once it is back up, Panorama > Software — Check Now, download, and install the latest **12.1.x** release (this reboots again).
+4. **Rebuild the log collector.** Re-add the managed collector (paste the new S/N, add **Disk A**), then re-create the collector group **named `default`** (the name matters) with this Panorama as a member. Do a **targeted push** to the `default` collector group and confirm it shows **In sync** (Panorama > Managed Collectors).
+
+> &#8505; The collector group must be named **`default`** because the VM-Series bootstrap intentionally does **not** set `cgname` — the firewalls fall back to the `default` collector group. (Setting a collector-group name in bootstrap has historically been buggy with the licensing plugin, so we omit it.)
+
+> &#8505; Steps 1 and 4 overlap with the detailed collector setup below — the difference here is doing it *around* the serial-number change, reboot, and upgrade. (Basics for now; we'll flesh this out after testing.)
+
+### 4.8.2. Prepare Panorama for Logging and Bootstrapping
 
 - Navigate to Panorama > Setup > Interfaces, and click on the Management Interface
   - Add the Public IP address of Panorama to the "Public IP Address" field
