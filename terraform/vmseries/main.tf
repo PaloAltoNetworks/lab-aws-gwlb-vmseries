@@ -25,7 +25,10 @@ locals {
       mgmt-interface-swap = "enable"
       plugin-op-commands  = "aws-gwlb-inspect:enable,panorama-licensing-mode-on"
       type                = "dhcp-client"
-      cgname              = "PANORAMA-LOG-COLLECTOR"
+      # NOTE: cgname intentionally omitted. Firewalls fall back to the "default" collector
+      # group, which is the known-good behavior. Setting cgname in bootstrap has historically
+      # been buggy when combined with the sw_fw_license (Panorama licensing) plugin. This is
+      # why the collector group in 4.8 must be named "default".
       tplname             = "stack-aws-gwlb-lab"
       dgname              = "AWS-GWLB-LAB"
       auth-key            = var.auth-key
