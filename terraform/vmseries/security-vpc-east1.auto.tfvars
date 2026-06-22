@@ -6,8 +6,16 @@ prefix_name_tag  = "CHANGEME-"
 region           = "us-east-1"
 peer_region      = "us-west-2"
 fw_instance_type = "m5.xlarge"
-fw_license_type  = "airs" // AI Runtime Security image (prod-v7k5pwjb72ea2); subscribe in 4.3, license via flex-credit deployment profile (4.7.1)
-fw_version       = "11.2.11" //Ignored when fw_license_type=airs (latest AI Runtime Security image is auto-selected). Used only for byol/payg.
+
+# fw_license_type selects which Palo Alto marketplace image to deploy (subscribe / accept terms in 4.3):
+#   "byol"  = VM-Series Next-Generation Firewall (BYOL)   <-- DEFAULT; license with flex credits via 4.7.1
+#   "airs"  = AI Runtime Security (prod-v7k5pwjb72ea2)     <-- flex/AIRS; set fw_version to an AIRS image (e.g. 11.2.11)
+#   "payg1" / "payg2" = pre-licensed Pay-As-You-Go bundles (billed hourly by AWS)
+fw_license_type  = "byol"
+# fw_version: PAN-OS version for the AMI lookup. MUST be <= your Panorama version.
+#   This lab's Panorama runs 11.2.x, so keep the firewalls on 11.2.x.
+#   byol example: 11.2.12   |   airs example: 11.2.11
+fw_version       = "11.2.12"
 # >>> Set this to YOUR key pair name. The key pair must exist in us-east-1 (EC2 Console -> Key Pairs).
 # >>> Leave as "" ONLY if running on QwikLabs (auto-detects the qwikLABS* key).
 vmseries_ssh_key_name     = ""

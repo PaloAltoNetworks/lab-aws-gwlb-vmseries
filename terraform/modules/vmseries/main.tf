@@ -128,15 +128,12 @@ data "aws_ami" "pa-vm" {
     values = [var.fw_license_type_map[var.fw_license_type]]
   }
 
-  # For "airs" the marketplace AMI name varies (PA-VM-AWS-* vs PA-AI-Runtime-Security-AWS-*),
-  # so filter by product-code only and let most_recent select the latest AI Runtime Security
-  # image (fw_version is not used for airs). For byol/payg, keep pinning the version by name.
-  dynamic "filter" {
-    for_each = var.fw_license_type == "airs" ? [] : [1]
-    content {
-      name   = "name"
-      values = ["PA-VM-AWS-${var.fw_version}*"]
-    }
+  # Pin the version via the AMI name. AI Runtime Security ("airs") images use varying name
+  # prefixes (PA-VM-AWS-* and PA-AI-Runtime-Security-AWS-*), so match on the version segment;
+  # byol/payg use the standard PA-VM-AWS-<version> name. most_recent breaks any ties.
+  filter {
+    name   = "name"
+    values = [var.fw_license_type == "airs" ? "*AWS-${var.fw_version}-*" : "PA-VM-AWS-${var.fw_version}*"]
   }
 }
 
