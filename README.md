@@ -60,6 +60,7 @@ Use the corresponding [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8
   - [4.5. Search Available VM-Series Images (AMIs)](#45-search-available-vm-series-images-amis)
   - [4.6. Clone Repo and Install Terraform](#46-clone-repo-and-install-terraform)
   - [4.7. Deploy Panorama and TGW Infrastructure with Terraform](#47-deploy-panorama-and-tgw-infrastructure-with-terraform)
+    - [4.7.1. Provision Panorama Licensing with Software NGFW Credits](#471-provision-panorama-licensing-with-software-ngfw-credits)
   - [4.8. Prepare Panorama](#48-prepare-panorama)
   - [4.9. Update Deployment Values in tfvars for VM-series](#49-update-deployment-values-in-tfvars-for-vm-series)
   - [4.10. Apply Terraform](#410-apply-terraform)
@@ -332,6 +333,48 @@ terraform apply
 - It will be about 7 minutes from the time the Terraform finishes before you can access and authenticate to the Panorama.
 
 > &#10067; What AWS resources were created from this terraform execution?
+
+### 4.7.1. Provision Panorama Licensing with Software NGFW Credits
+
+> &#8505; The lab Panorama image is partially prepped and **already licensed**, so this step is **not strictly required** if you deployed the prepped image. It **is** required if you bring up Panorama from the public Marketplace image. Either way, walk through it once — provisioning a license from a **Software NGFW Credits** deployment profile is the real-world workflow and is worth seeing end to end.
+
+[Software NGFW Credits](https://docs.paloaltonetworks.com/vm-series/11-1/vm-series-deployment-guide/license-the-vm-series-firewall/software-ngfw-credits) are a flexible, pooled licensing model ("flex credits"): instead of perpetual per-VM licenses, you allocate credits from a pool to a **deployment profile** that describes how many firewalls/vCPUs you need and which subscriptions to enable. The same profile can also license **Panorama** — for management and/or as a dedicated log collector. Provisioning generates a Software NGFW **auth code** (starts with `D`) that the firewall or Panorama uses to license itself.
+
+> &#10067; Why is a credit-based ("flex") model well suited to autoscaling VM-Series deployments compared to perpetual licenses?
+
+#### Create a Deployment Profile
+
+1. Log in to the [Customer Support Portal (CSP)](https://support.paloaltonetworks.com).
+2. Go to **Products > Software NGFW Credits**, then click **Create Deployment Profile**.
+3. **Step 1 — Select the firewall type.** Choose the option that matches your credit pool — **Virtual Firewall** for a classic VM-Series pool, or **Prisma AIRS > AI Runtime Security (Firewalls)** if your pool is AIRS-based — then click **Next**.
+
+<img src="docs/images/deployment-profile-step1-firewall-type.png" width="45%">
+
+4. **Complete the profile form:**
+   - **Profile Name** — something identifiable, e.g. `<your-initials>-swfw-workshop`
+   - **Number of Firewalls** — `4` (the two VM-Series in this lab, plus headroom)
+   - **Planned vCPUs per Firewall** — `4`
+   - **Security Use Case** — e.g. `Internet Security - Basic` (adjust the subscriptions as you like)
+   - Under **Use Credits to Enable**, check **Panorama for Management** and **Panorama as Dedicated Log Collector** — this lab uses Panorama for both management and logging.
+
+<img src="docs/images/deployment-profile-form.png" width="55%">
+
+5. Click **Calculate Estimated Cost** to see the credits/hour, then **Create Deployment Profile**. The new profile is issued a Software NGFW **auth code** (starts with `D`) — this is the auth code used to bootstrap/license the firewalls.
+
+#### Provision the Panorama License
+
+1. Back on the **Software NGFW Credits** page, open the **⋮ (More Options)** menu on your deployment profile row and select **Provision Panorama**.
+
+<img src="docs/images/provision-panorama-menu.png" width="60%">
+
+2. Choose **Provision New** to generate a fresh Panorama serial number + auth code (or **Migrate Existing** to convert an existing virtual Panorama license without changing its serial). Select the entry and click **Provision**.
+
+#### Activate on Panorama
+
+1. In the Panorama web UI, go to **Panorama > Setup > Management** and confirm the **Serial Number** matches the one you just provisioned (set it here if you deployed the Marketplace image).
+2. Go to **Panorama > Licenses** and click **Retrieve license keys from license server**. Panorama checks in with the licensing cloud and activates its **Device Management** and **Support** licenses from your credit pool.
+
+> &#8505; Reference: [Create a Deployment Profile](https://docs.paloaltonetworks.com/vm-series/11-1/vm-series-deployment-guide/license-the-vm-series-firewall/software-ngfw-credits/create-a-deployment-profile) · [Software NGFW Credits overview](https://docs.paloaltonetworks.com/vm-series/11-1/vm-series-deployment-guide/license-the-vm-series-firewall/software-ngfw-credits) · [Customer Support Portal](https://support.paloaltonetworks.com)
 
 ## 4.8. Prepare Panorama
 
