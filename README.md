@@ -291,7 +291,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" Name
 On CloudShell in AWS:
 
 ```
-cd ~ && chmod +x ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && source ~/.bashrc
+cd ~ && git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git && chmod +x ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && source ~/.bashrc
 ```
 
 Or on local machine, follow instructions from HashiCorp:
