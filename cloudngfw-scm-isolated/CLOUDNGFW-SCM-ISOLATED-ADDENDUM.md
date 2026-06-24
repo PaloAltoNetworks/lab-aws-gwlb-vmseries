@@ -19,12 +19,12 @@ Manual Last Updated: 2026-06-24
 
 In Part 1 you ran one firewall engine: VM-Series behind a Gateway Load Balancer, managed by Panorama. In this part you introduce a second engine, Palo Alto Cloud NGFW for AWS (a Palo Alto-operated managed firewall service), and you manage it from Strata Cloud Manager (SCM).
 
-This lab uses the **isolated model**: the Cloud NGFW inspection endpoint lives in the same VPC as the application, and that VPC sends its outbound traffic through Cloud NGFW for inspection. No Transit Gateway, no separate security VPC. You will:
+This lab uses the **isolated model**: the Cloud NGFW inspection endpoint lives in the same VPC as the application, and that VPC sends both its outbound traffic and its inbound (load-balanced) traffic through Cloud NGFW for inspection. No Transit Gateway, no separate security VPC. You will:
 
 - Turn on Strata Cloud Manager Pro using your Part 1 deployment profile.
-- Deploy a self-contained application VPC with Terraform.
-- Create an SCM-managed Cloud NGFW and insert it into the VPC's outbound path.
-- Author policy in SCM-native security rules and watch traffic get inspected.
+- Deploy a self-contained application VPC with Terraform, including a public Application Load Balancer in front of the app servers.
+- Create an SCM-managed Cloud NGFW and insert it into the VPC's traffic path, inspecting both outbound and inbound flows with a single endpoint.
+- Author SCM-native security rules for each direction and watch traffic get inspected.
 
 | Choice | Part 1 (VM-Series) | This lab (Cloud NGFW) |
 | --- | --- | --- |
@@ -32,26 +32,37 @@ This lab uses the **isolated model**: the Cloud NGFW inspection endpoint lives i
 | Endpoint placement | Centralized security VPC | Distributed: endpoint in the app VPC (isolated) |
 | Management plane | Panorama | Strata Cloud Manager (SCM) |
 
-> &#8505; The isolated model does not inspect east/west traffic between VPCs. That is expected; this lab is about getting one application VPC's outbound traffic inspected by a SaaS firewall you manage from SCM.
+> &#8505; The isolated model does not inspect east/west traffic between VPCs. That is expected; this lab is about getting one application VPC's outbound and inbound traffic inspected by a SaaS firewall you manage from SCM.
 
 > &#8505; A later part of this lab (Part B) adds account onboarding, TLS decryption, and CloudWatch logging. The core lab here works **without** onboarding your account with cross-account IAM roles, which is a useful way to see what those roles do (and do not) gate.
 
 ## 2. Architecture
 
-Outbound, before Cloud NGFW is inserted (Phase 1):
+This lab inspects traffic in **both directions** with a **single** Cloud NGFW (Gateway Load Balancer) endpoint per Availability Zone.
+
+Outbound (app servers reaching the internet):
 
 ```
-app server -> NAT gateway -> IGW -> internet
+Phase 1 (no firewall): app server -> NAT gateway -> IGW -> internet
+Phase 2 (inserted):    app server -> Cloud NGFW endpoint -> [inspect] -> NAT gateway -> IGW -> internet
+return:                internet -> NAT gateway -> Cloud NGFW endpoint -> [inspect] -> app server
 ```
 
-Outbound, after Cloud NGFW is inserted (Phase 2):
+Inbound (internet clients reaching the app through a public ALB):
 
 ```
-app server -> Cloud NGFW endpoint -> [inspect] -> NAT gateway -> IGW -> internet
-return:      internet -> NAT -> Cloud NGFW endpoint -> app server
+Phase 1 (no firewall): client -> IGW -> ALB -> app server
+Phase 2 (inserted):    client -> IGW -> ALB -> Cloud NGFW endpoint -> [inspect] -> app server
+return:                app server -> Cloud NGFW endpoint -> [inspect] -> ALB -> IGW -> client
 ```
 
-> &#8505; The return path is steered back through the Cloud NGFW endpoint on purpose. Gateway Load Balancer requires the firewall to see both directions of a flow. Cloud NGFW does not source-NAT (egress NAT is not supported on SCM-managed firewalls), so the AWS NAT gateway does the NAT and the Terraform sets up the symmetric routing for you.
+> &#8505; The firewall sits **behind** the ALB. The Application Load Balancer is the public entry point; it forwards to the web servers through the Cloud NGFW endpoint, so the firewall inspects the (cleartext) ALB-to-web traffic. The separate client-to-ALB leg is terminated by the ALB.
+
+> &#8505; One endpoint handles both directions because the inbound hop the firewall inspects (ALB to web) stays inside the VPC. That leaves the endpoint subnet a single default route, out to the NAT gateway for outbound, with nothing to conflict over. Putting the firewall at the internet edge in front of the ALB would instead need a second endpoint, because outbound replies and inbound replies would want different default routes (NAT gateway vs IGW) in the same subnet.
+
+> &#8505; Gateway Load Balancer requires the firewall to see both directions of a flow. Cloud NGFW does not source-NAT (egress NAT is not supported on SCM-managed firewalls), so the AWS NAT gateway does the NAT and the Terraform sets up the symmetric return routing for you. Cross-zone load balancing is disabled on the ALB so each inbound flow stays within one AZ and one endpoint.
+
+> &#10067; Why can this design inspect both inbound and outbound with one GWLB endpoint, when inspecting internet-facing inbound traffic at the edge would need a second one?
 
 ## 3. Prerequisites
 
@@ -101,9 +112,10 @@ terraform apply
 terraform output gwlbe_subnet_az_ids
 ```
 
-- Confirm an app server reaches the internet: connect with Session Manager (EC2 -> Instances -> select an app server -> Connect -> Session Manager) and run `curl -s https://ifconfig.me`. You should get a NAT public IP back (`terraform output nat_public_ips`).
+- Confirm outbound works: connect with Session Manager (EC2 -> Instances -> select an app server -> Connect -> Session Manager) and run `curl -s https://ifconfig.me`. You should get a NAT public IP back (`terraform output nat_public_ips`).
+- Confirm inbound works: `terraform output alb_dns_name`, then browse to `http://<alb_dns_name>/`. You should get the app's headers page.
 
-> &#8505; In Phase 1 the app servers egress straight through the NAT. This proves the application works before you insert the firewall, so when traffic changes later you know the firewall is the cause.
+> &#8505; In Phase 1 the app servers egress straight through the NAT and the ALB reaches them directly. This proves the application works in both directions before you insert the firewall, so when traffic changes later you know the firewall is the cause.
 
 > &#9888; This QwikLabs account does not have the `AWS-RunShellCommand` SSM document, so use **Session Manager** (an interactive shell) for any on-box step in this lab, not SSM Run Command.
 
@@ -146,38 +158,62 @@ This creates the Cloud NGFW endpoint in each `gwlbe` subnet and redirects the ap
 
 > &#8505; The apply pauses for about 2.5 minutes after creating the endpoint. A GWLB endpoint returns from creation in a `pending` state, and AWS rejects a route to it until it is `available`. The Terraform waits this out for you (`gwlbe_route_delay`).
 
-> &#9888; Cloud NGFW denies by default. The moment you insert it, the app servers lose internet (including Session Manager) until you add an allow policy in the next step. That is expected.
+> &#9888; Cloud NGFW denies by default. The moment you insert it, both directions stop: the app servers lose internet (including Session Manager), and the ALB page stops loading (its targets go unhealthy) until you add allow policy in the next step. That is expected.
 
 > &#10067; At this exact moment (routes flipped, no policy yet), where would you see an app server's outbound request being dropped?
 
 ## 8. Step 5 - Author SCM policy and test
 
-Policy for an SCM-managed Cloud NGFW lives in SCM-native security rules in a folder, not in Cloud NGFW rulestacks.
+Policy for an SCM-managed Cloud NGFW lives in SCM-native security rules in a folder, not in Cloud NGFW rulestacks. The firewall denies by default, so both directions are blocked right now. You will add one rule per direction and watch each come back.
 
 - Create a folder: SCM -> Workflows -> NGFW Setup -> Folder Management -> Add Folder (e.g. `aws-cloudngfw`), in `All Firewalls`.
 - Move your firewall into the folder: Folder Management -> your firewall -> Actions -> Move.
-- Author an outbound allow rule: Manage -> Configuration -> NGFW and Prisma Access -> Configuration Scope = your folder -> Security Services -> Security Policy -> Add Rule:
+
+Author the rules under Manage -> Configuration -> NGFW and Prisma Access -> Configuration Scope = your folder -> Security Services -> Security Policy -> Add Rule. Your app subnet CIDRs are `terraform output app_subnet_cidrs` (with the lab defaults, `10.104.1.0/24` and `10.104.2.0/24`).
+
+Outbound rule, app servers reaching the internet:
+
+  - `Name`: `allow-outbound-web`
   - `Source Zone`: `any` (required)
-  - `Source Address`: your app subnets (or `any`)
+  - `Source Address`: your app subnets
   - `Destination Zone`: `any` (required)
-  - `Application`: `web-browsing`, `ssl`, `dns` (and whatever your apps need outbound)
+  - `Destination Address`: `any`
+  - `Application`: `web-browsing`, `ssl`, `dns`
+  - `Service`: `application-default`
   - `Action`: `Allow`, log at session end
+
+Inbound rule, internet clients reaching the app through the ALB:
+
+  - `Name`: `allow-inbound-web`
+  - `Source Zone`: `any` (required)
+  - `Source Address`: `any`
+  - `Destination Zone`: `any` (required)
+  - `Destination Address`: your app subnets
+  - `Application`: `web-browsing`
+  - `Service`: `application-default`
+  - `Action`: `Allow`, log at session end
+
 - Push the configuration.
 
-<!-- screenshots (clean versions to add): Add Folder; Folder Management move firewall; Add Rule; Push -->
+<!-- screenshots (clean versions to add): Add Folder; Folder Management move firewall; outbound Add Rule; inbound Add Rule; Push -->
 
 > &#9888; SCM-managed Cloud NGFW rules must use `any` for source and destination zone. A real zone value silently drops traffic.
 
-Test:
+Test both directions:
 
-- From an app server (Session Manager), `curl -s https://ifconfig.me` and browse a few sites. Traffic now flows again, inspected by Cloud NGFW.
-- View logs: SCM -> Configurations -> Cloud NGFWs -> your firewall -> View Logs. You should see the allowed sessions.
+- Outbound: from an app server (Session Manager), `curl -s https://ifconfig.me` and browse a few sites. You get a NAT public IP back, and Session Manager itself stays connected (it egresses over `ssl`).
+- Inbound: browse to `http://<alb_dns_name>/` (`terraform output alb_dns_name`). The app's headers page loads, served through the firewall.
+- View logs: SCM -> Configurations -> Cloud NGFWs -> your firewall -> View Logs. You should see both the outbound and inbound sessions.
+
+> &#8505; Add the rules one at a time and re-test in between. With only the outbound rule, `curl https://ifconfig.me` works but the ALB page does not; the inbound rule is what restores it. That is deny-by-default showing you exactly what each rule gates.
+
+> &#10067; Your inbound rule leaves `Source Address` as `any`. What source does the firewall actually see for inbound traffic, the internet client or the ALB? The ALB is a Layer 7 proxy: the firewall inspects the ALB-to-web connection, so it sees the ALB's address. The original client IP survives only in the `X-Forwarded-For` header visible on the app's page.
 
 > &#10067; Compare these session logs with the VM-Series traffic logs in Panorama from Part 1. What is the same, and what differs in how each engine is managed and logged?
 
 ## 9. What you built
 
-You now have an application VPC whose outbound traffic is inspected by an SCM-managed Cloud NGFW, inserted as a Gateway Load Balancer endpoint in the isolated model, with policy authored in SCM-native security rules. You did all of this with only your account **allowlisted** - no cross-account IAM roles.
+You now have an application VPC whose **outbound and inbound** traffic is inspected by an SCM-managed Cloud NGFW, inserted as a single Gateway Load Balancer endpoint per AZ in the isolated model, with a security rule per direction authored in SCM-native policy. You did all of this with only your account **allowlisted** - no cross-account IAM roles.
 
 ## 10. Coming next (Part B): onboarding, decryption, and logging
 

@@ -8,6 +8,11 @@ output "app_subnet_ids" {
   value       = { for k, s in aws_subnet.app : k => s.id }
 }
 
+output "app_subnet_cidrs" {
+  description = "App subnet CIDRs. Use these as Source (outbound rule) and Destination (inbound rule) when authoring SCM policy."
+  value       = { for k, s in aws_subnet.app : k => s.cidr_block }
+}
+
 output "gwlbe_subnet_ids" {
   description = "GWLBE subnet ids (where the Cloud NGFW endpoint is placed), keyed by az1/az2."
   value       = { for k, s in aws_subnet.gwlbe : k => s.id }
@@ -21,6 +26,16 @@ output "gwlbe_subnet_az_ids" {
 output "public_subnet_ids" {
   description = "Public (NAT) subnet ids, keyed by az1/az2."
   value       = { for k, s in aws_subnet.public : k => s.id }
+}
+
+output "lb_subnet_ids" {
+  description = "ALB subnet ids (internet-facing inbound), keyed by az1/az2."
+  value       = { for k, s in aws_subnet.lb : k => s.id }
+}
+
+output "alb_dns_name" {
+  description = "Public DNS name of the inbound ALB. Browse or curl http://<this> to test inbound inspection through Cloud NGFW."
+  value       = aws_lb.app.dns_name
 }
 
 output "web_instance_ids" {

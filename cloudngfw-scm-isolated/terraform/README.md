@@ -2,9 +2,11 @@
 
 Standalone Terraform for the Cloud NGFW for AWS + Strata Cloud Manager lab. It is
 self-contained: no dependency on the Part 1 GWLB/VM-Series modules. It builds one
-VPC where application servers send outbound traffic through a Cloud NGFW for
-inspection and decryption, using the isolated model (the Cloud NGFW GWLB endpoint
-lives in the same VPC as the workload, no Transit Gateway required).
+VPC where application servers send both outbound and inbound traffic through a
+Cloud NGFW for inspection, using the isolated model (the Cloud NGFW GWLB endpoint
+lives in the same VPC as the workload, no Transit Gateway required). A single
+endpoint per AZ inspects both directions: the firewall sits behind a public ALB
+for inbound, and in front of the NAT gateway for outbound.
 
 ## What it builds
 
@@ -13,18 +15,26 @@ A single VPC across two AZs:
 - `app` subnets - two Amazon Linux web servers (Session Manager access, no public IP).
 - `gwlbe` subnets - hold the customer-managed Cloud NGFW GWLB endpoint (Phase 2).
 - `public` subnets - a NAT gateway per AZ for internet egress.
+- `lb` subnets - a public Application Load Balancer fronting the web servers (inbound).
 
-Routing follows the GWLB egress pattern with return-path symmetry, which the
-forward-proxy decryption depends on:
+Routing follows the GWLB pattern with return-path symmetry, which a single
+endpoint can serve in both directions because the inbound hop it inspects (ALB to
+web) is intra-VPC:
 
 ```
 Phase 1 (insert_cngfw = false):
-  app -> NAT -> IGW -> internet
+  outbound: app -> NAT -> IGW -> internet
+  inbound:  client -> IGW -> ALB -> app
 
 Phase 2 (insert_cngfw = true):
-  app -> Cloud NGFW endpoint -> (inspect/decrypt) -> NAT -> IGW -> internet
-  return: internet -> NAT -> Cloud NGFW endpoint -> app   (symmetry)
+  outbound: app -> Cloud NGFW endpoint -> (inspect) -> NAT -> IGW -> internet
+  return:   internet -> NAT -> Cloud NGFW endpoint -> app   (symmetry)
+  inbound:  client -> IGW -> ALB -> Cloud NGFW endpoint -> (inspect) -> app
+  return:   app -> Cloud NGFW endpoint -> ALB -> IGW -> client   (symmetry)
 ```
+
+Cross-zone load balancing is disabled on the ALB so each inbound flow stays in one
+AZ, keeping the GWLB flow symmetric on a single per-AZ endpoint.
 
 ## Two-phase flow
 
@@ -57,14 +67,14 @@ In QwikLabs Cloud Shell leave `aws_profile` empty (the ambient role is used).
 
 | Variable | Default | Notes |
 | --- | --- | --- |
-| `region` | `us-west-2` | Must match the Cloud NGFW region in SCM. |
-| `name_prefix` | `cngfw-` | Short unique prefix (your initials). |
-| `azs` | two us-west-2 AZs | AZ names in your own account. |
+| `region` | `us-east-1` | Must match the Cloud NGFW region in SCM. |
+| `name_prefix` | `cngfw-` | Short unique prefix (your initials, under 8 chars). |
+| `azs` | `us-east-1a`, `us-east-1b` | AZ names in your own account. |
 | `vpc_cidr` | `10.104.0.0/16` | `/16` gives clean `/24` subnets. |
 | `insert_cngfw` | `false` | Phase toggle. |
 | `cngfw_gwlb_service_name` | `""` | The SCM Cloud NGFW's GWLB endpoint service name. Required for Phase 2. |
 | `web_instance_type` | `t3.micro` | App server size. |
-| `ca_secret_name` | `cloudngfwca-untrust` | Secrets Manager secret the app role may read (decryption exercise). |
+| `ca_secret_name` | `aws-outbound-trust` | Secrets Manager secret the app role may read (decryption exercise). |
 
 ## Notes
 

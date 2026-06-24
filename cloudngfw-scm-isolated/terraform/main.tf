@@ -15,6 +15,7 @@ locals {
   app_subnets    = { for idx, az in var.azs : "az${idx + 1}" => cidrsubnet(var.vpc_cidr, 8, idx + 1) }
   gwlbe_subnets  = { for idx, az in var.azs : "az${idx + 1}" => cidrsubnet(var.vpc_cidr, 8, idx + 11) }
   public_subnets = { for idx, az in var.azs : "az${idx + 1}" => cidrsubnet(var.vpc_cidr, 8, idx + 21) }
+  lb_subnets     = { for idx, az in var.azs : "az${idx + 1}" => cidrsubnet(var.vpc_cidr, 8, idx + 31) }
 }
 
 # ---------------- VPC + IGW ----------------
@@ -294,4 +295,131 @@ resource "aws_instance" "web" {
   }
 
   tags = { Name = "${var.name_prefix}web-${each.key}" }
+}
+
+# ---------------- Inbound: public ALB in front of the firewall ----------------
+# Single-endpoint isolated model: the Cloud NGFW endpoint sits BEHIND the ALB.
+# Clients reach the internet-facing ALB over HTTP; the ALB forwards to the web
+# servers THROUGH the same GWLB endpoint that handles outbound, so the firewall
+# inspects the (cleartext) ALB -> web hop. Because that hop is intra-VPC, the
+# endpoint subnet keeps a single 0.0.0.0/0 -> NAT route and no second endpoint
+# is needed. Cross-zone load balancing is disabled so each ALB node only reaches
+# a target in its own AZ, keeping the GWLB flow symmetric on one per-AZ endpoint.
+
+resource "aws_subnet" "lb" {
+  for_each          = local.az_map
+  vpc_id            = aws_vpc.this.id
+  availability_zone = each.value
+  cidr_block        = local.lb_subnets[each.key]
+  tags              = { Name = "${var.name_prefix}lb-${each.key}" }
+}
+
+resource "aws_security_group" "alb" {
+  name        = "${var.name_prefix}alb"
+  description = "Lab inbound ALB"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "HTTP from anywhere (lab)"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "All egress"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.name_prefix}alb" }
+}
+
+resource "aws_lb" "app" {
+  name               = "${replace(var.name_prefix, "_", "-")}alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = [for k, s in aws_subnet.lb : s.id]
+  tags               = { Name = "${var.name_prefix}alb" }
+}
+
+resource "aws_lb_target_group" "app" {
+  name                              = "${replace(var.name_prefix, "_", "-")}tg"
+  port                              = 80
+  protocol                          = "HTTP"
+  vpc_id                            = aws_vpc.this.id
+  target_type                       = "instance"
+  load_balancing_cross_zone_enabled = "false"
+
+  health_check {
+    path                = "/index.php"
+    protocol            = "HTTP"
+    matcher             = "200"
+    interval            = 30
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+  }
+
+  tags = { Name = "${var.name_prefix}tg" }
+}
+
+resource "aws_lb_target_group_attachment" "app" {
+  for_each         = local.az_map
+  target_group_arn = aws_lb_target_group.app.arn
+  target_id        = aws_instance.web[each.key].id
+  port             = 80
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.app.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app.arn
+  }
+}
+
+# lb subnet route table: internet-facing. Phase 2 forces the ALB -> web hop
+# through the Cloud NGFW endpoint in the same AZ.
+resource "aws_route_table" "lb" {
+  for_each = local.az_map
+  vpc_id   = aws_vpc.this.id
+  tags     = { Name = "${var.name_prefix}lb-${each.key}" }
+}
+
+resource "aws_route" "lb_default" {
+  for_each               = local.az_map
+  route_table_id         = aws_route_table.lb[each.key].id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.this.id
+}
+
+resource "aws_route" "lb_to_app_fw" {
+  for_each               = var.insert_cngfw ? local.az_map : {}
+  route_table_id         = aws_route_table.lb[each.key].id
+  destination_cidr_block = local.app_subnets[each.key]
+  vpc_endpoint_id        = aws_vpc_endpoint.gwlbe[each.key].id
+  depends_on             = [time_sleep.gwlbe_ready]
+}
+
+resource "aws_route_table_association" "lb" {
+  for_each       = local.az_map
+  subnet_id      = aws_subnet.lb[each.key].id
+  route_table_id = aws_route_table.lb[each.key].id
+}
+
+# App RT return leg (phase 2): web -> ALB replies go back through the firewall
+# so GWLB sees both directions of the inbound flow (symmetry).
+resource "aws_route" "app_to_lb_fw" {
+  for_each               = var.insert_cngfw ? local.az_map : {}
+  route_table_id         = aws_route_table.app[each.key].id
+  destination_cidr_block = local.lb_subnets[each.key]
+  vpc_endpoint_id        = aws_vpc_endpoint.gwlbe[each.key].id
+  depends_on             = [time_sleep.gwlbe_ready]
 }
