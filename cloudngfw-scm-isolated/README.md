@@ -89,12 +89,15 @@ You do not need the 30-day eval. Your Part 1 deployment profile already includes
 
 Run Terraform from the QwikLabs Cloud Shell, the same way as Part 1.
 
-> &#9888; AWS Cloud Shell gives you a 1 GB home directory **per region**, and Part 1's Terraform provider cache may have filled the `us-east-1` one. If `terraform init` fails with a no-space error, do either:
+<!-- WORKSHOP-TEMP: one-off note for this cohort run; remove when generalizing the lab -->
+> &#9888; **For this workshop, open your Cloud Shell in `us-east-2` (Ohio), not `us-east-1`.** Part 1 already filled your `us-east-1` Cloud Shell storage (AWS gives only 1 GB of Cloud Shell home space **per region**), so running Part 2's `terraform init` there fails with a no-space error. Starting the shell in `us-east-2` gives you a clean 1 GB.
 >
-> - **Open Cloud Shell in a different region** (for example `us-east-2`) and run these same commands. The lab still deploys to `us-east-1` because the region is pinned in `terraform.tfvars`, so nothing else changes.
-> - Or **free space in the `us-east-1` shell** first: `find ~ -type d -name .terraform -prune -exec rm -rf {} +` (this clears cached providers, not your Part 1 state), then re-run `terraform init`.
+> **This changes only WHERE you run the commands. Every lab resource still deploys to `us-east-1`.** The region is pinned in `terraform.tfvars`, so leave `region` and `azs` exactly as they ship. Your Cloud NGFW, VPC, and app servers are all created in `us-east-1`.
+>
+> (If you would rather stay in the `us-east-1` shell, free space first with `find ~ -type d -name .terraform -prune -exec rm -rf {} +`, then continue.)
+<!-- /WORKSHOP-TEMP -->
 
-- Open Cloud Shell (`us-east-1`, or another region per the note above).
+- Switch the AWS console **Region selector to `us-east-2` (Ohio)**, then open Cloud Shell.
 - Clone the repo and change into the Cloud NGFW Terraform directory.
 
 ```
@@ -103,7 +106,7 @@ cd lab-aws-gwlb-vmseries/cloudngfw-scm-isolated/terraform
 cp example.tfvars terraform.tfvars
 ```
 
-- Edit `terraform.tfvars`: set `name_prefix` to a short unique value (your initials). Leave `insert_cngfw = false` for now.
+- Edit `terraform.tfvars`: set `name_prefix` to a short unique value (your initials). Leave `insert_cngfw = false` for now, and leave `region = "us-east-1"` and `azs` as they ship - your Cloud Shell may be in `us-east-2`, but the lab deploys to `us-east-1`.
 - Deploy.
 
 ```
