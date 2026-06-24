@@ -6,7 +6,7 @@ name_prefix = "pan-gwlb-lab-"
 ### Panorama instance (latest+greatest: 12.1.7, >=16 vCPU / 32 GB, gp3 log disk)
 panorama_version       = "12.1.7"
 panorama_instance_type = "m5.4xlarge"
-panorama_log_disk_gib  = 1000
+panorama_log_disk_gib  = 2000
 
 ### Networking
 vpc_cidr            = "192.168.10.0/24"

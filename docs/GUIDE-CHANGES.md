@@ -48,8 +48,11 @@ and why. Structural items are settled; the P4 e2e pass may append more. Nothing 
 
 9. **Fresh public Marketplace Panorama image (no prepped golden AMI).** Eliminates the prepped-image
    failure class (panrepo too small, KMS-CMK cross-org sharing, version pinned below the FW). Costs
-   it adds, now documented: ~18-20 min first boot (longer with the 1 TiB log disk), Marketplace
-   subscription acceptance, and load-bearing sizing (12.x Panorama = `m5.4xlarge` + ~1 TiB gp3).
+   it adds, now documented: ~20-25 min first boot (the log disk init adds to it), Marketplace
+   subscription acceptance, and load-bearing sizing (12.x Panorama = `m5.4xlarge` + a **2 TB
+   (2000 GiB)** gp3 logging disk). The logging disk MUST be a 2 TB unit (the official module
+   default): an undersized disk (e.g. 1 TB) fails to initialize and the Panorama mgmt plane hangs
+   at boot. The guide must call out the 2 TB requirement explicitly.
 
 10. **tfvars shape.** `az_index` (0/1) replaces `az` strings; `deploy_exercise_routes` gates the
     inspection-path routes (false = the student exercise; true = a fully-wired instructor/e2e env).

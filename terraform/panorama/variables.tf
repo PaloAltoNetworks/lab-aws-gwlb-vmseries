@@ -95,7 +95,11 @@ variable "panorama_ami_id" {
 }
 
 variable "panorama_log_disk_gib" {
-  description = "Size of the gp3 log disk attached to Panorama (panorama-mode logging). ~1 TiB recommended for 12.x."
+  description = "Size of the gp3 logging disk attached to Panorama (panorama-mode). PAN-OS Panorama on AWS requires 2 TB (2000 GiB) units; an undersized disk fails to initialize and the mgmt plane hangs at boot. Matches the official module default."
   type        = number
-  default     = 1000
+  default     = 2000
+  validation {
+    condition     = var.panorama_log_disk_gib >= 2000 && var.panorama_log_disk_gib % 2000 == 0
+    error_message = "Panorama logging disk must be a multiple of 2000 GiB (2 TB units); PAN-OS rejects other sizes and hangs at boot."
+  }
 }
