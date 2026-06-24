@@ -1,2 +1,46 @@
-# Local-only MCP server config (not part of the lab)
+# ── Local-only MCP server config (not part of the lab) ──
 .mcp.json
+
+# ── Terraform ──
+**/.terraform/*
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.plan
+*.bak
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Live tfvars (students copy *.example -> terraform.tfvars and edit).
+# Never commit live values; commit only the *.example templates.
+terraform.tfvars
+*.auto.tfvars
+# Generated partial-backend config (bucket/table are account-specific)
+backend.hcl
+
+# ── Secrets / credentials (NEVER commit) ──
+.env
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+# panorama-init writes the API password into this state file
+panorama-*-state.json
+*-state.json
+
+# ── Python ──
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# ── Editor / OS ──
+.vscode/
+.history
+.idea/
+*.DS_Store
+my-todo.md

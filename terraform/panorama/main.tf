@@ -1,133 +1,315 @@
-### SSH key pair selection
-# Bring-your-own-key: if var.panorama_ssh_key_name is set, use it directly (shared/standard account).
-# Otherwise (null or ""), fall back to auto-detecting the QwikLabs-generated key (qwikLABS*).
-
-locals {
-  use_qwiklabs_key      = var.panorama_ssh_key_name == null || var.panorama_ssh_key_name == ""
-  panorama_ssh_key_name = local.use_qwiklabs_key ? data.aws_key_pair.panorama[0].key_name : var.panorama_ssh_key_name
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
-data "aws_key_pair" "panorama" {
-  count              = local.use_qwiklabs_key ? 1 : 0
-  include_public_key = true
+locals {
+  azs = data.aws_availability_zones.available.names
+}
 
+############################################
+# Fail-fast AMI resolution (clear message) #
+############################################
+# Mirror the panorama module's lookup so we can assert it resolves and emit a
+# readable error instead of an opaque "your query returned no results".
+data "aws_ami" "panorama_check" {
+  count       = var.panorama_ami_id == null ? 1 : 0
+  most_recent = true
+  owners      = ["aws-marketplace"]
   filter {
-    name   = "key-name"
-    values = ["qwikLABS*"]
+    name   = "name"
+    values = ["Panorama-AWS-${var.panorama_version}*"]
+  }
+  filter {
+    name   = "product-code"
+    values = [var.panorama_product_code]
   }
 }
 
-### Panorama Encrypted Volumes
-
-data "aws_ebs_default_kms_key" "current" {
-  count = var.panorama_ebs_encrypted ? 1 : 0
+check "panorama_ami_resolves" {
+  assert {
+    condition     = var.panorama_ami_id != null || length(data.aws_ami.panorama_check) > 0
+    error_message = "No Panorama AMI found for version '${var.panorama_version}' (product code '${var.panorama_product_code}') in region '${var.region}'. List options: aws ec2 describe-images --region ${var.region} --owners aws-marketplace --filters 'Name=name,Values=Panorama-AWS-*' --query 'Images[].Name'"
+  }
 }
 
-data "aws_kms_alias" "current_arn" {
-  count = var.panorama_ebs_encrypted ? 1 : 0
-
-  name = var.panorama_ebs_kms_key_alias != "" ? "alias/${var.panorama_ebs_kms_key_alias}" : data.aws_ebs_default_kms_key.current[0].key_arn
+############################################
+# VPC + networking                          #
+############################################
+resource "aws_vpc" "panorama" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+  tags                 = { Name = "${var.name_prefix}panorama-vpc" }
 }
 
-### Module calls for app2 VPC
-
-module "management_vpc" {
-  source           = "../modules/vpc"
-  global_tags      = var.global_tags
-  region           = var.region
-  prefix_name_tag  = var.prefix_name_tag
-  vpc              = var.management_vpc
-  vpc_route_tables = var.management_vpc_route_tables
-  subnets          = var.management_vpc_subnets
-  vpc_endpoints    = var.management_vpc_endpoints
-  security_groups  = var.management_vpc_security_groups
+resource "aws_internet_gateway" "panorama" {
+  vpc_id = aws_vpc.panorama.id
+  tags   = { Name = "${var.name_prefix}panorama-igw" }
 }
 
-module "management_vpc_routes" {
-  source            = "../modules/vpc_routes"
-  region            = var.region
-  global_tags       = var.global_tags
-  prefix_name_tag   = var.prefix_name_tag
-  vpc_routes        = var.management_vpc_routes
-  vpc_route_tables  = module.management_vpc.route_table_ids
-  internet_gateways = module.management_vpc.internet_gateway_id
-  nat_gateways      = module.management_vpc.nat_gateway_ids
-  transit_gateways  = module.management_transit_gateways.transit_gateway_ids
+resource "aws_subnet" "mgmt" {
+  vpc_id            = aws_vpc.panorama.id
+  cidr_block        = var.mgmt_subnet_cidr
+  availability_zone = local.azs[0]
+  tags              = { Name = "${var.name_prefix}panorama-mgmt" }
 }
 
-module "management_transit_gateways" {
-  source                          = "../modules/transit_gateway"
-  global_tags                     = var.global_tags
-  prefix_name_tag                 = var.prefix_name_tag
-  subnets                         = module.management_vpc.subnet_ids
-  vpcs                            = module.management_vpc.vpc_id
-  transit_gateways                = var.management_transit_gateways
-  transit_gateway_vpc_attachments = var.management_transit_gateway_vpc_attachments
+resource "aws_subnet" "tgw" {
+  vpc_id            = aws_vpc.panorama.id
+  cidr_block        = var.tgw_subnet_cidr
+  availability_zone = local.azs[0]
+  tags              = { Name = "${var.name_prefix}panorama-tgw-attach" }
 }
 
-module "panorama" {
-  source = "../modules/panorama"
+resource "aws_route_table" "mgmt" {
+  vpc_id = aws_vpc.panorama.id
+  tags   = { Name = "${var.name_prefix}panorama-mgmt-rt" }
+}
 
-  availability_zone      = var.panorama_az
-  panorama_ami_id        = var.panorama_ami_id
-  private_ip_address     = var.private_ip_address
-  create_public_ip       = var.panorama_create_public_ip
-  ebs_volumes            = var.panorama_ebs_volumes
-  name                   = var.panorama_deployment_name
-  ebs_kms_key_alias      = try(data.aws_kms_alias.current_arn[0].arn, null)
-  panorama_version       = var.panorama_version
-  ssh_key_name           = local.panorama_ssh_key_name
-  subnet_id              = module.management_vpc.subnet_ids["management1"]
-  vpc_security_group_ids = [module.management_vpc.security_group_ids["panorama"]]
-  panorama_iam_role      = var.panorama_create_iam_instance_profile == false ? null : aws_iam_instance_profile.panorama_instance_profile[0].name
+resource "aws_route" "mgmt_default" {
+  route_table_id         = aws_route_table.mgmt.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.panorama.id
+}
 
-  global_tags = var.global_tags
+# Return path: Panorama -> firewalls (replies to FW-initiated device comms) via the TGW.
+resource "aws_route" "mgmt_to_fw" {
+  route_table_id         = aws_route_table.mgmt.id
+  destination_cidr_block = var.fw_supernet
+  transit_gateway_id     = module.tgw.transit_gateway.id
+  depends_on             = [module.panorama_tgw_attach]
+}
 
-  depends_on = [
-    aws_iam_instance_profile.panorama_instance_profile
+resource "aws_route_table_association" "mgmt" {
+  subnet_id      = aws_subnet.mgmt.id
+  route_table_id = aws_route_table.mgmt.id
+}
+
+resource "aws_route_table" "tgw" {
+  vpc_id = aws_vpc.panorama.id
+  tags   = { Name = "${var.name_prefix}panorama-tgw-rt" }
+}
+
+resource "aws_route_table_association" "tgw" {
+  subnet_id      = aws_subnet.tgw.id
+  route_table_id = aws_route_table.tgw.id
+}
+
+############################################
+# Security group                            #
+############################################
+resource "aws_security_group" "panorama" {
+  name        = "${var.name_prefix}panorama-sg"
+  description = "Panorama management access"
+  vpc_id      = aws_vpc.panorama.id
+  tags        = { Name = "${var.name_prefix}panorama-sg" }
+}
+
+# Admin/runner access (panorama-init SSH + XML API + UI). Only created if CIDRs provided.
+resource "aws_security_group_rule" "admin_ssh" {
+  count             = length(var.mgmt_allowed_cidrs) > 0 ? 1 : 0
+  security_group_id = aws_security_group.panorama.id
+  type              = "ingress"
+  protocol          = "tcp"
+  from_port         = 22
+  to_port           = 22
+  cidr_blocks       = var.mgmt_allowed_cidrs
+  description       = "SSH (panorama-init) from admin/runner"
+}
+
+resource "aws_security_group_rule" "admin_https" {
+  count             = length(var.mgmt_allowed_cidrs) > 0 ? 1 : 0
+  security_group_id = aws_security_group.panorama.id
+  type              = "ingress"
+  protocol          = "tcp"
+  from_port         = 443
+  to_port           = 443
+  cidr_blocks       = var.mgmt_allowed_cidrs
+  description       = "HTTPS XML API + UI from admin/runner"
+}
+
+# Firewall device communications (FWs initiate to Panorama).
+resource "aws_security_group_rule" "fw_mgmt_3978" {
+  security_group_id = aws_security_group.panorama.id
+  type              = "ingress"
+  protocol          = "tcp"
+  from_port         = 3978
+  to_port           = 3978
+  cidr_blocks       = [var.fw_supernet]
+  description       = "Panorama and FW device management (3978) from firewalls"
+}
+
+resource "aws_security_group_rule" "fw_https" {
+  security_group_id = aws_security_group.panorama.id
+  type              = "ingress"
+  protocol          = "tcp"
+  from_port         = 443
+  to_port           = 443
+  cidr_blocks       = [var.fw_supernet]
+  description       = "HTTPS from firewalls"
+}
+
+resource "aws_security_group_rule" "fw_icmp" {
+  security_group_id = aws_security_group.panorama.id
+  type              = "ingress"
+  protocol          = "icmp"
+  from_port         = -1
+  to_port           = -1
+  cidr_blocks       = [var.fw_supernet]
+  description       = "ICMP (reachability tests) from firewalls"
+}
+
+resource "aws_security_group_rule" "egress_all" {
+  security_group_id = aws_security_group.panorama.id
+  type              = "egress"
+  protocol          = "-1"
+  from_port         = 0
+  to_port           = 0
+  cidr_blocks       = ["0.0.0.0/0"]
+  description       = "All outbound (licensing, updates, device comms)"
+}
+
+############################################
+# SSH keypair (panorama-init requires SSH)  #
+############################################
+resource "tls_private_key" "panorama" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "panorama" {
+  key_name   = "${var.name_prefix}panorama-key"
+  public_key = tls_private_key.panorama.public_key_openssh
+  tags       = { Name = "${var.name_prefix}panorama-key" }
+}
+
+# Private key written locally for panorama-init --ssh-key. Gitignored (*.pem).
+resource "local_file" "panorama_private_key" {
+  filename        = "${path.module}/panorama-ssh-key.pem"
+  content         = tls_private_key.panorama.private_key_pem
+  file_permission = "0600"
+}
+
+############################################
+# IAM (Panorama instance profile)           #
+############################################
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "panorama" {
+  name               = "${var.name_prefix}panorama"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": { "Service": "ec2.amazonaws.com" }
+    }
   ]
 }
+EOF
+}
 
-# module "security_vpc" {
-#   source = "../modules/vpc"
+resource "aws_iam_role_policy" "panorama" {
+  role   = aws_iam_role.panorama.id
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["ec2:DescribeInstances", "ec2:DescribeInstanceStatus"],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["cloudwatch:ListMetrics", "cloudwatch:GetMetricStatistics", "cloudwatch:DescribeAlarmsForMetric", "cloudwatch:DescribeAlarms"],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
 
-#   cidr_block              = var.vpc_cidr
-#   create_internet_gateway = true
-#   enable_dns_hostnames    = true
-#   enable_dns_support      = true
-#   instance_tenancy        = "default"
-#   name                    = "${var.name_prefix}${var.vpc_name}"
-#   security_groups         = var.vpc_security_groups
-# }
+resource "aws_iam_instance_profile" "panorama" {
+  name = "${var.name_prefix}panorama-instance-profile"
+  role = aws_iam_role.panorama.name
+}
 
-# module "security_subnet_sets" {
-#   for_each = toset(distinct([for _, v in var.vpc_subnets : v.set]))
-#   source   = "../modules/subnet_set"
+############################################
+# Panorama instance (official module)       #
+############################################
+module "panorama" {
+  source  = "PaloAltoNetworks/swfw-modules/aws//modules/panorama"
+  version = "2.2.7" # keep in sync with var.module_version
 
-#   cidrs               = { for k, v in var.vpc_subnets : k => v if v.set == each.key }
-#   has_secondary_cidrs = module.security_vpc.has_secondary_cidrs
-#   name                = each.key
-#   vpc_id              = module.security_vpc.id
-# }
+  name              = "${var.name_prefix}panorama"
+  availability_zone = local.azs[0]
+  create_public_ip  = true
 
-# locals {
-#   security_vpc_routes = concat(
-#     [
-#       for cidr in var.vpc_routes_outbound_destin_cidrs :
-#       {
-#         subnet_key   = "mgmt"
-#         next_hop_set = module.security_vpc.igw_as_next_hop_set
-#         to_cidr      = cidr
-#       }
-#     ],
-#   )
-# }
+  panorama_version       = var.panorama_version
+  product_code           = var.panorama_product_code
+  panorama_ami_id        = var.panorama_ami_id
+  include_deprecated_ami = false
+  instance_type          = var.panorama_instance_type
+  private_ip_address     = var.panorama_private_ip
 
-# module "security_vpc_routes" {
-#   for_each = { for route in local.security_vpc_routes : "${route.subnet_key}_${route.to_cidr}" => route }
-#   source   = "../modules/vpc_route"
+  ebs_encrypted     = true
+  ebs_volume_type   = "gp3"
+  ebs_kms_key_alias = "alias/aws/ebs"
+  ebs_volumes = [
+    {
+      name            = "${var.name_prefix}panorama-logs"
+      ebs_device_name = "/dev/sdb"
+      ebs_size        = tostring(var.panorama_log_disk_gib)
+    }
+  ]
 
-#   next_hop_set    = each.value.next_hop_set
-#   route_table_ids = module.security_subnet_sets[each.value.subnet_key].unique_route_table_ids
-#   to_cidr         = each.value.to_cidr
-# }
+  ssh_key_name           = aws_key_pair.panorama.key_name
+  subnet_id              = aws_subnet.mgmt.id
+  vpc_security_group_ids = [aws_security_group.panorama.id]
+  panorama_iam_role      = aws_iam_instance_profile.panorama.name
+
+  global_tags = var.global_tags
+}
+
+############################################
+# Transit Gateway (Panorama region)         #
+############################################
+module "tgw" {
+  source  = "PaloAltoNetworks/swfw-modules/aws//modules/transit_gateway"
+  version = "2.2.7" # keep in sync with var.module_version
+
+  name = "${var.name_prefix}panorama-tgw"
+  asn  = var.tgw_asn
+  route_tables = {
+    # Association for the Panorama VPC attachment.
+    from_panorama = {
+      create = true
+      name   = "${var.name_prefix}from-panorama"
+    }
+    # Dedicated table for the cross-region peering attachment (the security-stack
+    # root associates the peering here and adds the FW<->Panorama routes).
+    from_peer = {
+      create = true
+      name   = "${var.name_prefix}from-peer"
+    }
+  }
+  tags = var.global_tags
+}
+
+module "panorama_tgw_attach" {
+  source  = "PaloAltoNetworks/swfw-modules/aws//modules/transit_gateway_attachment"
+  version = "2.2.7" # keep in sync with var.module_version
+
+  name                        = "${var.name_prefix}panorama-vpc"
+  vpc_id                      = aws_vpc.panorama.id
+  subnets                     = { (local.azs[0]) = { id = aws_subnet.tgw.id } }
+  transit_gateway_route_table = module.tgw.route_tables["from_panorama"]
+  propagate_routes_to         = {}
+  appliance_mode_support      = "disable"
+  dns_support                 = "enable"
+  tags                        = var.global_tags
+}

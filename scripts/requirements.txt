@@ -1,0 +1,3 @@
+# panorama-init needs paramiko (SSH). The license-manager + verify scripts use only the
+# Python stdlib (urllib) + the aws CLI, so no extra deps for those.
+paramiko>=3.0
