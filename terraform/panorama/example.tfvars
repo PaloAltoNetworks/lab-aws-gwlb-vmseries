@@ -3,10 +3,12 @@
 region      = "ca-central-1" # MUST differ from the security/FW region
 name_prefix = "pan-gwlb-lab-"
 
-### Panorama instance (latest+greatest: 12.1.7, >=16 vCPU / 32 GB, gp3 log disk)
+### Panorama instance (latest+greatest: 12.1.7, m5.4xlarge = 16 vCPU / 64 GB)
 panorama_version       = "12.1.7"
 panorama_instance_type = "m5.4xlarge"
-panorama_log_disk_gib  = 2000
+# 0 = no dedicated log disk (logs to /opt/panlogs on the root). A dedicated disk via the
+# module's volume-attachment hangs PAN-OS 12.1.7 first boot; see docs/GUIDE-CHANGES.md.
+panorama_log_disk_gib  = 0
 
 ### Networking
 vpc_cidr            = "192.168.10.0/24"

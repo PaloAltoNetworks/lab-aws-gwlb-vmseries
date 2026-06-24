@@ -48,11 +48,19 @@ and why. Structural items are settled; the P4 e2e pass may append more. Nothing 
 
 9. **Fresh public Marketplace Panorama image (no prepped golden AMI).** Eliminates the prepped-image
    failure class (panrepo too small, KMS-CMK cross-org sharing, version pinned below the FW). Costs
-   it adds, now documented: ~20-25 min first boot (the log disk init adds to it), Marketplace
-   subscription acceptance, and load-bearing sizing (12.x Panorama = `m5.4xlarge` + a **2 TB
-   (2000 GiB)** gp3 logging disk). The logging disk MUST be a 2 TB unit (the official module
-   default): an undersized disk (e.g. 1 TB) fails to initialize and the Panorama mgmt plane hangs
-   at boot. The guide must call out the 2 TB requirement explicitly.
+   it adds, now documented: ~15-20 min first boot, Marketplace subscription acceptance, and sizing
+   (12.x Panorama = `m5.4xlarge`, 224 GB gp3 root from the AMI default).
+
+   **Logging-disk gotcha (load-bearing).** A dedicated Panorama logging disk attached via the
+   official module's `ebs_volumes` (a post-launch `aws_volume_attachment`) HANGS PAN-OS 12.1.7
+   first boot: the mgmt plane never starts (CPU idle, console frozen at `eth0 link ready`, no SSH).
+   Confirmed by isolation: with no disk the same image reaches the login prompt in ~3 min. The
+   working hand-built 12.1.7 reference instead used an INLINE `ebs_block_device` (present in the
+   launch block-device mapping, 1024 GiB, unencrypted) and booted fine. The canonical 11.2 lab uses
+   NO dedicated disk and logs to `/opt/panlogs` on the root. So: default to **no dedicated log
+   disk** (logs to the root partition); a dedicated disk is a tracked follow-up that must use the
+   inline `ebs_block_device` method, which the official module does not expose (needs a module
+   wrapper or a raw instance for Panorama).
 
 10. **tfvars shape.** `az_index` (0/1) replaces `az` strings; `deploy_exercise_routes` gates the
     inspection-path routes (false = the student exercise; true = a fully-wired instructor/e2e env).

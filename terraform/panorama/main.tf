@@ -259,13 +259,18 @@ module "panorama" {
   ebs_encrypted     = true
   ebs_volume_type   = "gp3"
   ebs_kms_key_alias = "alias/aws/ebs"
-  ebs_volumes = [
+  # NOTE: the official module attaches log disks via a post-launch aws_volume_attachment,
+  # which hangs PAN-OS 12.1.7 first boot (mgmt plane never starts; confirmed by deploy
+  # without a disk reaching login in ~3 min vs hanging forever with one). Default to NO
+  # dedicated log disk (Panorama logs to /opt/panlogs on the 224 GB root, like the canonical
+  # 11.2 lab). A dedicated disk needs the inline ebs_block_device approach (follow-up).
+  ebs_volumes = var.panorama_log_disk_gib > 0 ? [
     {
       name            = "${var.name_prefix}panorama-logs"
       ebs_device_name = "/dev/sdb"
       ebs_size        = tostring(var.panorama_log_disk_gib)
     }
-  ]
+  ] : []
 
   ssh_key_name           = aws_key_pair.panorama.key_name
   subnet_id              = aws_subnet.mgmt.id
