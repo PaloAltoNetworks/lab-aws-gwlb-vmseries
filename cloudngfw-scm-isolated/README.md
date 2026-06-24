@@ -158,6 +158,8 @@ terraform output gwlbe_subnet_az_ids
 - In the Cloud NGFW console, open your firewall and copy its GWLB endpoint **service name** (looks like `com.amazonaws.vpce.us-east-1.vpce-svc-...`).
 - Edit `terraform.tfvars`:
 
+**Make sure to remove the `#` comment from the lines**
+
 ```
 insert_cngfw            = true
 cngfw_gwlb_service_name = "com.amazonaws.vpce.us-east-1.vpce-svc-0123456789abcdef0"
