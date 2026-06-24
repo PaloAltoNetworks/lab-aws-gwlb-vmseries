@@ -98,11 +98,18 @@ Run Terraform from the QwikLabs Cloud Shell, the same way as Part 1.
 <!-- /WORKSHOP-TEMP -->
 
 - Switch the AWS console **Region selector to `us-east-2` (Ohio)**, then open Cloud Shell.
-- Clone the repo and change into the Cloud NGFW Terraform directory.
+- Clone the repo and install Terraform. This fresh `us-east-2` shell does not carry over the Terraform binary you installed in Part 1 (Cloud Shell storage is per-region), so install it again with the same one-liner as Part 1:
 
 ```
-git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git
-cd lab-aws-gwlb-vmseries/cloudngfw-scm-isolated/terraform
+cd ~ && git clone https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git
+chmod +x ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && ~/lab-aws-gwlb-vmseries/terraform/install_terraform.sh && source ~/.bashrc
+```
+
+- Verify Terraform, then change into the Cloud NGFW Terraform directory and create your tfvars:
+
+```
+terraform version
+cd ~/lab-aws-gwlb-vmseries/cloudngfw-scm-isolated/terraform
 cp example.tfvars terraform.tfvars
 ```
 
