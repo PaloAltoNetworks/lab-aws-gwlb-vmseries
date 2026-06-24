@@ -239,12 +239,6 @@ The next part adds the cross-account IAM roles (via a CloudFormation template) a
 
 > &#8505; This is the natural place to see what the onboarding roles actually unlock: the core inspection above worked without them; decryption and CloudWatch logging do not.
 
-## 11. Cleanup
-
-- `terraform destroy` the lab VPC.
-- In SCM, delete the Cloud NGFW endpoints and the firewall resource.
-- Your QwikLabs account is recycled at the end of the workshop.
-
 ## References
 
 - *Cloud NGFW for AWS - Getting Started* (SCM onboarding, tenant V2, deployment-profile activation)
