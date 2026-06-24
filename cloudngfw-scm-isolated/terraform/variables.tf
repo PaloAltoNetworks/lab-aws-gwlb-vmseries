@@ -59,6 +59,12 @@ variable "web_instance_type" {
   default     = "t3.micro"
 }
 
+variable "gwlbe_route_delay" {
+  description = "Seconds to wait after the Cloud NGFW GWLB endpoint is created before adding routes to it. AWS rejects routes to a GWLB endpoint still in 'pending' state (RouteNotSupported), so the endpoint must reach 'available' first."
+  type        = string
+  default     = "150s"
+}
+
 variable "ca_secret_name" {
   description = "Name of the AWS Secrets Manager secret holding the Cloud NGFW forward-proxy CA (key + cert). The SCM Cloud Certificate references this as its Cloud Secret Name. The app instance role is granted read access to secrets matching this prefix for the decryption exercise."
   type        = string

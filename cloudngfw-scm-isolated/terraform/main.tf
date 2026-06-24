@@ -92,6 +92,14 @@ resource "aws_vpc_endpoint" "gwlbe" {
   }
 }
 
+# The GWLB endpoint returns from creation while still "pending"; AWS rejects a
+# route to it until it is "available". Wait before creating the redirect routes.
+resource "time_sleep" "gwlbe_ready" {
+  count           = var.insert_cngfw ? 1 : 0
+  depends_on      = [aws_vpc_endpoint.gwlbe]
+  create_duration = var.gwlbe_route_delay
+}
+
 # ---------------- Route tables ----------------
 # Public (NAT) RT - per AZ so return traffic can be steered back through the
 # firewall (GWLB requires flow symmetry; forward-proxy decryption breaks without it).
@@ -116,6 +124,7 @@ resource "aws_route" "public_return_to_fw" {
   route_table_id         = aws_route_table.public[each.key].id
   destination_cidr_block = local.app_subnets[each.key]
   vpc_endpoint_id        = aws_vpc_endpoint.gwlbe[each.key].id
+  depends_on             = [time_sleep.gwlbe_ready]
 }
 
 resource "aws_route_table_association" "public" {
@@ -163,6 +172,7 @@ resource "aws_route" "app_default_fw" {
   route_table_id         = aws_route_table.app[each.key].id
   destination_cidr_block = "0.0.0.0/0"
   vpc_endpoint_id        = aws_vpc_endpoint.gwlbe[each.key].id
+  depends_on             = [time_sleep.gwlbe_ready]
 }
 
 resource "aws_route_table_association" "app" {
