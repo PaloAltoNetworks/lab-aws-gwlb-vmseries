@@ -1,4 +1,4 @@
-# Cloud NGFW for AWS + Strata Cloud Manager - Isolated Outbound Lab (Part 2)
+# Cloud NGFW for AWS + Strata Cloud Manager - Isolated Model Lab (Part 2)
 
 > &#8505; This is Part 2, a self-contained lab. You deploy a new VPC and run its own Terraform independently of Part 1. Part 1 is needed for one thing only: its deployment profile, which you use to turn on Strata Cloud Manager Pro.
 
@@ -89,7 +89,12 @@ You do not need the 30-day eval. Your Part 1 deployment profile already includes
 
 Run Terraform from the QwikLabs Cloud Shell, the same way as Part 1.
 
-- Open Cloud Shell in `us-east-1`.
+> &#9888; AWS Cloud Shell gives you a 1 GB home directory **per region**, and Part 1's Terraform provider cache may have filled the `us-east-1` one. If `terraform init` fails with a no-space error, do either:
+>
+> - **Open Cloud Shell in a different region** (for example `us-east-2`) and run these same commands. The lab still deploys to `us-east-1` because the region is pinned in `terraform.tfvars`, so nothing else changes.
+> - Or **free space in the `us-east-1` shell** first: `find ~ -type d -name .terraform -prune -exec rm -rf {} +` (this clears cached providers, not your Part 1 state), then re-run `terraform init`.
+
+- Open Cloud Shell (`us-east-1`, or another region per the note above).
 - Clone the repo and change into the Cloud NGFW Terraform directory.
 
 ```
@@ -138,7 +143,7 @@ terraform output gwlbe_subnet_az_ids
 
 > &#10067; Why does Cloud NGFW ask for Availability Zone IDs instead of names?
 
-## 7. Step 4 - Insert Cloud NGFW into the egress path (Terraform, Phase 2)
+## 7. Step 4 - Insert Cloud NGFW into the traffic path (Terraform, Phase 2)
 
 - In the Cloud NGFW console, open your firewall and copy its GWLB endpoint **service name** (looks like `com.amazonaws.vpce.us-east-1.vpce-svc-...`).
 - Edit `terraform.tfvars`:
@@ -154,7 +159,7 @@ cngfw_gwlb_service_name = "com.amazonaws.vpce.us-east-1.vpce-svc-0123456789abcde
 terraform apply
 ```
 
-This creates the Cloud NGFW endpoint in each `gwlbe` subnet and redirects the app subnets' egress (and the return path) through it.
+This creates the Cloud NGFW endpoint in each `gwlbe` subnet and redirects the app subnets' egress, the inbound ALB-to-web hop, and both return paths through it.
 
 > &#8505; The apply pauses for about 2.5 minutes after creating the endpoint. A GWLB endpoint returns from creation in a `pending` state, and AWS rejects a route to it until it is `available`. The Terraform waits this out for you (`gwlbe_route_delay`).
 
