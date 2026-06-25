@@ -424,6 +424,29 @@ resource "aws_route" "app_to_lb_fw" {
   depends_on             = [time_sleep.gwlbe_ready]
 }
 
+# ---------------- Part B: CloudWatch log groups (created manually in the Part B guide) ----------------
+# The Part B lab guide has students create these two log groups themselves (AWS CLI or
+# console) as a learning step. The onboarding LogMetric role can write log streams and
+# events but NOT create a log group, so the groups must pre-exist with these exact names
+# (PaloAltoCloudNGFW / PaloAltoCloudNGFWAuditLog) for the role's IAM condition to permit
+# writes. They are intentionally left OUT of the Terraform so the code matches the guide
+# and so a student who already deployed Part A does not hit an "already exists" conflict.
+#
+# Uncomment the block below for a fully-automated / end-to-end deploy that provisions the
+# log groups in Terraform instead of by hand (var.log_retention_days controls retention).
+#
+# resource "aws_cloudwatch_log_group" "cngfw_traffic" {
+#   name              = "PaloAltoCloudNGFW"
+#   retention_in_days = var.log_retention_days
+#   tags              = { Name = "${var.name_prefix}cngfw-traffic" }
+# }
+#
+# resource "aws_cloudwatch_log_group" "cngfw_audit" {
+#   name              = "PaloAltoCloudNGFWAuditLog"
+#   retention_in_days = var.log_retention_days
+#   tags              = { Name = "${var.name_prefix}cngfw-audit" }
+# }
+
 # ---------------- SSM interface endpoints (management access independent of egress) ----------------
 # Without these the SSM agent reaches ssm / ssmmessages / ec2messages over the public
 # internet through the firewall + NAT, so any egress deny (deny-by-default, or an
