@@ -64,6 +64,8 @@ return:                app server -> Cloud NGFW endpoint -> [inspect] -> ALB -> 
 
 > &#10067; Why can this design inspect both inbound and outbound with one GWLB endpoint, when inspecting internet-facing inbound traffic at the edge would need a second one?
 
+> &#10067; Cross-zone load balancing is turned **off** on this ALB. Why does that matter once a Cloud NGFW endpoint is in the path? (Hint: the endpoint is zonal - traffic entering the AZ1 endpoint is inspected by the AZ1 firewall instance. If the ALB sent an AZ1 request to an AZ2 web server, the forward and return would cross different per-AZ endpoints and hit different firewall instances - asymmetric - and Gateway Load Balancer would drop the flow. Cross-zone off keeps each flow in one AZ: one endpoint, one firewall instance, both directions.)
+
 ## 3. Prerequisites
 
 - Your own QwikLabs AWS account. This lab is built for `us-east-1`.
