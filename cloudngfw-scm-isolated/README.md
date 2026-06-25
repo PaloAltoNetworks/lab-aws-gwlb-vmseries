@@ -236,14 +236,14 @@ Test both directions:
 
 You now have an application VPC whose **outbound and inbound** traffic is inspected by an SCM-managed Cloud NGFW, inserted as a single Gateway Load Balancer endpoint per AZ in the isolated model, with a security rule per direction authored in SCM-native policy. You did all of this with only your account **allowlisted** - no cross-account IAM roles.
 
-## 10. Coming next (Part B): onboarding, decryption, and logging
+## 10. Part B: onboarding, logging, and decryption
 
-The next part adds the cross-account IAM roles (via a CloudFormation template) and uses them to:
+Part B is a separate guide in this directory: [`PART-B.md`](PART-B.md). It onboards your AWS account with the cross-account IAM roles (via a CloudFormation template), then uses them to:
 
-- **Decrypt** outbound TLS with a forward-proxy certificate (an SCM Cloud Certificate bound to an AWS Secrets Manager secret), so Cloud NGFW can inspect the payload, not just the handshake.
 - **Forward logs** to CloudWatch (log groups `PaloAltoCloudNGFW` and `PaloAltoCloudNGFWAuditLog`) and publish metrics.
+- **Decrypt** TLS so Cloud NGFW inspects the payload, not just the handshake. Outbound traffic is decrypted with the firewall's own forward-trust CA (no AWS secret); inbound traffic is decrypted with your application's server certificate stored in an AWS Secrets Manager secret.
 
-> &#8505; This is the natural place to see what the onboarding roles actually unlock: the core inspection above worked without them; decryption and CloudWatch logging do not.
+> &#8505; Part B is where you see what onboarding actually unlocks: the core inspection above worked with allowlisting alone, but CloudWatch logging and inbound decryption do not. (Outbound decryption is the exception - it uses the firewall's own CA and needs no cross-account role.)
 
 ## References
 

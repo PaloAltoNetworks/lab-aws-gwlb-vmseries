@@ -70,3 +70,9 @@ variable "ca_secret_name" {
   type        = string
   default     = "aws-outbound-trust"
 }
+
+variable "log_retention_days" {
+  description = "Retention for the Cloud NGFW CloudWatch log groups (PaloAltoCloudNGFW / PaloAltoCloudNGFWAuditLog). Short by default since lab accounts are short-lived."
+  type        = number
+  default     = 7
+}
