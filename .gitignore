@@ -1,2 +1,11 @@
 # Local-only MCP server config (not part of the lab)
 .mcp.json
+
+# Terraform working files (students run these in Cloud Shell; never commit state/secrets)
+**/.terraform/
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+terraform.tfvars
+*.auto.tfvars
+crash.log
