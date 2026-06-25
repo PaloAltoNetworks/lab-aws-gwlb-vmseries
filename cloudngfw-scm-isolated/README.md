@@ -175,7 +175,7 @@ This creates the Cloud NGFW endpoint in each `gwlbe` subnet and redirects the ap
 
 > &#8505; The apply pauses for about 2.5 minutes after creating the endpoint. A GWLB endpoint returns from creation in a `pending` state, and AWS rejects a route to it until it is `available`. The Terraform waits this out for you (`gwlbe_route_delay`).
 
-> &#9888; Cloud NGFW denies by default. The moment you insert it, both directions stop: the app servers lose internet (including Session Manager), and the ALB page stops loading (its targets go unhealthy) until you add allow policy in the next step. That is expected.
+> &#9888; Cloud NGFW denies by default. The moment you insert it, both directions stop: the app servers lose outbound internet and the ALB page stops loading (its targets go unhealthy) until you add allow policy in the next step. That is expected. Session Manager keeps working - it reaches SSM through private VPC endpoints, so you keep your shell even while the data plane is denied.
 
 > &#10067; At this exact moment (routes flipped, no policy yet), where would you see an app server's outbound request being dropped?
 
@@ -218,7 +218,7 @@ Inbound rule, internet clients reaching the app through the ALB:
 
 Test both directions:
 
-- Outbound: from an app server (Session Manager), `curl -s https://ifconfig.me` and browse a few sites. You get a NAT public IP back, and Session Manager itself stays connected (it egresses over `ssl`).
+- Outbound: from an app server (Session Manager), `curl -s https://ifconfig.me` and browse a few sites. You get a NAT public IP back. Session Manager stays connected throughout because it uses the private SSM VPC endpoints, independent of your firewall policy.
 - Inbound: browse to `http://<alb_dns_name>/` (`terraform output alb_dns_name`). The app's headers page loads, served through the firewall.
 - View logs: SCM -> Configurations -> Cloud NGFWs -> your firewall -> View Logs. You should see both the outbound and inbound sessions.
 

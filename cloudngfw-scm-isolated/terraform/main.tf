@@ -423,3 +423,44 @@ resource "aws_route" "app_to_lb_fw" {
   vpc_endpoint_id        = aws_vpc_endpoint.gwlbe[each.key].id
   depends_on             = [time_sleep.gwlbe_ready]
 }
+
+# ---------------- SSM interface endpoints (management access independent of egress) ----------------
+# Without these the SSM agent reaches ssm / ssmmessages / ec2messages over the public
+# internet through the firewall + NAT, so any egress deny (deny-by-default, or an
+# outbound rule that does not match the agent's traffic) drops Session Manager. These
+# private interface endpoints keep SSM in-VPC: private DNS points the SSM service names
+# at ENIs in the VPC, so management access survives whatever the firewall policy does.
+resource "aws_security_group" "vpce" {
+  name        = "${var.name_prefix}vpce"
+  description = "SSM interface endpoints"
+  vpc_id      = aws_vpc.this.id
+
+  ingress {
+    description = "HTTPS from within the VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    description = "All egress"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = { Name = "${var.name_prefix}vpce" }
+}
+
+resource "aws_vpc_endpoint" "ssm" {
+  for_each            = toset(["ssm", "ssmmessages", "ec2messages"])
+  vpc_id              = aws_vpc.this.id
+  service_name        = "com.amazonaws.${var.region}.${each.key}"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = [for k, s in aws_subnet.app : s.id]
+  security_group_ids  = [aws_security_group.vpce.id]
+  private_dns_enabled = true
+  tags                = { Name = "${var.name_prefix}vpce-${each.key}" }
+}
