@@ -40,6 +40,8 @@ This lab uses the **isolated model**: the Cloud NGFW inspection endpoint lives i
 
 This lab inspects traffic in **both directions** with a **single** Cloud NGFW (Gateway Load Balancer) endpoint per Availability Zone.
 
+![Isolated model topology: App1 VPC across two AZs with a public ALB in front, a single Cloud NGFW GWLB endpoint per AZ inspecting both directions, and per-subnet route tables](images/isolated-topology.png)
+
 Outbound (app servers reaching the internet):
 
 ```
