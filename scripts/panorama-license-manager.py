@@ -46,11 +46,14 @@ from pathlib import Path
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S")
 LOG = logging.getLogger("lm")
 
-# ── sw_fw_license plugin schema (adjust here if a plugin version differs) ──
+# ── sw_fw_license plugin schema (verified live against PAN-OS 12.1.7 / plugin 1.2.3) ──
+# Node names are SINGULAR (bootstrap-definition / license-manager). authcode element is
+# "authcode" (not "auth-code"). license-manager entry holds device-group/template-stack/
+# bootstrap-definition (string refs) + optional auto-deactivate (1-24 hrs).
 DEV = "/config/devices/entry[@name='localhost.localdomain']"
 SWFW = f"{DEV}/plugins/sw_fw_license"
-XP_BOOTSTRAP_DEFS = f"{SWFW}/bootstrap-definitions"
-XP_LICENSE_MGRS = f"{SWFW}/license-managers"
+XP_BOOTSTRAP_DEFS = f"{SWFW}/bootstrap-definition"
+XP_LICENSE_MGRS = f"{SWFW}/license-manager"
 
 
 def ssl_ctx():
@@ -169,7 +172,7 @@ def main():
     ap.add_argument("--device-group", default="AWS-GWLB-LAB")
     ap.add_argument("--template", default="tpl-aws-gwlb-lab")
     ap.add_argument("--template-stack", default="stack-aws-gwlb-lab")
-    ap.add_argument("--auto-deactivate", default="24", help="Hours of disconnection before returning credits, or 'never'.")
+    ap.add_argument("--auto-deactivate", default="never", help="Hours (1-24) before returning credits after a FW disconnects; non-numeric (e.g. 'never') omits it = never deactivate (lab default).")
     ap.add_argument("--ssm-param", default="/pan-gwlb-lab/lm-authkey")
     ap.add_argument("--ssm-region", default="us-west-1", help="Region whose SSM the security-stack reads (the FW region).")
     ap.add_argument("--dump", action="store_true", help="Print the live sw_fw_license config and exit (schema verification).")
@@ -187,23 +190,26 @@ def main():
     if not args.authcode:
         raise SystemExit("No authcode: pass --authcode or set QWIKLABS_REFACTOR_VM_AUTHCODE.")
 
-    # 0. Confirm the sw_fw_license plugin is installed (panorama-init installs it).
-    plugins = op(args.ip, key, "<show><plugins><packages></packages></plugins></show>", ctx, timeout=30)
+    # 0. Confirm the sw_fw_license plugin is installed. (PAN-OS 12.1 bundles plugins; install
+    #    from the bundle via `request plugins install sw_fw_license-<ver>` or the Panorama UI.)
+    plugins = op(args.ip, key, "<show><plugins><installed></installed></plugins></show>", ctx, timeout=30)
     if "sw_fw_license" not in plugins:
-        raise SystemExit("sw_fw_license plugin not installed. Run panorama-init with --plugins sw_fw_license-<ver> first.")
+        raise SystemExit("sw_fw_license plugin not installed. PAN-OS 12.1: install from the Plugins bundle (UI) or 'request plugins install sw_fw_license-<ver>'.")
     LOG.info("✅ sw_fw_license plugin present.")
 
     # 1. Device group + template + template stack (bootstrap targets).
     ensure(args.ip, key, f"{DEV}/device-group", f"<entry name='{args.device_group}'/>", ctx, f"device-group {args.device_group}")
     ensure(args.ip, key, f"{DEV}/template", f"<entry name='{args.template}'><config><devices><entry name='localhost.localdomain'><vsys><entry name='vsys1'/></vsys></entry></devices></config></entry>", ctx, f"template {args.template}")
     ensure(args.ip, key, f"{DEV}/template-stack",
-           f"<entry name='{args.template_stack}'><templates><member>{args.template}</member></templates></entry>", ctx,
+           f"<entry name='{args.template_stack}'><templates><member>{args.template}</member></templates>"
+           f"<settings><default-vsys>vsys1</default-vsys></settings></entry>", ctx,
            f"template-stack {args.template_stack}")
 
     # 2. sw_fw_license: bootstrap-definition (authcode) + license-manager (binding).
-    ad = "<never/>" if args.auto_deactivate.lower() == "never" else f"<auto-deactivate>{args.auto_deactivate}</auto-deactivate>"
+    # auto-deactivate is optional (1-24 hrs); non-numeric (e.g. "never") omits it = never deactivate.
+    ad = f"<auto-deactivate>{args.auto_deactivate}</auto-deactivate>" if str(args.auto_deactivate).isdigit() else ""
     ensure(args.ip, key, XP_BOOTSTRAP_DEFS,
-           f"<entry name='{args.bootstrap_def}'><auth-code>{args.authcode}</auth-code></entry>", ctx,
+           f"<entry name='{args.bootstrap_def}'><authcode>{args.authcode}</authcode></entry>", ctx,
            f"bootstrap-definition {args.bootstrap_def}")
     ensure(args.ip, key, XP_LICENSE_MGRS,
            f"<entry name='{args.lm_name}'>"
