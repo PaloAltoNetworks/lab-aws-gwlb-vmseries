@@ -82,8 +82,41 @@ and why. Structural items are settled; the P4 e2e pass may append more. Nothing 
 14. **First build = AIRS 12.1.6 firewalls / Panorama 12.1.7** (latest+greatest), versus the old
     11.2.x. 11.2.10-h6 / 11.2.12 remains the documented fallback pair.
 
-## To verify / likely-append during P4 e2e
-- Exact `sw_fw_license` config xpaths (verified via `--dump` against the live Panorama).
-- Whether the device certificate is fetched (CSP OTP) or skipped (Berg: not bootstrap-critical).
-- Any FW-side template/policy config the guide must teach for the three flows (zones, security
-  policy, GWLB health-probe interface-mgmt-profile).
+## PAN-OS 12.1 Panorama provisioning (operational learnings from the live build)
+
+Provisioning a fresh 12.1.7 Panorama differs from the prepped-image 11.2 lab in load-bearing ways:
+
+15. **Bundled plugins (12.1).** Plugins ship bundled in the image; you install from the bundle
+    (Panorama UI "Bundled Plugins", or `request plugins install <name>`). The old
+    `request plugins download file <name>` path is **server-refused** with
+    `Only Cloud Services plugin is allowed for download` on 12.1. panorama-init's plugin step
+    (download-then-install) therefore fails on 12.1 and needs an install-from-bundle path
+    (tracked: patch the vendored panorama-init or wrap it). The companion + guide assume the
+    plugin is installed from the bundle.
+
+16. **Panorama-mode needs a logging disk + a reboot.** A fresh 12.1 image boots
+    `system-mode: management-only`. Attaching a logging disk (any supported size; the module's
+    post-launch volume-attachment is fine) and **rebooting** makes PAN-OS auto-switch to
+    `panorama` mode (the disk goes Present->Available, then panorama-mode on reboot).
+    `request system system-mode panorama` fails while the disk is still being integrated; the
+    reboot is the reliable trigger. (The earlier "disk hangs the boot" was a misdiagnosis — see
+    item 17.)
+
+17. **Connectivity, not Panorama, was the multi-day red herring.** The "boot hang / mgmt plane
+    dead" symptoms were a **single-`/32` security group vs a rotating runner egress IP**: the
+    runner's corp IP rotated out of the SG mid-session, so SSH/443 "timed out" (dropped, not
+    refused) while Panorama was healthy. `get-console-output` is stale (caps ~283s; use
+    `get-console-screenshot`), and a healthy idle Panorama sits at ~1% CPU (idle != stuck).
+    Fix: allow the runner's stable range (or use the runner-EC2 with a fixed IP).
+
+18. **Licensing sequence (12.1, no prepped image):** device cert via OTP
+    (`request certificate fetch otp <otp>`, single-use/short-lived) -> `request license fetch`
+    (pulls the Device-Management license if the serial is provisioned in CSP) -> install
+    `sw_fw_license` from the bundle -> the License-Manager companion (DG + template-stack +
+    bootstrap-definition + license-manager, commit, retrieve `_AQ__` key). The `sw_fw_license`
+    config schema (verified): singular `bootstrap-definition`/`license-manager` nodes, `authcode`
+    element, template-stack requires a `<settings>` element.
+
+## Still to confirm during P4 e2e
+- FW-side template/policy config for the three flows (zones, security policy, GWLB
+  health-probe interface-mgmt-profile) — how much is bootstrap-driven vs needs Panorama push.
