@@ -1,5 +1,13 @@
 # Guide changes forced by the official-modules refactor
 
+> **CORRECTION (2026-06-26):** items 9, 16, 17 below were written mid-debug and wrongly blamed the
+> Panorama logging disk for the boot "hang." The real cause was a single-`/32` security group vs the
+> runner's rotating corp egress IP (see item 17) — **the disk attachment via the official module's
+> `ebs_volumes` works fine**, and `panorama_log_disk_gib = 2000` is the correct value (panorama-mode
+> needs the logging disk). The fresh 12.1 image boots `management-only`; attach the disk + **reboot**
+> and it auto-switches to `panorama` mode. The `variables.tf` default (0) and the "no dedicated disk"
+> framing should be reverted to 2000 during the P5 cleanup. See HANDOVER-gwlb-refactor-2026-06-26.
+
 Running list for Berg's review (decision #4). Every change the refactor forces in the lab guide
 (`README.md`) versus the old build. The guide is the crown jewel, so each item notes what changes
 and why. Structural items are settled; the P4 e2e pass may append more. Nothing here is applied to
