@@ -99,9 +99,15 @@ You deploy the centralized **Virtual WAN** design: a Virtual WAN with a single V
 
 > &#8505; **Why Cloud Shell.** It gives you `az`, `terraform`, `git`, and a web **VS Code editor** with zero local setup, plus a **persistent home directory** — so your cloned repo and Terraform state survive across sessions.
 
-- In the Azure Portal, click the **Cloud Shell** icon (`>_`) in the top bar, and choose **Bash**.
-- If it's your first time, accept the prompt to create storage (Cloud Shell makes a small storage account for your home directory automatically — one-time, reused after).
-- Point Cloud Shell at the shared lab subscription and confirm your tooling:
+- Make sure the Azure Portal is in the **lab directory/tenant** your instructor named (switch via **Settings → Directories + subscriptions** if needed), then click the **Cloud Shell** icon (`>_`) in the top bar and choose **Bash**.
+- On first launch you'll get a **Getting started** dialog. This is where you pick your subscription **and** set up storage — do this:
+  - Choose **Mount storage account** (it persists your files between sessions).
+  - **Storage account subscription** → select the **lab subscription** your instructor named.
+  - Click **Next**, choose **"We will create a storage account for you"**, then **Next**. One-time; it's reused on later launches.
+
+> &#9888; Don't pick **"No storage account required"** (ephemeral). An ephemeral shell loses your cloned repo and Terraform state if the session resets — painful during the ~40-min apply.
+
+- Once the shell opens you're already on the lab subscription. Confirm it and your tooling (the `az account set` is just a belt-and-suspenders check if you have more than one subscription):
 
 ```
 az account set --subscription "<SUBSCRIPTION_ID_FROM_INSTRUCTOR>"
