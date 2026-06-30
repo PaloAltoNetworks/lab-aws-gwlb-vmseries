@@ -1,8 +1,8 @@
 ### Global
-# REQUIRED on a shared account: set the SAME short unique prefix you used for the Panorama
-# deploy (e.g. your initials + "-", like "ad-"). Each student must differ. This is how the
-# VM-Series stack finds YOUR Panorama (it looks up the peer TGW by "<prefix>tgw-us-west-2").
-prefix_name_tag  = "CHANGEME-"
+# prefix_name_tag: leave "" for a dedicated account (the normal case). Set a SHORT unique
+# prefix ONLY if multiple students share one AWS account. If you set it, use the SAME prefix
+# you used for the Panorama deploy (this stack finds your Panorama via "<prefix>tgw-us-west-2").
+prefix_name_tag  = ""
 region           = "us-east-1"
 peer_region      = "us-west-2"
 fw_instance_type = "m5.xlarge"
@@ -12,12 +12,11 @@ fw_instance_type = "m5.xlarge"
 #   "airs"  = AI Runtime Security (prod-v7k5pwjb72ea2)     <-- flex/AIRS; set fw_version to an AIRS image (e.g. 11.2.11)
 #   "payg1" / "payg2" = pre-licensed Pay-As-You-Go bundles (billed hourly by AWS)
 fw_license_type  = "byol"
-# fw_version: PAN-OS version for the AMI lookup. MUST be <= your Panorama version.
-#   This lab's Panorama runs 11.2.x, so keep the firewalls on 11.2.x.
-#   byol example: 11.2.12   |   airs example: 11.2.11
+# fw_version: PAN-OS version for the VM-Series AMI lookup. MUST MATCH panorama_version in
+#   terraform/panorama/terraform.tfvars (Panorama must be >= the firewalls). Default 11.2.12.
 fw_version       = "11.2.12"
-# >>> Set this to YOUR key pair name. The key pair must exist in us-east-1 (EC2 Console -> Key Pairs).
-# >>> Leave as "" ONLY if running on QwikLabs (auto-detects the qwikLABS* key).
+# SSH key: leave "" to have Terraform mint a key (writes vmseries-ssh-key.pem locally).
+# Set to a key pair name only if you want to bring your own.
 vmseries_ssh_key_name     = ""
 panorama_host    = "192.168.10.10"
 

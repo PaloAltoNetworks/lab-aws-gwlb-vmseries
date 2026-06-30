@@ -1,8 +1,9 @@
 ## General
 region                = "us-west-2"
-# REQUIRED on a shared account: set a SHORT prefix UNIQUE TO YOU (e.g. your initials + "-",
-# like "ad-") so your resources don't collide with other students. Each student must differ.
-prefix_name_tag       = "CHANGEME-"
+# prefix_name_tag: leave "" for a dedicated account (the normal case). Set a SHORT unique
+# prefix (e.g. "ad-") ONLY if multiple students share one AWS account, so resources don't
+# collide. If you set it, use the SAME prefix in security-vpc-east1.auto.tfvars.
+prefix_name_tag       = ""
 
 global_tags = {
   ManagedBy   = "terraform"
@@ -122,15 +123,15 @@ panorama_create_iam_role             = true
 #panorama_existing_iam_role_name = "PanoramaROCuratedRole" <-- use this variable to attach existing IAM Role.
 
 ## Panorama
-# >>> Set this to YOUR key pair name. The key pair must exist in us-west-2 (EC2 Console -> Key Pairs).
-# >>> Leave as "" ONLY if running on QwikLabs (auto-detects the qwikLABS* key).
+# SSH key: leave "" to have Terraform mint a key (writes panorama-ssh-key.pem locally).
+# Set to a key pair name only if you want to bring your own.
 panorama_ssh_key_name     = ""
-# Pre-baked lab Panorama image (panorama-aws-advanced-lab-11.1.2-h3, owner 367521625516),
-# shared to account 961341553712 in us-west-2. Carries license + baseline Template/Device Group
-# that the §4.8 prep and VM-Series bootstrap depend on.
-# NOTE: image is PAN-OS 11.1.2-h3 while VM-Series target is 11.1.4-h7 (Panorama slightly older
-# than managed FWs — original lab pairing; watch for content/commit-push quirks).
-panorama_ami_id           = "ami-0927942a5ff1290e9"
+# Panorama PAN-OS version. Deployed from the public AWS Marketplace Panorama image (no prepped
+# image). MUST MATCH the VM-Series fw_version in security-vpc-east1.auto.tfvars.
+panorama_version          = "11.2.12"
+# panorama_ami_id: leave null to auto-select the Marketplace image for panorama_version above.
+# Only set a specific AMI ID here if you must pin one.
+panorama_ami_id           = null
 panorama_az               = "us-west-2a"
 private_ip_address        = "192.168.10.10"
 panorama_create_public_ip = true

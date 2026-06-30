@@ -1,20 +1,31 @@
 ### SSH key pair selection
-# Bring-your-own-key: if var.panorama_ssh_key_name is set, use it directly (shared/standard account).
-# Otherwise (null or ""), fall back to auto-detecting the QwikLabs-generated key (qwikLABS*).
+# By default Terraform MINTS a fresh key pair and writes the private key to
+# ./panorama-ssh-key.pem (gitignored) on the machine running Terraform. Use it to SSH to
+# Panorama: ssh -i panorama-ssh-key.pem admin@<panorama-eip>.
+# To bring your own key instead, set panorama_ssh_key_name in terraform.tfvars.
 
 locals {
-  use_qwiklabs_key      = var.panorama_ssh_key_name == null || var.panorama_ssh_key_name == ""
-  panorama_ssh_key_name = local.use_qwiklabs_key ? data.aws_key_pair.panorama[0].key_name : var.panorama_ssh_key_name
+  mint_panorama_key     = var.panorama_ssh_key_name == null || var.panorama_ssh_key_name == ""
+  panorama_ssh_key_name = local.mint_panorama_key ? aws_key_pair.panorama[0].key_name : var.panorama_ssh_key_name
 }
 
-data "aws_key_pair" "panorama" {
-  count              = local.use_qwiklabs_key ? 1 : 0
-  include_public_key = true
+resource "tls_private_key" "panorama" {
+  count     = local.mint_panorama_key ? 1 : 0
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
 
-  filter {
-    name   = "key-name"
-    values = ["qwikLABS*"]
-  }
+resource "aws_key_pair" "panorama" {
+  count      = local.mint_panorama_key ? 1 : 0
+  key_name   = "${var.prefix_name_tag}gwlb-lab-panorama"
+  public_key = tls_private_key.panorama[0].public_key_openssh
+}
+
+resource "local_file" "panorama_ssh_key" {
+  count           = local.mint_panorama_key ? 1 : 0
+  content         = tls_private_key.panorama[0].private_key_pem
+  filename        = "${path.module}/panorama-ssh-key.pem"
+  file_permission = "0600"
 }
 
 ### Panorama Encrypted Volumes

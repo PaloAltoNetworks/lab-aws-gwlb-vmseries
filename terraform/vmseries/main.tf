@@ -1,20 +1,31 @@
 ### SSH key pair selection
-# Bring-your-own-key: if var.vmseries_ssh_key_name is set, use it directly (shared/standard account).
-# Otherwise (null or ""), fall back to auto-detecting the QwikLabs-generated key (qwikLABS*).
+# By default Terraform MINTS a fresh key pair and writes the private key to
+# ./vmseries-ssh-key.pem (gitignored) on the machine running Terraform. Use it to SSH to the
+# VM-Series mgmt EIPs (admin@<mgmt-eip>) and the spoke test hosts (ec2-user@<host>).
+# To bring your own key instead, set vmseries_ssh_key_name in security-vpc-east1.auto.tfvars.
 
 locals {
-  use_qwiklabs_key      = var.vmseries_ssh_key_name == null || var.vmseries_ssh_key_name == ""
-  vmseries_ssh_key_name = local.use_qwiklabs_key ? data.aws_key_pair.vmseries[0].key_name : var.vmseries_ssh_key_name
+  mint_vmseries_key     = var.vmseries_ssh_key_name == null || var.vmseries_ssh_key_name == ""
+  vmseries_ssh_key_name = local.mint_vmseries_key ? aws_key_pair.vmseries[0].key_name : var.vmseries_ssh_key_name
 }
 
-data "aws_key_pair" "vmseries" {
-  count              = local.use_qwiklabs_key ? 1 : 0
-  include_public_key = true
+resource "tls_private_key" "vmseries" {
+  count     = local.mint_vmseries_key ? 1 : 0
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
 
-  filter {
-    name   = "key-name"
-    values = ["qwikLABS*"]
-  }
+resource "aws_key_pair" "vmseries" {
+  count      = local.mint_vmseries_key ? 1 : 0
+  key_name   = "${var.prefix_name_tag}gwlb-lab-vmseries"
+  public_key = tls_private_key.vmseries[0].public_key_openssh
+}
+
+resource "local_file" "vmseries_ssh_key" {
+  count           = local.mint_vmseries_key ? 1 : 0
+  content         = tls_private_key.vmseries[0].private_key_pem
+  filename        = "${path.module}/vmseries-ssh-key.pem"
+  file_permission = "0600"
 }
 
 

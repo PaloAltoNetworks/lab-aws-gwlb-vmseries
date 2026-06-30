@@ -9,3 +9,6 @@
 terraform.tfvars
 *.auto.tfvars
 crash.log
+
+# Minted SSH private keys (terraform local_file) - never commit
+*.pem
