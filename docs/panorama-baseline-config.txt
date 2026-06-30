@@ -1,0 +1,71 @@
+set shared tag gwlbe-outbound color color4
+set shared tag spoke color color13 comments "AWS Spoke / App Workload resources"
+set shared tag app1 color color3 comments "Spoke App1 VPC"
+set shared tag app2 color color29 comments "Spoke App2 VPC"
+
+set shared address gwlb-data1-10.100.0.16_28 ip-netmask 10.100.0.16/28
+set shared address gwlb-data1-10.100.0.16_28 description "GWLB / VM-Series Data subnet 1"
+set shared address gwlb-data2-10.100.1.16_28 ip-netmask 10.100.1.16/28
+set shared address gwlb-data2-10.100.1.16_28 description "GWLB / VM-Series Data subnet 2"
+set shared address rfc-10 ip-netmask 10.0.0.0/8
+set shared address app1-web1-10.200.0.48 ip-netmask 10.200.0.48/28
+set shared address app1-web1-10.200.0.48 description "Spoke App1 Web1 Subnet"
+set shared address app1-web1-10.200.0.48 tag [ app1 spoke ]
+set shared address app1-web2-10.200.1.48 ip-netmask 10.200.1.48/28
+set shared address app1-web2-10.200.1.48 description "Spoke App1 Web2 Subnet"
+set shared address app1-web2-10.200.1.48 tag [ app1 spoke ]
+set shared address app2-web1-10.250.0.48 ip-netmask 10.250.0.48/28
+set shared address app2-web1-10.250.0.48 description "Spoke App2 Web1 Subnet"
+set shared address app2-web1-10.250.0.48 tag [ app2 spoke ]
+set shared address app2-web2-10.250.1.48 ip-netmask 10.250.1.48/28
+set shared address app2-web2-10.250.1.48 description "Spoke App2 Web2 Subnet"
+set shared address app2-web2-10.250.1.48 tag [ app2 spoke ]
+set shared address app1-alb1-10.200.0.16 ip-netmask 10.200.0.16/28
+set shared address app1-alb1-10.200.0.16 description "Spoke App1 ALB Public Subnet 1"
+set shared address app1-alb1-10.200.0.16 tag [ app1 spoke ]
+set shared address app1-alb2-10.200.1.16 ip-netmask 10.200.1.16/28
+set shared address app1-alb2-10.200.1.16 description "Spoke App1 ALB Public Subnet 2"
+set shared address app1-alb2-10.200.1.16 tag [ app1 spoke ]
+set shared address app2-alb1-10.250.0.16 ip-netmask 10.250.0.16/28
+set shared address app2-alb1-10.250.0.16 description "Spoke App2 ALB Public Subnet 1"
+set shared address app2-alb1-10.250.0.16 tag [ app2 spoke ]
+set shared address app2-alb2-10.250.1.16 ip-netmask 10.250.1.16/28
+set shared address app2-alb2-10.250.1.16 description "Spoke App2 ALB Public Subnet 2"
+set shared address app2-alb2-10.250.1.16 tag [ app2 spoke ]
+
+set shared log-settings profiles default enhanced-application-logging yes
+set shared log-settings profiles default match-list traffic log-type traffic filter "All Logs" send-to-panorama yes quarantine no
+set shared log-settings profiles default match-list auth log-type auth filter "All Logs" send-to-panorama yes quarantine no
+set shared log-settings profiles default match-list data log-type data filter "All Logs" send-to-panorama yes quarantine no
+set shared log-settings profiles default match-list decryption log-type decryption filter "All Logs" send-to-panorama yes quarantine no
+set shared log-settings profiles default match-list threat log-type threat filter "All Logs" send-to-panorama yes quarantine no
+set shared log-settings profiles default match-list url log-type url filter "All Logs" send-to-panorama yes quarantine no
+set shared log-settings profiles default match-list wildfire log-type wildfire filter "All Logs" send-to-panorama yes quarantine no
+set shared log-settings profiles default match-list tunnel-enhanced-app-logging log-type tunnel filter "All Logs" send-to-panorama yes quarantine no
+
+set template tpl-aws-gwlb-lab settings default-vsys vsys1
+set template tpl-aws-gwlb-lab description "Template settings for AWS GWLB Deployment"
+set template tpl-aws-gwlb-lab config devices localhost.localdomain network interface ethernet ethernet1/1 layer3 dhcp-client enable yes
+set template tpl-aws-gwlb-lab config devices localhost.localdomain network virtual-router vr-default ecmp algorithm ip-modulo
+set template tpl-aws-gwlb-lab config devices localhost.localdomain network virtual-router vr-default interface ethernet1/1
+set template tpl-aws-gwlb-lab config devices localhost.localdomain vsys vsys1 import network interface ethernet1/1
+set template tpl-aws-gwlb-lab config devices localhost.localdomain vsys vsys1 zone gwlb network layer3 ethernet1/1
+set template tpl-aws-gwlb-lab config devices localhost.localdomain vsys vsys1 zone gwlb network log-setting default
+
+set template-stack stack-aws-gwlb-lab settings default-vsys vsys1
+set template-stack stack-aws-gwlb-lab templates tpl-aws-gwlb-lab
+
+set device-group AWS-GWLB-LAB reference-templates tpl-aws-gwlb-lab
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any from gwlb
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any to gwlb
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any source any
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any destination any
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any source-user any
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any category any
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any application any
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any service any
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any source-hip any
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any destination-hip any
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any action allow
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any log-setting default
+set device-group AWS-GWLB-LAB pre-rulebase security rules student-gwlb-any description "Initial Temporary rule with logging to catch all traffic. This should be replaced with an explicit DENY policy once others are in place"

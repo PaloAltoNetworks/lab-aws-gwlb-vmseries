@@ -62,7 +62,7 @@ Use the corresponding [quiz](https://docs.google.com/forms/d/e/1FAIpQLSfkJdW2cz8
   - [4.7. Deploy Panorama and TGW Infrastructure with Terraform](#47-deploy-panorama-and-tgw-infrastructure-with-terraform)
     - [4.7.1. Provision Panorama Licensing with Software NGFW Credits](#471-provision-panorama-licensing-with-software-ngfw-credits)
   - [4.8. Prepare Panorama](#48-prepare-panorama)
-    - [4.8.1. Apply Your New Serial Number (Prepped Image)](#481-apply-your-new-serial-number-prepped-image)
+    - [4.8.1. Apply Your New Serial Number and License](#481-apply-your-new-serial-number-and-license)
     - [4.8.2. Prepare Panorama for Logging and Bootstrapping](#482-prepare-panorama-for-logging-and-bootstrapping)
   - [4.9. Update Deployment Values in tfvars for VM-series](#49-update-deployment-values-in-tfvars-for-vm-series)
   - [4.10. Apply Terraform](#410-apply-terraform)
@@ -185,6 +185,8 @@ The `awsstudent` user and its `default_policy` Deny are QwikLabs-only. Your SSO 
 
 > &#8505; By default this lab deploys the **VM-Series Next-Generation Firewall (BYOL)** image and licenses it with Software NGFW (flex) credits via the deployment profile in [4.7.1](#471-provision-panorama-licensing-with-software-ngfw-credits). If you set `fw_license_type = "airs"` in the tfvars (see [4.5](#45-search-available-vm-series-images-amis)), you instead deploy the **AI Runtime Security** image (Product ID `prod-v7k5pwjb72ea2`, also flex-licensed). Subscribe to whichever one you will deploy.
 
+> &#9888; This lab is built and tested with the **BYOL VM-Series** image. The `airs` option is left in place for convenience but has **not** been validated end to end here - use it at your own risk.
+
 - Search for `AWS Marketplace Subscriptions` in top search bar
 - Select Discover Products from left menu -> Filter for Publisher "Palo Alto Networks". Explore the various offerings available
 - Select Manage Subscriptions from the left menu
@@ -270,7 +272,7 @@ aws ec2 describe-images --filters "Name=owner-alias,Values=aws-marketplace" Name
 >   "payg2" = "806j2of0qy5osgjjixq9gqc6g"   # PAYG, Advanced Security subscriptions
 >   "airs"  = "b261y39exndwe1ltro1tqpeog"   # AI Runtime Security (prod-v7k5pwjb72ea2)
 >```
-> This lab **defaults to `fw_license_type = "byol"` and `fw_version = "11.2.12"`** (set in `security-vpc-east1.auto.tfvars`). To deploy AI Runtime Security instead, set `fw_license_type = "airs"` and an AIRS `fw_version` such as `11.2.11`. Either way you license the firewalls with [Software NGFW Flex Credits](https://www.paloaltonetworks.com/resources/tools/ngfw-credits-estimator) via the deployment profile in 4.7.1.
+> This lab **defaults to `fw_license_type = "byol"` and `fw_version = "11.2.12"`** (set in `security-vpc-east1.auto.tfvars`). To deploy AI Runtime Security instead, set `fw_license_type = "airs"` and an AIRS `fw_version` such as `11.2.11`. Either way you license the firewalls with [Software NGFW Flex Credits](https://www.paloaltonetworks.com/resources/tools/ngfw-credits-estimator) via the deployment profile in 4.7.1. **Note: this lab is tested with BYOL only; the `airs` path is not validated here.**
 >
 > The `payg*` images come pre-licensed and are billed hourly by AWS, which is good for short-lived or autoscaling capacity but generally costlier over time.
 
@@ -324,16 +326,16 @@ terraform version
 cd ~/lab-aws-gwlb-vmseries/terraform/panorama
 ```
 
-> &#8505; On QwikLabs no edits are needed here - leave `panorama_ssh_key_name = ""` (it auto-detects the `qwikLABS*` key) and `prefix_name_tag = ""`. Just `init` and `apply`.
+> &#8505; On QwikLabs no edits are needed here - leave `panorama_ssh_key_name = ""` (Terraform mints the key, see 4.1.1) and `prefix_name_tag = ""`. Just `init` and `apply`.
 
 <details>
 <summary><b>⚙️ Shared / standard account - edit <code>terraform.tfvars</code> first</b></summary>
 
 Open `terraform/panorama/terraform.tfvars` and set:
-- `panorama_ssh_key_name` = the key pair name you created in 4.1.1 (must exist in `us-west-2`).
 - `prefix_name_tag` = a short unique prefix, e.g. your initials + `-` (such as `"ad-"`), so your VPC, TGW, IAM role, etc. don't collide with other students in the shared account.
+- (Optional) `panorama_ssh_key_name` = your own key pair name if you would rather bring your own than use the minted key (see 4.1.1); it must exist in `us-west-2`.
 
-The AMI (`panorama_ami_id`) and region are already set - no change needed.
+The region is `us-west-2` and `panorama_ami_id` is `null` (auto-selects the Marketplace image for `panorama_version`) - no change needed.
 
 </details>
 
@@ -363,7 +365,7 @@ terraform apply
 
 ### 4.7.1. Provision Panorama Licensing with Software NGFW Credits
 
-> &#8505; The lab Panorama image is partially prepped and **already licensed**, so this step is **not strictly required** if you deployed the prepped image. It **is** required if you bring up Panorama from the public Marketplace image. Either way, walk through it once - provisioning a license from a **Software NGFW Credits** deployment profile is the real-world workflow and is worth seeing end to end.
+> &#8505; The Panorama is deployed from the **stock AWS Marketplace image**, so it is not pre-licensed - this step is **required**. Provisioning a license from a **Software NGFW Credits** deployment profile is also the real-world workflow and is worth seeing end to end.
 
 [Software NGFW Credits](https://docs.paloaltonetworks.com/vm-series/11-1/vm-series-deployment-guide/license-the-vm-series-firewall/software-ngfw-credits) are a flexible, pooled licensing model ("flex credits"): instead of perpetual per-VM licenses, you allocate credits from a pool to a **deployment profile** that describes how many firewalls/vCPUs you need and which subscriptions to enable. The same profile can also license **Panorama** - for management and/or as a dedicated log collector. Provisioning generates a Software NGFW **auth code** (starts with `D`) that the firewall or Panorama uses to license itself.
 
@@ -405,38 +407,45 @@ terraform apply
 
 ## 4.8. Prepare Panorama
 
-> &#8505; The Panorama was deployed from a partially prepped image that is licensed and has a baseline Template/Device Group. However, additional steps will be completed here to prepare the Panorama for logging and bootstrapping.
+> &#8505; The Panorama was deployed from the stock AWS Marketplace image, so it starts essentially empty and unlicensed. In this section you set an admin password, apply a baseline configuration snippet (template, template stack, device group, and a starter security rule), then prepare Panorama for logging and bootstrapping.
 
-- Copy the `panorama_url` from the Terraform output and access it in a browser.
-  
-- Authenticate using the credentials from `aws-gwlb-lab-secrets.txt` *(shared / standard account: use the Panorama admin credentials provided by your instructor - the pre-baked lab image ships with set credentials)*
+- Copy the `panorama_url` from the Terraform output - you will use it for the web UI shortly.
 
-### 4.8.1. Apply Your New Serial Number (Prepped Image)
+- The Marketplace image has no preset web-UI password. SSH in with the minted key (4.1.1) and set one:
 
-> &#9888; **Do this if you provisioned a new Panorama serial/license in [4.7.1](#471-provision-panorama-licensing-with-software-ngfw-credits).** Panorama and the managed firewalls cannot obtain device certificates until the serial number is set, so this is required for licensing and for the VM-Series to connect. The pre-baked image manages **itself** as a log collector keyed by its *current* serial, and you cannot change the serial while that managed-collector config is in place, so remove it first.
+```
+ssh -i panorama-ssh-key.pem admin@<panorama-eip>
+configure
+set mgt-config users admin password      # enter and confirm a new password
+```
 
-1. **Remove the log collector config.** Panorama > Collector Groups -> delete the existing collector group. Then Panorama > Managed Collectors -> delete the existing managed collector (it is named with the Panorama's *current* serial). **Commit to Panorama.**
-2. **Set the new serial number.** Panorama > Setup > Management -> set the **Serial Number** to the one you provisioned in 4.7.1. This restarts the management server (~1-2 min); a full reboot is **not** required once the collector above is removed and committed.
-3. **License + device certificate.** Run a license fetch (Panorama > Licenses, or CLI `request license fetch`) so the new serial pulls its entitlements and checks in. In the CSP, confirm the serial registered and generate a **device-certificate one-time password (OTP)**, then fetch the cert on Panorama (Panorama > Setup > Management > **Device Certificate** -> Get Certificate, using the OTP). Status should read *"Successfully fetched Device Certificate."*
-4. **Upgrade Panorama to the latest 11.2.x.** Panorama > Software -> Check Now, download, and install the latest **11.2.x** release, then reboot. Keep Panorama on the same train as your firewalls (see the version rule in [4.5](#45-search-available-vm-series-images-amis)).
-5. **Rebuild the log collector.** Re-add the managed collector (paste the new S/N, add **Disk A**), then re-create the collector group **named `default`** (the name matters) with this Panorama as a member. Do a **targeted push** to the `default` collector group and confirm it shows **In sync** (Panorama > Managed Collectors).
+- While you are still in `configure` mode, apply the baseline configuration. Open [docs/panorama-baseline-config.txt](docs/panorama-baseline-config.txt), paste its `set` commands, then commit:
 
-> &#8505; The collector group must be named **`default`** because the VM-Series bootstrap intentionally does **not** set `cgname`, so the firewalls fall back to the `default` collector group. (Setting a collector-group name in bootstrap has historically been buggy with the licensing plugin, so we omit it.)
+```
+# paste the contents of docs/panorama-baseline-config.txt
+commit
+exit
+```
 
-> &#9888; **Do not try to take this pre-baked Panorama to 12.1.x.** Its `/opt/panrepo` partition is too small to ingest the 12.1 base image once the running 11.2 image and its base are on disk (neither can be purged), so the 12.1 download fails post-processing. Keep this Panorama on **11.2.x**. If you specifically need a 12.1 Panorama, use the optional standalone path: [docs/optional-12.1-panorama.md](docs/optional-12.1-panorama.md).
+> &#8505; The baseline snippet creates the lab's template `tpl-aws-gwlb-lab`, template stack `stack-aws-gwlb-lab`, device group `AWS-GWLB-LAB` (with the starter `student-gwlb-any` allow rule), the `gwlb` zone, `ethernet1/1`, and the virtual router - the scaffolding the later steps and the License Manager build on.
 
-> &#8505; Steps 1 and 5 overlap with the detailed collector setup in 4.8.2 below; the difference here is doing it around the serial-number change and upgrade.
+- Open the `panorama_url` in a browser and log in as `admin` with the password you just set.
+
+### 4.8.1. Apply Your New Serial Number and License
+
+> &#9888; **Do this if you provisioned a new Panorama serial/license in [4.7.1](#471-provision-panorama-licensing-with-software-ngfw-credits).** Panorama and the managed firewalls cannot obtain device certificates until the serial number is set, so this is required for licensing and for the VM-Series to connect.
+
+1. **Set the serial number.** Panorama > Setup > Management -> set the **Serial Number** to the one you provisioned in 4.7.1. This restarts the management server (~1-2 min).
+2. **License + device certificate.** Run a license fetch (Panorama > Licenses, or CLI `request license fetch`) so the new serial pulls its entitlements and checks in. In the CSP, confirm the serial registered and generate a **device-certificate one-time password (OTP)**, then fetch the cert on Panorama (Panorama > Setup > Management > **Device Certificate** -> Get Certificate, using the OTP). Status should read *"Successfully fetched Device Certificate."*
+
+> &#8505; The Marketplace image already runs **11.2.12** (set by `panorama_version`), matching the VM-Series `fw_version`, so no Panorama upgrade is needed. If you ever need a different release, keep Panorama on the same train as the firewalls (see the version rule in [4.5](#45-search-available-vm-series-images-amis)).
 
 ### 4.8.2. Prepare Panorama for Logging and Bootstrapping
 
 - Navigate to Panorama > Setup > Interfaces, and click on the Management Interface
   - Add the Public IP address of Panorama to the "Public IP Address" field
 
-- Navigate to Panorama > Collector Groups and delete the existing collector group
-
-- Navigate to Panorama > Managed Collectors and delete the existing log-collector, then commit to Panorama
-
-- From the dashboard, copy the serial number of Panorama (Found under the general information)
+- From the dashboard, copy the serial number of Panorama (found under the general information)
 
 - Configure a new log collector by navigating to Panorama > Managed Collectors > Add
   - Paste the serial number to the collector S/N, then click Ok
@@ -447,20 +456,22 @@ terraform apply
   - Commit to Panorama
 
 - Navigate to Panorama > Collector Groups, then click Add
-  - Use “default” for the name of the Collector Group, then select the “GWLB-LAB-PANORAMA-01” under the Collector Group Members, then click Ok
+  - Use “default” for the name of the Collector Group, then select the log collector you just added (named with the Panorama S/N) under the Collector Group Members, then click Ok
   - Commit to Panorama
   - Navigate to Commit > Push to Devices > Edit Selections > Collector Groups and select the “default” collector group. Then click Ok
   - Push to the collector group specified above
   - Check the Managed Collectors page under Panorama > Managed Collectors. The collector group status should be “In sync”
 
+> &#8505; The collector group must be named **`default`** because the VM-Series bootstrap intentionally does not set `cgname`, so the firewalls fall back to the `default` collector group. (Setting a collector-group name in bootstrap has historically been buggy with the licensing plugin, so it is omitted.) For background on Panorama log collection, see [Manage Log Collection](https://docs.paloaltonetworks.com/panorama/11-2/panorama-admin/manage-log-collection).
+
 - Navigate to Panorama > Plugins > Check Now
   - Search for `sw_fw_license-1.1.2`. Then download and install the plugin
 
-- Navigate to Panorama > SW Fireall License
+- Navigate to Panorama > SW Firewall Licenses
 
 - Configure a SW Firewall License Bootstrap Definition
   - Name: `aws-gwlb-lab`
-  - Auth Code: Found in `aws-gwlb-lab-secrets.txt` *(shared / standard account: the VM-Series **flex-credit auth code** from your CSP deployment profile - see 4.7.1)*
+  - Auth Code: the VM-Series **flex-credit auth code** from your Software NGFW deployment profile (see 4.7.1). *(Workshop students: ask your instructor for CSP access or which auth code to use.)*
 
 - Configure a SW Firewall License Manager
   - Name: `aws-gwlb-lab`
@@ -488,7 +499,7 @@ terraform apply
 ## 4.9. Update Deployment Values in tfvars for VM-series
 
 
-Most of the bootstrap parameters and environment-specific variable values have already been prepped in the Terraform code for this deployment. On QwikLabs you only need to update the `auth-key` value for your Panorama. *(Shared / standard account: you also set your SSH key and prefix - see the collapsed note below.)*
+Most of the bootstrap parameters and environment-specific variable values are already set in the Terraform code for this deployment. You only need to update the `auth-key` value from your Panorama. *(Shared / standard account: you also set your `prefix_name_tag` - see the collapsed note below.)*
 
 - **When bootstrapping, be very careful to ensure all of the parameters are set correctly. These values will be passed in as User Data for the VM-Series launch. If values are incorrect, the bootstrap will likely fail and you will need to redeploy!**
 
@@ -502,8 +513,8 @@ cd ~/lab-aws-gwlb-vmseries/terraform/vmseries
 <summary><b>⚙️ Shared / standard account - edit <code>security-vpc-east1.auto.tfvars</code> first</b></summary>
 
 Open `security-vpc-east1.auto.tfvars` and set:
-- `vmseries_ssh_key_name` = your key pair name. **It must exist in `us-east-1`** (the VM-Series region) - key pairs are per-region, so create one in us-east-1 even if you already made one in us-west-2 for Panorama.
 - `prefix_name_tag` = **the same prefix you used for the Panorama deploy** (e.g. `"ad-"`). This is how the VM-Series stack finds *your* Panorama - it looks up the peer transit gateway by `<prefix>tgw-us-west-2`. If this doesn't match your Panorama's prefix, the apply will fail to find the peer TGW.
+- (Optional) `vmseries_ssh_key_name` if you want to bring your own key pair instead of the minted one (see 4.1.1); it must already exist in `us-east-1`, the VM-Series region.
 
 The region, AMI, and `panorama_host` are already set - no change needed.
 
@@ -511,7 +522,7 @@ The region, AMI, and `panorama_host` are already set - no change needed.
 
 - Edit the file `student.auto.tfvars` to update the value of the `auth-key` variable.
 
-> &#8505; The `auth-key` is the **VM-Series bootstrap parameter generated by *your* Panorama** in step 4.8 (Panorama → SW Firewall Licenses → License Manager → **Show Bootstrap Parameters**). On QwikLabs it is also pre-generated in `aws-gwlb-lab-secrets.txt` - either source works.
+> &#8505; The `auth-key` is the **VM-Series bootstrap parameter generated by *your* Panorama** in step 4.8 (Panorama → SW Firewall Licenses → License Manager → **Show Bootstrap Parameters**).
 
 > &#9888; **Copy ONLY the `auth-key`.** The "Show Bootstrap Parameters" screen also lists a `panorama-server` IP, but the licensing plugin can display a **stale/old IP** there. **Do not** change `panorama_host` - it is already set to `192.168.10.10` (your deployed Panorama's private address, reached over the TGW). This lab uses a single Panorama (no HA), so do not set `panorama-server-2`.
 
@@ -661,8 +672,8 @@ In the meantime, let's go look at what you built!
   - Monitor -> Device Group Dropdown = All -> System
   - Search for the serial number of one of your VM-Series
     - `( description contains '00795xxxxxxx' )`
-- Inspect Pre-Configured Interface, Zone, and Virtual Router configuration for your template
-- Inspect Pre-Configured Security Policies and NAT Policies for your Device Group
+- Inspect the Interface, Zone, and Virtual Router configuration you applied via the baseline snippet (4.8), now visible in your template
+- Inspect the Security Policies for your Device Group (the `student-gwlb-any` starter rule from the baseline), and note the absence of NAT Policies
 
 > &#10067; Why are NAT policies not needed for GWLB model?
 
@@ -679,7 +690,7 @@ vmseries_eips = {
   "vmseries02-mgmt" = "44.237.145.237"
 }
 ```
-- Refer to `aws-gwlb-lab-secrets.txt` for the VM-Series local credentials. These are the same credentials you used for Panorama. *(Shared / standard account: use the VM-Series local credentials provided by your instructor.)*
+- For the VM-Series local credentials: this basic bootstrap does not set a password, so the initial `admin` password is the **EC2 instance ID** (a PAN-OS-on-AWS default) and you are prompted to set a new one on first login. You can also reach the CLI with the minted `vmseries-ssh-key.pem`. *(Workshop students: your instructor will confirm the access method.)*
 
 - Establish a connection to both VM-Series Web UI via HTTPS
 - Establish a connection to both VM-Series CLI via SSH
