@@ -1,0 +1,154 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  AWS GWLB VM-Series lab - builder EC2. A small self-contained Amazon Linux 2023 instance
+  with Terraform + git + AWS CLI pre-installed and the lab repo cloned, for running the lab
+  Terraform from inside AWS (the recommended alternative to CloudShell, which has a 1 GB home
+  and per-region storage that bites students). It uses an IAM instance role, so there are no
+  static credentials to manage, and you connect with SSM Session Manager, so there is no SSH
+  key and no inbound port to open.
+
+Parameters:
+  RepoUrl:
+    Type: String
+    Default: https://github.com/PaloAltoNetworks/lab-aws-gwlb-vmseries.git
+    Description: Git URL of the lab repo to clone onto the builder.
+  RepoBranch:
+    Type: String
+    Default: main
+    Description: Branch to check out.
+  InstanceType:
+    Type: String
+    Default: t3.medium
+    AllowedValues: [t3.small, t3.medium, t3.large]
+    Description: Builder size. t3.medium is plenty for Terraform.
+  TerraformVersion:
+    Type: String
+    Default: 1.15.6
+    Description: Terraform version to install.
+  LatestAl2023Ami:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64
+    Description: Auto-resolved latest Amazon Linux 2023 AMI for this region. Leave as-is.
+
+Resources:
+  BuilderVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 192.168.250.0/24
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags: [{ Key: Name, Value: gwlb-lab-builder-vpc }]
+
+  BuilderIgw:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: [{ Key: Name, Value: gwlb-lab-builder-igw }]
+
+  BuilderIgwAttach:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref BuilderVpc
+      InternetGatewayId: !Ref BuilderIgw
+
+  BuilderSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref BuilderVpc
+      CidrBlock: 192.168.250.0/25
+      MapPublicIpOnLaunch: true
+      Tags: [{ Key: Name, Value: gwlb-lab-builder-subnet }]
+
+  BuilderRt:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref BuilderVpc
+      Tags: [{ Key: Name, Value: gwlb-lab-builder-rt }]
+
+  BuilderDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: BuilderIgwAttach
+    Properties:
+      RouteTableId: !Ref BuilderRt
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref BuilderIgw
+
+  BuilderRtAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref BuilderSubnet
+      RouteTableId: !Ref BuilderRt
+
+  BuilderRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      # AdministratorAccess is deliberate for a dedicated lab/sandbox account: the lab itself
+      # creates IAM roles and resources across many services, and this avoids permission
+      # whack-a-mole. SSM core lets you connect via Session Manager. Do not use this template
+      # in a shared or production account.
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Tags: [{ Key: Name, Value: gwlb-lab-builder-role }]
+
+  BuilderInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles: [!Ref BuilderRole]
+
+  BuilderSg:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: gwlb-lab builder - egress only, connect via SSM (no inbound)
+      VpcId: !Ref BuilderVpc
+      SecurityGroupEgress:
+        - IpProtocol: "-1"
+          CidrIp: 0.0.0.0/0
+      Tags: [{ Key: Name, Value: gwlb-lab-builder-sg }]
+
+  BuilderInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !Ref LatestAl2023Ami
+      IamInstanceProfile: !Ref BuilderInstanceProfile
+      SubnetId: !Ref BuilderSubnet
+      SecurityGroupIds: [!Ref BuilderSg]
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: gp3   # account SCP denies gp2
+            VolumeSize: 30
+            DeleteOnTermination: true
+      Tags: [{ Key: Name, Value: gwlb-lab-builder }]
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -eux
+          dnf install -y git unzip jq
+          command -v aws >/dev/null 2>&1 || { curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip; unzip -q /tmp/awscliv2.zip -d /tmp; /tmp/aws/install; }
+          curl -fsSL -o /tmp/tf.zip "https://releases.hashicorp.com/terraform/${TerraformVersion}/terraform_${TerraformVersion}_linux_amd64.zip"
+          unzip -o /tmp/tf.zip -d /usr/local/bin
+          chmod +x /usr/local/bin/terraform
+          sudo -u ec2-user git clone -b ${RepoBranch} ${RepoUrl} /home/ec2-user/lab-aws-gwlb-vmseries || true
+          printf 'Builder ready.\nRepo: /home/ec2-user/lab-aws-gwlb-vmseries (branch %s)\nterraform: %s\n' "${RepoBranch}" "$(/usr/local/bin/terraform version | head -1)" > /home/ec2-user/BUILDER-READY.txt
+          chown ec2-user:ec2-user /home/ec2-user/BUILDER-READY.txt
+
+Outputs:
+  InstanceId:
+    Description: Builder instance ID.
+    Value: !Ref BuilderInstance
+  ConnectViaConsole:
+    Description: Easiest - browser, no local tools.
+    Value: !Sub "EC2 console > Instances > ${BuilderInstance} > Connect > Session Manager"
+  ConnectViaCli:
+    Description: Or from a machine that has the SSM session-manager plugin.
+    Value: !Sub "aws ssm start-session --target ${BuilderInstance} --region ${AWS::Region}"
+  RepoPath:
+    Description: Where the lab repo is cloned on the builder.
+    Value: /home/ec2-user/lab-aws-gwlb-vmseries
