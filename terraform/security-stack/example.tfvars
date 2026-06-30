@@ -9,7 +9,8 @@ name_prefix     = "pan-gwlb-lab-"
 az_count        = 2
 
 # Remote state of the panorama root (from the bootstrap output). TODO: set bucket to yours.
-panorama_state_bucket = "pan-gwlb-lab-tfstate-493890030279-us-west-1"
+# Get it from: terraform -chdir=terraform/bootstrap output -raw state_bucket
+panorama_state_bucket = "pan-gwlb-lab-tfstate-<ACCOUNT_ID>-us-west-1"
 panorama_state_key    = "panorama/terraform.tfstate"
 panorama_state_region = "us-west-1"
 
