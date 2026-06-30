@@ -28,15 +28,22 @@ CLI:
 
 ```bash
 aws cloudformation deploy \
+  --region us-west-2 \
   --template-file builder/builder.cfn.yaml \
   --stack-name gwlb-lab-builder \
   --capabilities CAPABILITY_IAM
   # optional: --parameter-overrides RepoBranch=<branch> InstanceType=t3.large
 ```
 
-Launch it in whichever region is convenient. It does not have to match the lab's deploy
-regions; Terraform deploys to the regions pinned in the tfvars regardless of where the
-builder runs.
+### Which region to launch in
+
+Launch the builder in **us-west-2** (the Panorama region). Where you run Terraform from does
+**not** affect where the lab resources land: Terraform deploys to the regions pinned in the
+tfvars (Panorama in us-west-2, VM-Series + spokes in us-east-1) no matter where the builder
+runs. The reason to pick us-west-2 is **quota**. This stack creates its own small, dedicated
+VPC, and on a QwikLabs account us-east-1 already carries three lab VPCs (security + two
+spokes) plus the heavy VM-Series compute, so adding the builder there can push you into the
+VPC or vCPU limit. us-west-2 only holds the Panorama, so it has room.
 
 ## Connect
 
@@ -62,3 +69,7 @@ your region, and run the same Terraform. We do not document local setup here.
 
 When you are done with the whole lab, after `terraform destroy` of the lab stacks, delete the
 builder stack: `aws cloudformation delete-stack --stack-name gwlb-lab-builder`.
+
+If you launched the builder in the same region as the VM-Series compute (us-east-1) and a
+Terraform apply fails on a vCPU limit, delete the builder stack first to free quota, then
+re-run. Launching the builder in us-west-2 (above) avoids this.
